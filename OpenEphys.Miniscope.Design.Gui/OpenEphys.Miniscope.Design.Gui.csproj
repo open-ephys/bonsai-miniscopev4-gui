@@ -21,6 +21,7 @@
     <PackageReference Include="Bonsai.Vision" Version="2.9.0" />
     <PackageReference Include="OpenEphys.Miniscope" Version="0.4.0" />
     <PackageReference Include="OpenEphys.Miniscope.Design" Version="0.4.0" />
+    <PackageReference Include="OpenEphys.Commutator" Version="0.3.1" />
   </ItemGroup>
 
   <ItemGroup>
