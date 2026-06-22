@@ -15,7 +15,7 @@ using Bonsai.IO;
 using Hexa.NET.ImGui;
 using OpenCV.Net;
 
-namespace OpenEphys.Miniscope.Design.GUI;
+namespace OpenEphys.Miniscope.Design.Gui;
 
 /// <summary>
 /// Renders all settings panels in a collapsible sidebar and returns an updated <see cref="SettingsPanelDto"/>.
@@ -27,7 +27,9 @@ public class SettingsPanel
     const float ExpandedWidth = 375f;
     const float CollapsedWidth = 36f;
 
-    static float GetCurrentWidth(float availableX)
+    bool settingsOpen = true;
+
+    float GetCurrentWidth(float availableX)
     {
         if (settingsOpen)
         {
@@ -70,8 +72,6 @@ public class SettingsPanel
     [XmlIgnore]
     [Browsable(false)]
     public bool AcquisitionStatus { get; set; }
-
-    static bool settingsOpen = true;
 
     /// <summary>
     /// Renders the settings sidebar and returns an updated <see cref="SettingsPanelDto"/> alongside each source value.
@@ -247,7 +247,7 @@ public class SettingsPanel
                                     {
                                         SaveFileDialog dlg = new()
                                         {
-                                            InitialDirectory = Path.GetFullPath(string.IsNullOrEmpty(fileName) ? "./" : fileName),
+                                            InitialDirectory = GetDirectory(fileName),
                                             Filter = "All Files|*.*",
                                             Title = "Choose where to save Miniscope data.",
                                             AddExtension = false,
@@ -269,7 +269,7 @@ public class SettingsPanel
                         ImGui.SameLine();
                         if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
                         {
-                            var dir = Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(fileName) ? "./" : fileName));
+                            var dir = GetDirectory(fileName);
                             if (Directory.Exists(dir))
                                 System.Diagnostics.Process.Start("explorer.exe", dir);
                         }
@@ -551,4 +551,6 @@ public class SettingsPanel
             return source.SubscribeSafe(sourceObserver);
         });
     }
+
+    static string GetDirectory(string path) => Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path) ? "./" : path));
 }

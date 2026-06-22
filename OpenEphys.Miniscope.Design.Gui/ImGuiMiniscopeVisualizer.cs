@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Bonsai.ImGui;
 
-namespace OpenEphys.Miniscope.Design.GUI;
+namespace OpenEphys.Miniscope.Design.Gui;
 
 /// <summary>
 /// Defines a visualizer that initializes an ImGui-based visualizer for Miniscope data.

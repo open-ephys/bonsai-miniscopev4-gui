@@ -5,7 +5,7 @@ using Bonsai.ImGui;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImPlot;
 
-namespace OpenEphys.Miniscope.Design.GUI;
+namespace OpenEphys.Miniscope.Design.Gui;
 
 /// <summary>   
 /// Represents an extension context for ImGui that initializes an ImGui context and links it to the provided ImGui context.

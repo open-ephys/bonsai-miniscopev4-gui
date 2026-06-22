@@ -30,29 +30,4 @@ public class CreateStatusBarDto : Transform<Tuple<int, int, bool, string, string
     {
         return source.Select(value => new StatusBarDto(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5));
     }
-
-    /// <summary>
-    /// Creates a <see cref="StatusBarDto"/> by combining the latest values from each individual status bar sequence.
-    /// </summary>
-    /// <param name="cameraIndex">The index of the camera to connect to.</param>
-    /// <param name="bufferSize">The number of frames to buffer during acquisition.</param>
-    /// <param name="isConnected">Whether the miniscope is currently connected.</param>
-    /// <param name="statusMessage">A message describing the current connection status.</param>
-    /// <param name="recordingError">A message describing a recording error, if one has occurred.</param>
-    /// <returns>A sequence of <see cref="StatusBarDto"/> objects.</returns>
-    public IObservable<StatusBarDto> Process(
-        IObservable<int> cameraIndex,
-        IObservable<int> bufferSize,
-        IObservable<bool> isConnected,
-        IObservable<string> statusMessage,
-        IObservable<string> recordingError)
-    {
-        return Observable.CombineLatest(
-            cameraIndex,
-            bufferSize,
-            isConnected,
-            statusMessage,
-            recordingError,
-            (index, buffer, connected, status, error) => new StatusBarDto(index, buffer, connected, status, error));
-    }
 }

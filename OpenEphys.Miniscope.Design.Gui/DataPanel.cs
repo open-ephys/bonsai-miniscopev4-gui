@@ -10,7 +10,7 @@ using Bonsai.Vision;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImPlot;
 
-namespace OpenEphys.Miniscope.Design.GUI;
+namespace OpenEphys.Miniscope.Design.Gui;
 
 /// <summary>
 /// Renders the image tabs and signal tabs inside a single child region that fills the available content area.
@@ -38,7 +38,7 @@ public class DataPanel
     /// </summary>
     [XmlIgnore]
     [Browsable(false)]
-    public ImTextureRef dFFImage { get; set; }
+    public ImTextureRef DFFImage { get; set; }
 
     /// <summary>
     /// Gets or sets the height, in pixels, of the source images used to calculate the display size.
@@ -77,10 +77,10 @@ public class DataPanel
     [Browsable(false)]
     public ScalarHistogram ImageHistogram { get; set; }
 
-    readonly Vector2 fillWidth = new(-1, -1);
-    readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs;
-    readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
-    readonly string[] histogramAxisTickLabels = new string[] { "0%", "20%", "40%", "60%", "80%", "100%" };
+    static readonly Vector2 fillAvailable = new(-1, -1);
+    static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs;
+    static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
+    static readonly string[] histogramAxisTickLabels = new string[] { "0%", "20%", "40%", "60%", "80%", "100%" };
 
     /// <summary>
     /// Renders the data panel for each source value and forwards the value unchanged.
@@ -99,7 +99,7 @@ public class DataPanel
                     float tabBarHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ItemSpacing.Y;
                     float imageChildHeight = totalHeight * fraction - tabBarHeight;
 
-                    ImGui.BeginChild("##Data", fillWidth);
+                    ImGui.BeginChild("##Data", fillAvailable);
 
                     ImGui.BeginChild("##image_pane", new Vector2(-1, imageChildHeight), ImGuiChildFlags.None);
 
@@ -126,7 +126,7 @@ public class DataPanel
 
                         if (ImGui.BeginTabItem("dF/F##dFF"))
                         {
-                            PlotImage(displaySize, dFFImage);
+                            PlotImage(displaySize, DFFImage);
                             ImGui.EndTabItem();
                         }
 
@@ -148,7 +148,7 @@ public class DataPanel
                             {
                                 ImGui.Text("No data to display");
                             }
-                            else if (ImPlot.BeginPlot("##series", fillWidth, plotFlags))
+                            else if (ImPlot.BeginPlot("##series", fillAvailable, plotFlags))
                             {
                                 ImPlot.SetupAxes("Sample", "Value", flagsX, flagsY);
                                 ImPlot.SetupAxisLimits(ImAxis.Y1, -0.1, 1.1, ImPlotCond.Always);
@@ -177,7 +177,7 @@ public class DataPanel
                             ImGui.EndTabItem();
                         }
 
-                        if (ImGui.BeginTabItem("Histogram"))
+                        if (ImageHistogram != null && ImGui.BeginTabItem("Histogram"))
                         {
                             ImPlotAxisFlags flagsX = ImPlotAxisFlags.NoLabel;
                             ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoTickLabels;
@@ -185,7 +185,7 @@ public class DataPanel
                             var histogram = ImageHistogram.Val0;
                             histogram.Bins.GetRawData(out var binPtr);
 
-                            if (ImPlot.BeginPlot("##histogram", fillWidth, plotFlags))
+                            if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
                             {
                                 double minValue = 0, maxValue = byte.MaxValue;
                                 int numLabels = histogramAxisTickLabels.Length;

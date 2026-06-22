@@ -1,11 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Numerics;
 using System.Reactive.Linq;
 using Bonsai;
 using OpenCV.Net;
 
-namespace OpenEphys.Miniscope.Design.GUI;
+namespace OpenEphys.Miniscope.Design.Gui;
 
 /// <summary>
 /// Represents the saturation overlay settings displayed and edited by the GUI.
@@ -28,19 +27,5 @@ public class CreateSaturationSettingsDto : Transform<Tuple<double, Scalar>, Satu
     public override IObservable<SaturationSettingsDto> Process(IObservable<Tuple<double, Scalar>> source)
     {
         return source.Select(value => new SaturationSettingsDto(value.Item1, value.Item2));
-    }
-
-    /// <summary>
-    /// Creates a <see cref="SaturationSettingsDto"/> by combining the latest values from each individual saturation setting sequence.
-    /// </summary>
-    /// <param name="threshold">The minimum pixel intensity considered saturated.</param>
-    /// <param name="color">The color used to highlight saturated pixels.</param>
-    /// <returns>A sequence of <see cref="SaturationSettingsDto"/> objects.</returns>
-    public IObservable<SaturationSettingsDto> Process(IObservable<double> threshold, IObservable<Scalar> color)
-    {
-        return Observable.CombineLatest(
-            threshold,
-            color,
-            (threshold, color) => new SaturationSettingsDto(threshold, color));
     }
 }

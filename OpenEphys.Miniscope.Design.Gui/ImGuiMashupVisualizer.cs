@@ -9,7 +9,7 @@ using Bonsai.ImGui;
 using Bonsai.ImGui.Design;
 using Hexa.NET.ImGui;
 
-namespace OpenEphys.Miniscope.Design.GUI;
+namespace OpenEphys.Miniscope.Design.Gui;
 
 /// <summary>
 /// Represents a mashup visualizer that hosts a Dear ImGui control and coordinates rendering between
