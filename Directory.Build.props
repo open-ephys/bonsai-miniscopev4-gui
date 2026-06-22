@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <Authors>Open Ephys</Authors>
+    <Copyright>Copyright © Open Ephys and Contributors</Copyright>
+    <PackageProjectUrl>https://open-ephys.github.io/miniscope-docs/index.html</PackageProjectUrl>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IncludeSymbols>true</IncludeSymbols>
+    <RepositoryUrl>https://github.com/open-ephys/bonsai-miniscope-gui</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <PackageIcon>icon.png</PackageIcon>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
+    <LangVersion>10.0</LangVersion>
+    <Features>strict</Features>
+    <PackageType>Dependency;BonsaiLibrary</PackageType>
+  </PropertyGroup>
+
+  <Import Project="Local.build.props" Condition="Exists('Local.build.props')" />
+  <Import Project="build/Version.props" />
+
+  <ItemGroup>
+    <Content Include="..\LICENSE" PackagePath="/" />
+    <Content Include="..\icon.png" PackagePath="/" />
+    <Content Include="..\README.md" PackagePath="/" />
+  </ItemGroup>
+</Project>
