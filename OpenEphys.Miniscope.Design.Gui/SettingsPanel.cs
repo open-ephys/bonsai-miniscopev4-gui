@@ -139,6 +139,11 @@ public class SettingsPanel
 
                         ImGui.AlignTextToFramePadding();
                         ImGui.Text("LED Brightness: ");
+                        if (ImGui.BeginItemTooltip())
+                        {
+                            ImGui.Text("Change the brightness of the LED.\n\nTo type in a specific value, press `Ctrl` and click on the slider before typing. Press enter to set the brightness value.");
+                            ImGui.EndTooltip();
+                        }
                         ImGui.SameLine();
                         ImGui.SetNextItemWidth(-1f);
                         double brightnessMin = 0, brightnessMax = 100;
