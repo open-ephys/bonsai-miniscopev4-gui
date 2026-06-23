@@ -408,7 +408,11 @@ public class SettingsPanel
                             ImGui.BeginDisabled();
 
                         int portIndex = Array.IndexOf(portNames, portName);
-                        if (portIndex < 0) portIndex = 0;
+                        if (portIndex < 0 && portNames.Length > 0)
+                        {
+                            portIndex = 0;
+                            portName = portNames[0];
+                        }
                         if (ImGui.Combo("##comport", ref portIndex, portNames, portNames.Length) && portNames.Length > 0)
                         {
                             portName = portNames[portIndex];
