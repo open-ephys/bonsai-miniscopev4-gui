@@ -348,7 +348,7 @@ public class SettingsPanel
                         ImGui.SameLine();
                         ImGui.SetNextItemWidth(-1f);
 
-                        ImGui.SliderInt("##saturation_threshold", &satThreshold, byte.MinValue, byte.MaxValue, ImGuiSliderFlags.AlwaysClamp);
+                        ImGui.SliderInt("##saturation_threshold", &satThreshold, byte.MinValue, byte.MaxValue - 1, ImGuiSliderFlags.AlwaysClamp);
 
                         ImGui.Text("Color: ");
                         ImGui.SameLine();

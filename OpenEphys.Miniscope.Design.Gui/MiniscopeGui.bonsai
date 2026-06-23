@@ -394,7 +394,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p2:UclaMiniscopeV4">
-                      <p2:Index>1</p2:Index>
+                      <p2:Index>0</p2:Index>
                       <p2:LedBrightness>1</p2:LedBrightness>
                       <p2:Focus>5</p2:Focus>
                       <p2:SensorGain>Low</p2:SensorGain>
@@ -1323,13 +1323,10 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="cv:Threshold">
-                            <cv:ThresholdValue>192</cv:ThresholdValue>
+                            <cv:ThresholdValue>254</cv:ThresholdValue>
                             <cv:MaxValue>255</cv:MaxValue>
-                            <cv:ThresholdType>ToZero</cv:ThresholdType>
+                            <cv:ThresholdType>Binary</cv:ThresholdType>
                           </Combinator>
-                        </Expression>
-                        <Expression xsi:type="InputMapping">
-                          <PropertyMappings />
                         </Expression>
                         <Expression xsi:type="MemberSelector">
                           <Selector>Size</Selector>
@@ -1350,8 +1347,8 @@
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="cv:SolidColor">
                             <cv:Size>
-                              <cv:Width>640</cv:Width>
-                              <cv:Height>480</cv:Height>
+                              <cv:Width>608</cv:Width>
+                              <cv:Height>608</cv:Height>
                             </cv:Size>
                             <cv:Depth>U8</cv:Depth>
                             <cv:Channels>3</cv:Channels>
@@ -1377,6 +1374,13 @@
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="cv:Threshold">
+                            <cv:ThresholdValue>254</cv:ThresholdValue>
+                            <cv:MaxValue>255</cv:MaxValue>
+                            <cv:ThresholdType>ToZeroInv</cv:ThresholdType>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:Zip" />
                         </Expression>
                         <Expression xsi:type="Add" />
@@ -1384,20 +1388,21 @@
                       </Nodes>
                       <Edges>
                         <Edge From="0" To="3" Label="Source1" />
-                        <Edge From="0" To="12" Label="Source2" />
+                        <Edge From="0" To="11" Label="Source1" />
                         <Edge From="1" To="2" Label="Source1" />
                         <Edge From="2" To="3" Label="Source2" />
+                        <Edge From="2" To="11" Label="Source2" />
                         <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="3" To="5" Label="Source1" />
-                        <Edge From="3" To="10" Label="Source2" />
-                        <Edge From="4" To="9" Label="Source1" />
-                        <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="6" To="9" Label="Source2" />
-                        <Edge From="7" To="8" Label="Source1" />
-                        <Edge From="8" To="9" Label="Source3" />
+                        <Edge From="3" To="8" Label="Source1" />
+                        <Edge From="3" To="9" Label="Source2" />
+                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="5" To="8" Label="Source2" />
+                        <Edge From="6" To="7" Label="Source1" />
+                        <Edge From="7" To="8" Label="Source3" />
+                        <Edge From="8" To="9" Label="Source1" />
                         <Edge From="9" To="10" Label="Source1" />
-                        <Edge From="10" To="11" Label="Source1" />
-                        <Edge From="11" To="12" Label="Source1" />
+                        <Edge From="10" To="12" Label="Source1" />
+                        <Edge From="11" To="12" Label="Source2" />
                         <Edge From="12" To="13" Label="Source1" />
                         <Edge From="13" To="14" Label="Source1" />
                       </Edges>
@@ -1691,8 +1696,8 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:DataPanel">
-                      <p3:ImageHeight>480</p3:ImageHeight>
-                      <p3:ImageWidth>640</p3:ImageWidth>
+                      <p3:ImageHeight>608</p3:ImageHeight>
+                      <p3:ImageWidth>608</p3:ImageWidth>
                       <p3:ImageHeightFraction>0.6</p3:ImageHeightFraction>
                     </Combinator>
                   </Expression>
