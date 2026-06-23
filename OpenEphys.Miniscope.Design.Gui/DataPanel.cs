@@ -5,6 +5,7 @@ using Hexa.NET.ImGui;
 using Hexa.NET.ImPlot;
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -209,11 +210,21 @@ public class DataPanel
 
                                 if (ImageHistogram != null && ImGui.BeginTabItem("Histogram"))
                                 {
+                                    const int binCount = 256;
+
                                     ImPlotAxisFlags flagsX = ImPlotAxisFlags.NoLabel;
                                     ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoTickLabels;
 
-                                    var histogram = ImageHistogram.Val0;
-                                    histogram.Bins.GetRawData(out var binPtr);
+                                    var hist = ImageHistogram.Val0;
+
+                                    float[] bins = new float[binCount];
+                                    for (int i = 0; i < binCount; i++)
+                                        bins[i] = (float)hist.QueryValue(i);
+
+                                    float max = bins.Max();
+                                    if (max > 0f)
+                                        for (int i = 0; i < binCount; i++)
+                                            bins[i] /= max;
 
                                     if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
                                     {
@@ -223,7 +234,11 @@ public class DataPanel
                                         ImPlot.SetupAxes("Pixel Value [%]", "", flagsX, flagsY);
                                         ImPlot.SetupAxisLimits(ImAxis.X1, minValue, maxValue, ImPlotCond.Always);
                                         ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
-                                        ImPlot.PlotBars("##pixel_intensity", (float*)binPtr.ToPointer(), histogram.Bins.GetDimSize(0), 2.0f);
+
+                                        fixed (float* binPtr = bins)
+                                        {
+                                            ImPlot.PlotBars("##pixel_intensity", binPtr, hist.Bins.GetDimSize(0), 1.0f);
+                                        }
 
                                         ImPlot.EndPlot();
                                     }
