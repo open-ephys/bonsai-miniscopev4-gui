@@ -187,7 +187,7 @@ public class DataPanel
                                         if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
                                         {
                                             ImPlot.SetupAxes("", "Quaternion", axisFlags, axisFlags);
-                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -0.05, 1.05, ImPlotCond.Always);
+                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -1.05, 1.05, ImPlotCond.Always);
 
                                             if (QuaternionSeries != null)
                                             {

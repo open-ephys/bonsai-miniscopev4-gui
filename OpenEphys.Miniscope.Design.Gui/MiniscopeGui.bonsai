@@ -1323,7 +1323,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="cv:Threshold">
-                            <cv:ThresholdValue>254</cv:ThresholdValue>
+                            <cv:ThresholdValue>192</cv:ThresholdValue>
                             <cv:MaxValue>255</cv:MaxValue>
                             <cv:ThresholdType>Binary</cv:ThresholdType>
                           </Combinator>
@@ -1375,7 +1375,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="cv:Threshold">
-                            <cv:ThresholdValue>254</cv:ThresholdValue>
+                            <cv:ThresholdValue>192</cv:ThresholdValue>
                             <cv:MaxValue>255</cv:MaxValue>
                             <cv:ThresholdType>ToZeroInv</cv:ThresholdType>
                           </Combinator>
