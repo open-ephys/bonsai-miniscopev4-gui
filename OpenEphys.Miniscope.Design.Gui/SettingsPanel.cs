@@ -398,7 +398,7 @@ public class SettingsPanel
 
                     if (ImGui.CollapsingHeader("Commutator##commutator_header"))
                     {
-                        ImGui.BeginChild("##commutator_child", new Vector2(-1, 120), ImGuiChildFlags.Borders);
+                        ImGui.BeginChild("##commutator_child", new Vector2(-1, 100), ImGuiChildFlags.Borders);
 
                         ImGui.Text("COM Port: ");
                         ImGui.SameLine();
@@ -444,9 +444,16 @@ public class SettingsPanel
                         if (!commutatorConnected)
                             ImGui.BeginDisabled();
 
-                        ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
-                        ImGui.SameLine();
-                        ImGui.Checkbox("Enable LED##commutator_led", ref commutatorEnableLed);
+                        if (ImGui.BeginTable("##commutator_checkboxes", 2))
+                        {
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
+
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Enable LED##commutator_led", ref commutatorEnableLed);
+
+                            ImGui.EndTable();
+                        }
 
                         if (!commutatorConnected)
                             ImGui.EndDisabled();
