@@ -55,7 +55,7 @@ public class DataPanel
     /// Gets or sets the fraction of the available height allocated to the image pane. The signal pane
     /// receives the remaining fraction. Must be between 0 and 1.
     /// </summary>
-    public float ImageHeightFraction { get; set; } = 0.6f;
+    public float ImageHeightFraction { get; set; } = 0.5f;
 
     /// <summary>
     /// Gets or sets the rolling series of quaternion orientation values plotted in the time series tab.
@@ -86,7 +86,7 @@ public class DataPanel
     public bool AcquisitionStatus { get; set; }
 
     static readonly Vector2 fillAvailable = new(-1, -1);
-    static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs;
+    static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle;
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
     static readonly string[] histogramAxisTickLabels = new string[] { "0%", "20%", "40%", "60%", "80%", "100%" };
 
@@ -172,38 +172,52 @@ public class DataPanel
                                         ImGui.EndDisabled();
                                     }
 
-                                    ImPlotAxisFlags flagsX = ImPlotAxisFlags.AutoFit;
-                                    ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit;
+                                    ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0, 0));
+                                    int numRows = 3, numCols = 1;
+                                    float* rowRatios = stackalloc float[3] { 2f, 1f, 1f };
 
                                     if (QuaternionSeries == null && DigitalInSeries == null)
                                     {
                                         ImGui.Text("No data to display");
                                     }
-                                    else if (ImPlot.BeginPlot("##series", fillAvailable, plotFlags))
+                                    else if (ImPlot.BeginSubplots("##time_series_subplots", numRows, numCols, fillAvailable, ImPlotSubplotFlags.LinkAllX |ImPlotSubplotFlags.NoResize, rowRatios, null))
                                     {
-                                        ImPlot.SetupAxes("Sample", "Value", flagsX, flagsY);
-                                        ImPlot.SetupAxisLimits(ImAxis.Y1, -0.1, 1.1, ImPlotCond.Always);
+                                        ImPlotAxisFlags axisFlags = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoMenus | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines | ImPlotAxisFlags.NoTickLabels;
 
-                                        if (QuaternionSeries != null)
+                                        if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
                                         {
-                                            for (int i = 0; i < QuaternionSeries.Series.Length; i++)
+                                            ImPlot.SetupAxes("", "Quaternion", axisFlags, axisFlags);
+                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -0.05, 1.05, ImPlotCond.Always);
+
+                                            if (QuaternionSeries != null)
                                             {
-                                                var line = QuaternionSeries.Series[i];
-                                                ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
+                                                for (int i = 0; i < QuaternionSeries.Series.Length; i++)
+                                                {
+                                                    var line = QuaternionSeries.Series[i];
+                                                    ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
+                                                }
                                             }
+
+                                            ImPlot.EndPlot();
                                         }
 
-                                        if (DigitalInSeries != null)
+                                        if (ImPlot.BeginPlot("##digital_in1_series", fillAvailable, plotFlags | ImPlotFlags.NoLegend))
                                         {
-                                            for (int i = 0; i < DigitalInSeries.Series.Length; i++)
-                                            {
-                                                var line = DigitalInSeries.Series[i];
-                                                ImPlot.PlotStairsG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
-                                            }
+                                            ImPlot.SetNextLineStyle(ImPlot.GetColormapColor(4));
+                                            PlotDigitalSeries(DigitalInSeries, 1, axisFlags);
+                                            ImPlot.EndPlot();
                                         }
 
-                                        ImPlot.EndPlot();
+                                        if (ImPlot.BeginPlot("##digital_in0_series", fillAvailable, plotFlags | ImPlotFlags.NoLegend))
+                                        {
+                                            PlotDigitalSeries(DigitalInSeries, 0, axisFlags);
+                                            ImPlot.EndPlot();
+                                        }
+
+                                        ImPlot.EndSubplots();
                                     }
+
+                                    ImGui.PopStyleVar();
 
                                     ImGui.EndTabItem();
                                 }
@@ -212,8 +226,8 @@ public class DataPanel
                                 {
                                     const int binCount = 256;
 
-                                    ImPlotAxisFlags flagsX = ImPlotAxisFlags.NoLabel;
-                                    ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoTickLabels;
+                                    ImPlotAxisFlags flagsX = ImPlotAxisFlags.NoLabel | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines;
+                                    ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoTickLabels | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines;
 
                                     var hist = ImageHistogram.Val0;
 
@@ -228,11 +242,12 @@ public class DataPanel
 
                                     if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
                                     {
-                                        double minValue = 0, maxValue = byte.MaxValue;
+                                        double minValue = 0, maxValue = byte.MaxValue, axisOffset = 5;
                                         int numLabels = histogramAxisTickLabels.Length;
 
-                                        ImPlot.SetupAxes("Pixel Value [%]", "", flagsX, flagsY);
-                                        ImPlot.SetupAxisLimits(ImAxis.X1, minValue, maxValue, ImPlotCond.Always);
+
+                                        ImPlot.SetupAxes("", "", flagsX, flagsY);
+                                        ImPlot.SetupAxisLimits(ImAxis.X1, minValue - axisOffset, maxValue + axisOffset, ImPlotCond.Always);
                                         ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
 
                                         fixed (float* binPtr = bins)
@@ -267,7 +282,13 @@ public class DataPanel
     static void PlotImage(Vector2 displaySize, ImTextureRef image)
     {
         if (!image.TexID.IsNull)
+        {
+            float availableWidth = ImGui.GetContentRegionAvail().X;
+            float offsetX = (availableWidth - displaySize.X) * 0.5f;
+            if (offsetX > 0)
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offsetX);
             ImGui.Image(image, displaySize);
+        }
         else
             ImGui.Text("No image data found.");
     }
@@ -286,5 +307,17 @@ public class DataPanel
         }
 
         return new Vector2(displayWidth, displayHeight);
+    }
+
+    static unsafe void PlotDigitalSeries(RollingPlotPointSeries<Tuple<bool, bool>> series, int index, ImPlotAxisFlags axisFlags)
+    {
+        ImPlot.SetupAxes("", $"DigitalIn{index}", axisFlags, axisFlags);
+        ImPlot.SetupAxisLimits(ImAxis.Y1, -0.05, 1.05, ImPlotCond.Always);
+
+        if (series != null)
+        {
+            var line = series.Series[index];
+            ImPlot.PlotStairsG(digitalInLabels[index], line.Getter, null, series.Count);
+        }
     }
 }
