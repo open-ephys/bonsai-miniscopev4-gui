@@ -2320,6 +2320,19 @@
                   <Expression xsi:type="SubscribeSubject">
                     <Name>Frame</Name>
                   </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Quaternion</Selector>
+                  </Expression>
+                  <Expression xsi:type="ExternalizedMapping">
+                    <Property Name="PortName" />
+                    <Property Name="Enable" />
+                    <Property Name="EnableLed" />
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="OpenEphys.Commutator:AutoCommutator.bonsai">
+                    <PortName>COM4</PortName>
+                    <Enable>true</Enable>
+                    <EnableLed>true</EnableLed>
+                  </Expression>
                   <Expression xsi:type="SubscribeSubject">
                     <Name>CommutatorConnected</Name>
                   </Expression>
@@ -2340,19 +2353,6 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:TakeUntil" />
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>Quaternion</Selector>
-                  </Expression>
-                  <Expression xsi:type="ExternalizedMapping">
-                    <Property Name="PortName" />
-                    <Property Name="Enable" />
-                    <Property Name="EnableLed" />
-                  </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="OpenEphys.Commutator:AutoCommutator.bonsai">
-                    <PortName />
-                    <Enable>true</Enable>
-                    <EnableLed>true</EnableLed>
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:Materialize" />
@@ -2386,11 +2386,11 @@
                   </Expression>
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="3" Label="Source1" />
-                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="3" Label="Source1" />
                   <Edge From="2" To="3" Label="Source2" />
-                  <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="4" To="6" Label="Source1" />
+                  <Edge From="3" To="6" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
                   <Edge From="5" To="6" Label="Source2" />
                   <Edge From="6" To="7" Label="Source1" />
                   <Edge From="7" To="8" Label="Source1" />
