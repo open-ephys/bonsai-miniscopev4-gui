@@ -9,7 +9,6 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml.Serialization;
 using Bonsai;
 using Bonsai.IO;
 using Hexa.NET.ImGui;
@@ -53,27 +52,6 @@ public class SettingsPanel
     static readonly string[] PathSuffixValues = Enum.GetNames(typeof(PathSuffix));
 
     /// <summary>
-    /// Gets or sets the average frame rate, in Hz, used to display the acquisition frame rate.
-    /// </summary>
-    [XmlIgnore]
-    [Browsable(false)]
-    public double AverageFrameRate { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether a recording is currently in progress.
-    /// </summary>
-    [XmlIgnore]
-    [Browsable(false)]
-    public bool RecordingStatus { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether acquisition is currently in progress.
-    /// </summary>
-    [XmlIgnore]
-    [Browsable(false)]
-    public bool AcquisitionStatus { get; set; }
-
-    /// <summary>
     /// Renders the settings sidebar and returns an updated <see cref="SettingsPanelDto"/> alongside each source value.
     /// </summary>
     /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
@@ -86,8 +64,6 @@ public class SettingsPanel
             const nuint bufSize = 1024;
             string fileName = string.Empty;
             Task<string> saveDialogTask = null;
-            DateTime? acquisitionStart = null;
-            DateTime? recordingStart = null;
 
             var portNames = SerialPort.GetPortNames();
 
@@ -111,7 +87,7 @@ public class SettingsPanel
                 int codecIndex = Array.IndexOf(CodecValues, videoCodec);
                 if (codecIndex < 0) codecIndex = 0;
 
-                double satThreshold = dto.Saturation.Threshold;
+                var satThreshold = dto.Saturation.Threshold;
                 var satColor = new Vector4(
                     (float)dto.Saturation.Color.Val2 / 255,
                     (float)dto.Saturation.Color.Val1 / 255,
@@ -215,7 +191,7 @@ public class SettingsPanel
                     ImGui.SetNextItemOpen(true, ImGuiCond.Once);
                     if (ImGui.CollapsingHeader("File##file_header"))
                     {
-                        ImGui.BeginChild("##save_group", new Vector2(-1, 245), ImGuiChildFlags.Borders);
+                        ImGui.BeginChild("##save_group", new Vector2(-1, 200), ImGuiChildFlags.Borders);
 
                         ImGui.Text("File Name Template");
                         if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
@@ -361,54 +337,6 @@ public class SettingsPanel
                             ImGui.EndTable();
                         }
 
-                        ImGui.Separator();
-
-                        if (ImGui.BeginTable("##status_bar", 3))
-                        {
-                            ImGui.TableNextColumn();
-                            ImGui.Text("Frame Rate:");
-
-                            ImGui.TableNextColumn();
-                            if (AcquisitionStatus)
-                            {
-                                ImGui.Text("Acquiring:");
-                            }
-
-                            ImGui.TableNextColumn();
-
-                            if (RecordingStatus)
-                            {
-                                ImGui.Text("Recording:");
-                            }
-
-                            ImGui.TableNextColumn();
-                            ImGui.Text($"{AverageFrameRate:F1} FPS");
-
-                            ImGui.TableNextColumn();
-                            if (AcquisitionStatus)
-                            {
-                                acquisitionStart ??= DateTime.Now;
-                                ImGui.Text($"{(DateTime.Now - acquisitionStart.Value).TotalSeconds:F1} s");
-                            }
-                            else if (acquisitionStart != null)
-                            {
-                                acquisitionStart = null;
-                            }
-
-                            ImGui.TableNextColumn();
-                            if (RecordingStatus)
-                            {
-                                recordingStart ??= DateTime.Now;
-                                ImGui.Text($"{(DateTime.Now - recordingStart.Value).TotalSeconds:F1} s");
-                            }
-                            else if (recordingStart != null)
-                            {
-                                recordingStart = null;
-                            }
-
-                            ImGui.EndTable();
-                        }
-
                         ImGui.EndChild();
                     }
 
@@ -420,8 +348,7 @@ public class SettingsPanel
                         ImGui.SameLine();
                         ImGui.SetNextItemWidth(-1f);
 
-                        double thresholdMin = 0, thresholdMax = 255;
-                        ImGui.SliderScalar("##saturation_threshold", ImGuiDataType.Double, &satThreshold, &thresholdMin, &thresholdMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
+                        ImGui.SliderInt("##saturation_threshold", &satThreshold, byte.MinValue, byte.MaxValue, ImGuiSliderFlags.AlwaysClamp);
 
                         ImGui.Text("Color: ");
                         ImGui.SameLine();

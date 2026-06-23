@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Bonsai;
+using Bonsai.ImGui.Visualizers;
+using Bonsai.Vision;
+using Hexa.NET.ImGui;
+using Hexa.NET.ImPlot;
+using System;
 using System.ComponentModel;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Xml.Serialization;
-using Bonsai;
-using Bonsai.ImGui.Visualizers;
-using Bonsai.Vision;
-using Hexa.NET.ImGui;
-using Hexa.NET.ImPlot;
 
 namespace OpenEphys.Miniscope.Design.Gui;
 
@@ -77,6 +77,13 @@ public class DataPanel
     [Browsable(false)]
     public ScalarHistogram ImageHistogram { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether acquisition is currently in progress.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public bool AcquisitionStatus { get; set; }
+
     static readonly Vector2 fillAvailable = new(-1, -1);
     static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs;
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
@@ -87,128 +94,153 @@ public class DataPanel
     /// </summary>
     /// <param name="source">The sequence of values tied to the render tick of DearImGui.</param>
     /// <returns>The unmodified <paramref name="source"/> sequence.</returns>
-    public unsafe IObservable<TSource> Process<TSource>(IObservable<TSource> source)
+    public unsafe IObservable<Tuple<TSource, int>> Process<TSource>(IObservable<Tuple<TSource, int>> source)
     {
-        return Observable.Create<TSource>(observer =>
+        return Observable.Create<Tuple<TSource, int>>(observer =>
         {
-            var sourceObserver = Observer.Create<TSource>(
+            var sourceObserver = Observer.Create<Tuple<TSource, int>>(
                 value =>
                 {
+                    var bufferSize = value.Item2;
+
                     float totalHeight = ImGui.GetContentRegionAvail().Y;
                     float fraction = Math.Max(0f, Math.Min(1f, ImageHeightFraction));
                     float tabBarHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ItemSpacing.Y;
                     float imageChildHeight = totalHeight * fraction - tabBarHeight;
 
-                    ImGui.BeginChild("##Data", fillAvailable);
-
-                    ImGui.BeginChild("##image_pane", new Vector2(-1, imageChildHeight), ImGuiChildFlags.None);
-
-                    var availableSize = ImGui.GetContentRegionAvail();
-                    availableSize.Y -= tabBarHeight;
-
-                    var displaySize = CalculateDisplaySize(
-                        availableSize,
-                        new Vector2(ImageWidth, ImageHeight));
-
-                    if (ImGui.BeginTabBar("##ImageTabBar", ImGuiTabBarFlags.NoCloseWithMiddleMouseButton | ImGuiTabBarFlags.DrawSelectedOverline))
+                    if (ImGui.BeginChild("##Data", fillAvailable))
                     {
-                        if (ImGui.BeginTabItem("Image##Image"))
+                        if (ImGui.BeginChild("##image_pane", new Vector2(-1, imageChildHeight), ImGuiChildFlags.None))
                         {
-                            PlotImage(displaySize, MiniscopeImage);
-                            ImGui.EndTabItem();
-                        }
+                            var availableSize = ImGui.GetContentRegionAvail();
+                            availableSize.Y -= tabBarHeight;
 
-                        if (ImGui.BeginTabItem("Saturation##Saturation"))
-                        {
-                            PlotImage(displaySize, SaturationImage);
-                            ImGui.EndTabItem();
-                        }
+                            var displaySize = CalculateDisplaySize(
+                                availableSize,
+                                new Vector2(ImageWidth, ImageHeight));
 
-                        if (ImGui.BeginTabItem("dF/F##dFF"))
-                        {
-                            PlotImage(displaySize, DFFImage);
-                            ImGui.EndTabItem();
-                        }
-
-                        ImGui.EndTabBar();
-                    }
-
-                    ImGui.EndChild();
-
-                    ImGui.BeginChild("##signal_pane", new Vector2(-1, -1), ImGuiChildFlags.None);
-
-                    if (ImGui.BeginTabBar("##SignalTabBar"))
-                    {
-                        if (ImGui.BeginTabItem("Time Series"))
-                        {
-                            ImPlotAxisFlags flagsX = ImPlotAxisFlags.AutoFit;
-                            ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit;
-
-                            if (QuaternionSeries == null && DigitalInSeries == null)
+                            if (ImGui.BeginTabBar("##ImageTabBar", ImGuiTabBarFlags.NoCloseWithMiddleMouseButton | ImGuiTabBarFlags.DrawSelectedOverline))
                             {
-                                ImGui.Text("No data to display");
-                            }
-                            else if (ImPlot.BeginPlot("##series", fillAvailable, plotFlags))
-                            {
-                                ImPlot.SetupAxes("Sample", "Value", flagsX, flagsY);
-                                ImPlot.SetupAxisLimits(ImAxis.Y1, -0.1, 1.1, ImPlotCond.Always);
-
-                                if (QuaternionSeries != null)
+                                if (ImGui.BeginTabItem("Image##Image"))
                                 {
-                                    for (int i = 0; i < QuaternionSeries.Series.Length; i++)
-                                    {
-                                        var line = QuaternionSeries.Series[i];
-                                        ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
-                                    }
+                                    PlotImage(displaySize, MiniscopeImage);
+                                    ImGui.EndTabItem();
                                 }
 
-                                if (DigitalInSeries != null)
+                                if (ImGui.BeginTabItem("Saturation##Saturation"))
                                 {
-                                    for (int i = 0; i < DigitalInSeries.Series.Length; i++)
-                                    {
-                                        var line = DigitalInSeries.Series[i];
-                                        ImPlot.PlotStairsG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
-                                    }
+                                    PlotImage(displaySize, SaturationImage);
+                                    ImGui.EndTabItem();
                                 }
 
-                                ImPlot.EndPlot();
+                                if (ImGui.BeginTabItem("dF/F##dFF"))
+                                {
+                                    PlotImage(displaySize, DFFImage);
+                                    ImGui.EndTabItem();
+                                }
+
+                                ImGui.EndTabBar();
                             }
 
-                            ImGui.EndTabItem();
+                            ImGui.EndChild();
                         }
 
-                        if (ImageHistogram != null && ImGui.BeginTabItem("Histogram"))
+                        if (ImGui.BeginChild("##signal_pane", new Vector2(-1, -1), ImGuiChildFlags.None))
                         {
-                            ImPlotAxisFlags flagsX = ImPlotAxisFlags.NoLabel;
-                            ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoTickLabels;
-
-                            var histogram = ImageHistogram.Val0;
-                            histogram.Bins.GetRawData(out var binPtr);
-
-                            if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
+                            if (ImGui.BeginTabBar("##SignalTabBar"))
                             {
-                                double minValue = 0, maxValue = byte.MaxValue;
-                                int numLabels = histogramAxisTickLabels.Length;
+                                if (ImGui.BeginTabItem("Time Series"))
+                                {
+                                    if (AcquisitionStatus)
+                                    {
+                                        ImGui.BeginDisabled();
+                                    }
 
-                                ImPlot.SetupAxes("Pixel Value [%]", "", flagsX, flagsY);
-                                ImPlot.SetupAxisLimits(ImAxis.X1, minValue, maxValue, ImPlotCond.Always);
-                                ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
-                                ImPlot.PlotBars("##pixel_intensity", (float*)binPtr.ToPointer(), histogram.Bins.GetDimSize(0), 2.0f);
+                                    var bufferInputWidth = 60f;
+                                    ImGui.AlignTextToFramePadding();
+                                    ImGui.Text("Buffer Size: ");
+                                    ImGui.SameLine();
+                                    ImGui.SetNextItemWidth(bufferInputWidth);
+                                    if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
+                                    {
+                                        bufferSize = Math.Max(2, bufferSize);
+                                    }
 
-                                ImPlot.EndPlot();
+                                    if (AcquisitionStatus)
+                                    {
+                                        ImGui.EndDisabled();
+                                    }
+
+                                    ImPlotAxisFlags flagsX = ImPlotAxisFlags.AutoFit;
+                                    ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit;
+
+                                    if (QuaternionSeries == null && DigitalInSeries == null)
+                                    {
+                                        ImGui.Text("No data to display");
+                                    }
+                                    else if (ImPlot.BeginPlot("##series", fillAvailable, plotFlags))
+                                    {
+                                        ImPlot.SetupAxes("Sample", "Value", flagsX, flagsY);
+                                        ImPlot.SetupAxisLimits(ImAxis.Y1, -0.1, 1.1, ImPlotCond.Always);
+
+                                        if (QuaternionSeries != null)
+                                        {
+                                            for (int i = 0; i < QuaternionSeries.Series.Length; i++)
+                                            {
+                                                var line = QuaternionSeries.Series[i];
+                                                ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
+                                            }
+                                        }
+
+                                        if (DigitalInSeries != null)
+                                        {
+                                            for (int i = 0; i < DigitalInSeries.Series.Length; i++)
+                                            {
+                                                var line = DigitalInSeries.Series[i];
+                                                ImPlot.PlotStairsG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
+                                            }
+                                        }
+
+                                        ImPlot.EndPlot();
+                                    }
+
+                                    ImGui.EndTabItem();
+                                }
+
+                                if (ImageHistogram != null && ImGui.BeginTabItem("Histogram"))
+                                {
+                                    ImPlotAxisFlags flagsX = ImPlotAxisFlags.NoLabel;
+                                    ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoTickLabels;
+
+                                    var histogram = ImageHistogram.Val0;
+                                    histogram.Bins.GetRawData(out var binPtr);
+
+                                    if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
+                                    {
+                                        double minValue = 0, maxValue = byte.MaxValue;
+                                        int numLabels = histogramAxisTickLabels.Length;
+
+                                        ImPlot.SetupAxes("Pixel Value [%]", "", flagsX, flagsY);
+                                        ImPlot.SetupAxisLimits(ImAxis.X1, minValue, maxValue, ImPlotCond.Always);
+                                        ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
+                                        ImPlot.PlotBars("##pixel_intensity", (float*)binPtr.ToPointer(), histogram.Bins.GetDimSize(0), 2.0f);
+
+                                        ImPlot.EndPlot();
+                                    }
+
+                                    ImGui.EndTabItem();
+                                }
+
+                                ImGui.EndTabBar();
                             }
 
-                            ImGui.EndTabItem();
+                            ImGui.EndChild();
                         }
 
-                        ImGui.EndTabBar();
+                        ImGui.EndChild();
                     }
 
-                    ImGui.EndChild();
-
-                    ImGui.EndChild();
-
-                    observer.OnNext(value);
+                    observer.OnNext(Tuple.Create(value.Item1, bufferSize));
                 },
                 observer.OnError,
                 observer.OnCompleted);

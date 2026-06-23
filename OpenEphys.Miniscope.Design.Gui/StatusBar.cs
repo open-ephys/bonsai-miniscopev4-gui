@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Bonsai;
+using Hexa.NET.ImGui;
+using System;
 using System.ComponentModel;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
-using Bonsai;
-using Hexa.NET.ImGui;
+using System.Xml.Serialization;
 
 namespace OpenEphys.Miniscope.Design.Gui;
 
@@ -16,6 +17,27 @@ namespace OpenEphys.Miniscope.Design.Gui;
 public class StatusBar
 {
     /// <summary>
+    /// Gets or sets the average frame rate, in Hz, used to display the acquisition frame rate.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public double AverageFrameRate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the frame number of the current frame.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public int FrameNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a recording is currently in progress.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public bool RecordingStatus { get; set; }
+
+    /// <summary>
     /// Renders the status bar controls and returns an updated <see cref="StatusBarDto"/> alongside each source value.
     /// </summary>
     /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
@@ -24,11 +46,13 @@ public class StatusBar
     {
         return Observable.Create<Tuple<TSource, StatusBarDto>>(observer =>
         {
+            DateTime? acquisitionStart = null;
+            DateTime? recordingStart = null;
+
             var sourceObserver = Observer.Create<Tuple<TSource, StatusBarDto>>(value =>
             {
                 var dto = value.Item2;
                 var cameraIndex = dto.CameraIndex;
-                var bufferSize = dto.BufferSize;
                 var isConnected = dto.IsConnected;
                 var statusMessage = dto.StatusMessage;
                 var recordingError = dto.RecordingError;
@@ -40,7 +64,6 @@ public class StatusBar
 
                 var style = ImGui.GetStyle();
                 var indexInputWidth = 60f;
-                var bufferInputWidth = 60f;
 
                 ImGui.AlignTextToFramePadding();
                 ImGui.Text("Index: ");
@@ -55,18 +78,11 @@ public class StatusBar
                     statusMessage = string.Empty;
                 }
 
-                ImGui.SameLine();
-                ImGui.AlignTextToFramePadding();
-                ImGui.Text("Buffer Size: ");
-                ImGui.SameLine();
-                ImGui.SetNextItemWidth(bufferInputWidth);
-                ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0);
-
                 if (isConnected)
                     ImGui.EndDisabled();
 
                 ImGui.SameLine();
-                if (ImGui.Button(isConnected ? "Disconnect##statusbar_btn" : "Connect##statusbar_btn"))
+                if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn"))
                 {
                     isConnected = !isConnected;
                     statusMessage = string.Empty;
@@ -83,7 +99,7 @@ public class StatusBar
                 ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
                 var displayStatus = hasError
                     ? statusMessage
-                    : isConnected ? "Connected" : "Disconnected";
+                    : isConnected ? "Acquiring" : "Disconnected";
                 ImGui.Text(displayStatus);
                 ImGui.PopStyleColor();
 
@@ -95,9 +111,42 @@ public class StatusBar
                     ImGui.PopStyleColor();
                 }
 
+                if (ImGui.BeginTable("##status_bar", 4))
+                {
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"Frames per Second: {AverageFrameRate:F1}");
+
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"Frame Number: {FrameNumber}");
+
+                    ImGui.TableNextColumn();
+                    if (isConnected)
+                    {
+                        acquisitionStart ??= DateTime.Now;
+                        ImGui.Text($"Acquiring: {(DateTime.Now - acquisitionStart.Value).TotalSeconds:F1} s");
+                    }
+                    else if (acquisitionStart != null)
+                    {
+                        acquisitionStart = null;
+                    }
+
+                    ImGui.TableNextColumn();
+                    if (RecordingStatus)
+                    {
+                        recordingStart ??= DateTime.Now;
+                        ImGui.Text($"Recording: {(DateTime.Now - recordingStart.Value).TotalSeconds:F1} s");
+                    }
+                    else if (recordingStart != null)
+                    {
+                        recordingStart = null;
+                    }
+
+                    ImGui.EndTable();
+                }
+
                 ImGui.Separator();
 
-                observer.OnNext(Tuple.Create(value.Item1, new StatusBarDto(cameraIndex, bufferSize, isConnected, statusMessage, recordingError)));
+                observer.OnNext(Tuple.Create(value.Item1, new StatusBarDto(cameraIndex, isConnected, statusMessage, recordingError)));
             },
             observer.OnError,
             observer.OnCompleted);
