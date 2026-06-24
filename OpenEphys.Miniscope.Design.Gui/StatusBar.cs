@@ -31,11 +31,20 @@ public class StatusBar
     public int FrameNumber { get; set; }
 
     /// <summary>
+    /// Gets or sets the number of dropped frames since acquisition started.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public int DroppedFrames { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether a recording is currently in progress.
     /// </summary>
     [XmlIgnore]
     [Browsable(false)]
     public bool RecordingStatus { get; set; }
+
+    Vector4 colorError = new(0.9f, 0.3f, 0.3f, 1f);
 
     /// <summary>
     /// Renders the status bar controls and returns an updated <see cref="StatusBarDto"/> alongside each source value.
@@ -92,7 +101,7 @@ public class StatusBar
 
                 var hasError = !string.IsNullOrEmpty(statusMessage);
                 var statusColor = hasError
-                    ? new Vector4(0.9f, 0.3f, 0.3f, 1f)
+                    ? colorError
                     : isConnected
                         ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
                         : new Vector4(0.6f, 0.6f, 0.6f, 1f);
@@ -111,13 +120,18 @@ public class StatusBar
                     ImGui.PopStyleColor();
                 }
 
-                if (ImGui.BeginTable("##status_bar", 4))
+                if (ImGui.BeginTable("##status_bar", 5))
                 {
                     ImGui.TableNextColumn();
                     ImGui.Text($"Frames per Second: {AverageFrameRate:F1}");
 
                     ImGui.TableNextColumn();
                     ImGui.Text($"Frame Number: {FrameNumber}");
+
+                    ImGui.TableNextColumn();
+                    if (DroppedFrames > 0) ImGui.PushStyleColor(ImGuiCol.Text, colorError);
+                    ImGui.Text($"Dropped Frames: {DroppedFrames}");
+                    if (DroppedFrames > 0) ImGui.PopStyleColor();
 
                     ImGui.TableNextColumn();
                     if (isConnected)
