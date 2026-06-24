@@ -123,7 +123,7 @@ public class StatusBar
                     if (isConnected)
                     {
                         acquisitionStart ??= DateTime.Now;
-                        ImGui.Text($"Acquiring: {(DateTime.Now - acquisitionStart.Value).TotalSeconds:F1} s");
+                        ImGui.Text($"Acquiring: {(DateTime.Now - acquisitionStart.Value).TotalSeconds:F0} s");
                     }
                     else if (acquisitionStart != null)
                     {
@@ -134,7 +134,7 @@ public class StatusBar
                     if (RecordingStatus)
                     {
                         recordingStart ??= DateTime.Now;
-                        ImGui.Text($"Recording: {(DateTime.Now - recordingStart.Value).TotalSeconds:F1} s");
+                        ImGui.Text($"Recording: {(DateTime.Now - recordingStart.Value).TotalSeconds:F0} s");
                     }
                     else if (recordingStart != null)
                     {
