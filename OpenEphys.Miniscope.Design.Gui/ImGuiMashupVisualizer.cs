@@ -43,7 +43,7 @@ public abstract class ImGuiMashupVisualizer : MashupVisualizer
             var visualizerBuilder = (ImGuiMashupVisualizerBuilder)ExpressionBuilder.GetVisualizerElement(context.Source).Builder;
             var windowName = visualizerBuilder.Name ?? visualizerBuilder.GetType().Name;
 
-            imGuiControl = new ImGuiControl
+            imGuiControl = new ImGuiMiniscopeControl
             {
                 Dock = DockStyle.Fill,
             };
@@ -69,7 +69,6 @@ public abstract class ImGuiMashupVisualizer : MashupVisualizer
 
             imGuiControl.HandleCreated += (sender, e) =>
             {
-
                 var form = imGuiControl.FindForm();
                 if (form != null)
                 {
