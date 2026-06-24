@@ -27,6 +27,7 @@
   <ItemGroup>
     <EmbeddedResource Include="**\*.bonsai" />
     <EmbeddedResource Include="Fonts\*" />
+    <EmbeddedResource Include="Resources\icon.ico" />
   </ItemGroup>
 
 </Project>
