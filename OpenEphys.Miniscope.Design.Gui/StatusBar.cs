@@ -53,6 +53,8 @@ public class StatusBar
     /// <returns>A sequence of values paired with the status bar state updated from the rendered controls.</returns>
     public IObservable<Tuple<TSource, StatusBarDto>> Process<TSource>(IObservable<Tuple<TSource, StatusBarDto>> source)
     {
+        double elapsedAcquisitionTime = 0;
+
         return Observable.Create<Tuple<TSource, StatusBarDto>>(observer =>
         {
             DateTime? acquisitionStart = null;
@@ -137,12 +139,13 @@ public class StatusBar
                     if (isConnected)
                     {
                         acquisitionStart ??= DateTime.Now;
-                        ImGui.Text($"Acquiring: {(DateTime.Now - acquisitionStart.Value).TotalSeconds:F0} s");
+                        elapsedAcquisitionTime = (DateTime.Now - acquisitionStart.Value).TotalSeconds;
                     }
                     else if (acquisitionStart != null)
                     {
                         acquisitionStart = null;
                     }
+                    ImGui.Text($"Acquiring: {elapsedAcquisitionTime:F0} s");
 
                     ImGui.TableNextColumn();
                     if (RecordingStatus)
