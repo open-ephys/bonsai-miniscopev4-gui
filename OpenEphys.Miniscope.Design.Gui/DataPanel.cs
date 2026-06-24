@@ -252,7 +252,7 @@ public class DataPanel
 
                                         fixed (float* binPtr = bins)
                                         {
-                                            ImPlot.PlotBars("##pixel_intensity", binPtr, hist.Bins.GetDimSize(0), 1.0f);
+                                            ImPlot.PlotBars("##pixel_intensity", binPtr, hist.Bins.GetDimSize(0), 2.0f);
                                         }
 
                                         ImPlot.EndPlot();
