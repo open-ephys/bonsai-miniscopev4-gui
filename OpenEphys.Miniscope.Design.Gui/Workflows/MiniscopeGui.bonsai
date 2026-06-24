@@ -969,8 +969,18 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:WithLatestFrom" />
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeConnected</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="AcquisitionStatus" />
+                    </PropertyMappings>
+                  </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p3:SettingsPanel" />
+                    <Combinator xsi:type="p3:SettingsPanel">
+                      <p3:AcquisitionStatus>true</p3:AcquisitionStatus>
+                    </Combinator>
                   </Expression>
                   <Expression xsi:type="MemberSelector">
                     <Selector>Item1</Selector>
@@ -1361,15 +1371,17 @@
                   <Edge From="5" To="6" Label="Source5" />
                   <Edge From="6" To="7" Label="Source1" />
                   <Edge From="7" To="8" Label="Source2" />
-                  <Edge From="8" To="9" Label="Source1" />
+                  <Edge From="8" To="11" Label="Source1" />
                   <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="9" To="12" Label="Source1" />
-                  <Edge From="10" To="11" Label="Source1" />
+                  <Edge From="10" To="11" Label="Source2" />
+                  <Edge From="11" To="12" Label="Source1" />
+                  <Edge From="11" To="14" Label="Source1" />
                   <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="12" To="14" Label="Source1" />
-                  <Edge From="12" To="15" Label="Source1" />
-                  <Edge From="12" To="16" Label="Source1" />
-                  <Edge From="12" To="17" Label="Source1" />
+                  <Edge From="14" To="15" Label="Source1" />
+                  <Edge From="14" To="16" Label="Source1" />
+                  <Edge From="14" To="17" Label="Source1" />
+                  <Edge From="14" To="18" Label="Source1" />
+                  <Edge From="14" To="19" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -1453,8 +1465,8 @@
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="cv:SolidColor">
                             <cv:Size>
-                              <cv:Width>608</cv:Width>
-                              <cv:Height>608</cv:Height>
+                              <cv:Width>640</cv:Width>
+                              <cv:Height>480</cv:Height>
                             </cv:Size>
                             <cv:Depth>U8</cv:Depth>
                             <cv:Channels>3</cv:Channels>
@@ -1802,8 +1814,8 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:DataPanel">
-                      <p3:ImageHeight>608</p3:ImageHeight>
-                      <p3:ImageWidth>608</p3:ImageWidth>
+                      <p3:ImageHeight>480</p3:ImageHeight>
+                      <p3:ImageWidth>640</p3:ImageWidth>
                       <p3:ImageHeightFraction>0.6</p3:ImageHeightFraction>
                     </Combinator>
                   </Expression>
@@ -2015,7 +2027,7 @@
             </Expression>
             <Expression xsi:type="PropertyMapping">
               <PropertyMappings>
-                <Property Name="QuaternionFileName" />
+                <Property Name="CsvFileName" />
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
@@ -2203,7 +2215,7 @@
                     <Combinator xsi:type="rx:Timestamp" />
                   </Expression>
                   <Expression xsi:type="ExternalizedMapping">
-                    <Property Name="FileName" DisplayName="QuaternionFileName" />
+                    <Property Name="FileName" DisplayName="CsvFileName" />
                   </Expression>
                   <Expression xsi:type="ExternalizedMapping">
                     <Property Name="Suffix" />

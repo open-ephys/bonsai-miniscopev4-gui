@@ -23,6 +23,11 @@ namespace OpenEphys.Miniscope.Design.Gui;
 [Description("Renders all settings panels in a collapsible right-hand sidebar.")]
 public class SettingsPanel
 {
+    /// <summary>
+    /// Gets or sets the acquisition status of the GUI.
+    /// </summary>
+    public bool AcquisitionStatus { get; set; }
+
     const float ExpandedWidth = 375f;
     const float CollapsedWidth = 36f;
 
@@ -309,6 +314,8 @@ public class SettingsPanel
                                 buttonActive = true;
                             }
 
+                            if (!AcquisitionStatus) ImGui.BeginDisabled();
+
                             Vector2 buttonSize = new(-1f, ImGui.GetFrameHeight() * 2);
                             if (ImGui.Button("Record##record_button", buttonSize))
                             {
@@ -316,6 +323,8 @@ public class SettingsPanel
                                 if (recordButton)
                                     recordOnTriggerButton = false;
                             }
+
+                            if (!AcquisitionStatus) ImGui.EndDisabled();
 
                             if (buttonActive)
                                 ImGui.PopStyleColor();
@@ -329,12 +338,16 @@ public class SettingsPanel
                                 buttonActive = true;
                             }
 
+                            if (useRecordDuration || !AcquisitionStatus) ImGui.BeginDisabled();
+
                             if (ImGui.Button("Record on Trigger##record_on_trigger_button", buttonSize))
                             {
                                 recordOnTriggerButton = !recordOnTriggerButton;
                                 if (recordOnTriggerButton)
                                     recordButton = false;
                             }
+
+                            if (useRecordDuration || !AcquisitionStatus) ImGui.EndDisabled();
 
                             if (buttonActive)
                                 ImGui.PopStyleColor();
