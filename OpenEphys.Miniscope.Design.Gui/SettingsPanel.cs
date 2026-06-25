@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Bonsai;
+using Bonsai.IO;
+using Hexa.NET.ImGui;
+using OpenCV.Net;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.IO.Ports;
@@ -9,10 +13,6 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Bonsai;
-using Bonsai.IO;
-using Hexa.NET.ImGui;
-using OpenCV.Net;
 
 namespace OpenEphys.Miniscope.Design.Gui;
 
@@ -52,7 +52,8 @@ public class SettingsPanel
 
     static readonly string[] SensorGainValues = Enum.GetNames(typeof(GainV4)); // TODO: This is sorted by backing value => High | Low | Medium.
     static readonly string[] FrameRateValues = Enum.GetNames(typeof(FrameRateV4)).OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray();
-    static readonly string[] DigitalInValues = Enum.GetNames(typeof(MiniscopeDaqDigitalIn));
+    static readonly string[] DigitalInNames = Enum.GetNames(typeof(MiniscopeDaqDigitalIn));
+    static readonly MiniscopeDaqDigitalIn[] DigitalInValues = (MiniscopeDaqDigitalIn[])Enum.GetValues(typeof(MiniscopeDaqDigitalIn));
     static readonly string[] CodecValues = new string[] { "Y800" };
     static readonly string[] PathSuffixValues = Enum.GetNames(typeof(PathSuffix));
 
@@ -91,6 +92,8 @@ public class SettingsPanel
                 string videoCodec = dto.File.VideoCodec;
                 int codecIndex = Array.IndexOf(CodecValues, videoCodec);
                 if (codecIndex < 0) codecIndex = 0;
+                var triggerInput = dto.File.TriggerInput;
+                int triggerIndex = Array.IndexOf(DigitalInValues, triggerInput);
 
                 var satThreshold = dto.Saturation.Threshold;
                 var satColor = new Vector4(
@@ -185,11 +188,10 @@ public class SettingsPanel
                             ImGui.Text("LED Trigger: ");
                             ImGui.SameLine();
                             ImGui.SetNextItemWidth(-1f);
-                            int digitalInIndex = Array.IndexOf(DigitalInValues, ledRespectsDigitalIn.ToString());
-                            if (ImGui.Combo("##ledrespectdigitalin", ref digitalInIndex, DigitalInValues, DigitalInValues.Length))
+                            int digitalInIndex = Array.IndexOf(DigitalInValues, ledRespectsDigitalIn);
+                            if (ImGui.Combo("##ledrespectdigitalin", ref digitalInIndex, DigitalInNames, DigitalInNames.Length))
                             {
-                                if (Enum.TryParse<MiniscopeDaqDigitalIn>(DigitalInValues[digitalInIndex], out var result))
-                                    ledRespectsDigitalIn = result;
+                                ledRespectsDigitalIn = DigitalInValues[digitalInIndex];
                             }
 
                             ImGui.EndTable();
@@ -201,7 +203,7 @@ public class SettingsPanel
                     ImGui.SetNextItemOpen(true, ImGuiCond.Once);
                     if (ImGui.CollapsingHeader("File##file_header"))
                     {
-                        ImGui.BeginChild("##save_group", new Vector2(-1, 200), ImGuiChildFlags.Borders);
+                        ImGui.BeginChild("##file_group", new Vector2(-1, 220), ImGuiChildFlags.Borders);
 
                         ImGui.Text("File Name Template");
                         if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
@@ -282,7 +284,7 @@ public class SettingsPanel
 
                             ImGui.TableNextColumn();
                             ImGui.AlignTextToFramePadding();
-                            ImGui.Text("Video Codec: ");
+                            ImGui.Text("Codec: ");
                             ImGui.SameLine();
                             ImGui.SetNextItemWidth(-1f);
 
@@ -301,7 +303,9 @@ public class SettingsPanel
                             recordingDurationSeconds = Math.Max(0, recordingDurationSeconds);
                         }
 
+                        if (recordOnTriggerButton) ImGui.BeginDisabled();
                         ImGui.Checkbox("Use Recording Duration##use_record_duration", ref useRecordDuration);
+                        if (recordOnTriggerButton) ImGui.EndDisabled();
 
                         if (ImGui.BeginTable("##buttons", 2))
                         {
@@ -351,6 +355,27 @@ public class SettingsPanel
 
                             if (buttonActive)
                                 ImGui.PopStyleColor();
+
+                            ImGui.TableNextColumn();
+                            ImGui.TableNextColumn();
+                            ImGui.SetNextItemWidth(-1f);
+                            if (useRecordDuration || !AcquisitionStatus || recordOnTriggerButton) ImGui.BeginDisabled();
+                            if (ImGui.BeginCombo("##trigger_input", DigitalInNames[triggerIndex]))
+                            {
+                                foreach (var val in DigitalInValues)
+                                {
+                                    if (val == MiniscopeDaqDigitalIn.None) continue;
+
+                                    bool selected = triggerInput == val;
+                                    if (ImGui.Selectable(val.ToString(), selected))
+                                        triggerInput = val;
+
+                                    if (selected)
+                                        ImGui.SetItemDefaultFocus();
+                                }
+                                ImGui.EndCombo();
+                            }
+                            if (useRecordDuration || !AcquisitionStatus || recordOnTriggerButton) ImGui.EndDisabled();
 
                             ImGui.EndTable();
                         }
@@ -494,7 +519,7 @@ public class SettingsPanel
 
                 var updatedDto = new SettingsPanelDto(
                     new MiniscopeSettingsDto(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
-                    new FileSettingsDto(recordButton, recordOnTriggerButton, videoCodec, fileName, suffix, recordingDurationSeconds, useRecordDuration),
+                    new FileSettingsDto(recordButton, recordOnTriggerButton, videoCodec, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput),
                     new SaturationSettingsDto(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
                     new DffSettingsDto(backgroundFrames, backgroundThreshold, sigma),
                     new CommutatorSettingsDto(portName, commutatorConnected, commutatorEnable, commutatorEnableLed, commutatorStatus));

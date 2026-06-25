@@ -16,21 +16,47 @@ namespace OpenEphys.Miniscope.Design.Gui;
 /// <param name="Suffix">The suffix appended to the file name when saving Miniscope data.</param>
 /// <param name="RecordingDuration">The configured recording duration, in seconds.</param>
 /// <param name="UseRecordDuration">Indicates whether recording should automatically stop after <paramref name="RecordingDuration"/> seconds.</param>
-public record FileSettingsDto(bool RecordButton, bool RecordOnTriggerButton, string VideoCodec, string FileName, PathSuffix Suffix, int RecordingDuration, bool UseRecordDuration);
+/// <param name="TriggerInput">Indicates which digital input is used to trigger recording.</param>
+public record FileSettingsDto(bool RecordButton, bool RecordOnTriggerButton, string VideoCodec, string FileName, PathSuffix Suffix, int RecordingDuration, bool UseRecordDuration, MiniscopeDaqDigitalIn TriggerInput);
 
 /// <summary>
 /// Combines individual file setting values into a single <see cref="FileSettingsDto"/>.
 /// </summary>
 [Description("Combines individual file setting values into a single object.")]
-public class CreateFileSettingsDto : Transform<Tuple<bool, bool, string, string, PathSuffix, int, bool>, FileSettingsDto>
+[Combinator]
+public class CreateFileSettingsDto
 {
     /// <summary>
-    /// Creates a <see cref="FileSettingsDto"/> from a sequence of tuples containing the file settings.
+    /// Creates a <see cref="FileSettingsDto"/> by combining the latest values from each individual file setting sequence.
     /// </summary>
-    /// <param name="source">A sequence of tuples containing the file settings.</param>
+    /// <param name="recordButton">Indicates whether the manual record button is engaged.</param>
+    /// <param name="recordOnTriggerButton">Indicates whether recording is configured to start on a trigger.</param>
+    /// <param name="videoCodec">The codec used to encode the saved video file.</param>
+    /// <param name="fileName">The file name template used to save Miniscope data.</param>
+    /// <param name="suffix">The suffix appended to the file name when saving Miniscope data.</param>
+    /// <param name="recordingDuration">The configured recording duration, in seconds.</param>
+    /// <param name="useRecordDuration">Indicates whether recording should automatically stop after <paramref name="recordingDuration"/> seconds.</param>
+    /// <param name="triggerInput">Indicates which digital input is used to trigger recording.</param>
     /// <returns>A sequence of <see cref="FileSettingsDto"/> objects.</returns>
-    public override IObservable<FileSettingsDto> Process(IObservable<Tuple<bool, bool, string, string, PathSuffix, int, bool>> source)
+    public IObservable<FileSettingsDto> Process(
+        IObservable<bool> recordButton,
+        IObservable<bool> recordOnTriggerButton,
+        IObservable<string> videoCodec,
+        IObservable<string> fileName,
+        IObservable<PathSuffix> suffix,
+        IObservable<int> recordingDuration,
+        IObservable<bool> useRecordDuration,
+        IObservable<MiniscopeDaqDigitalIn> triggerInput)
     {
-        return source.Select(value => new FileSettingsDto(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7));
+        return Observable.CombineLatest(
+            recordButton,
+            recordOnTriggerButton,
+            videoCodec,
+            fileName,
+            suffix,
+            recordingDuration,
+            useRecordDuration,
+            triggerInput,
+            (recordButton, recordOnTriggerButton, videoCodec, fileName, suffix, recordingDuration, useRecordDuration, triggerInput) => new FileSettingsDto(recordButton, recordOnTriggerButton, videoCodec, fileName, suffix, recordingDuration, useRecordDuration, triggerInput));
     }
 }
