@@ -300,7 +300,7 @@ public class SettingsPanel
                         ImGui.SetNextItemWidth(-1f);
                         if (ImGui.InputInt("##recording_duration", ref recordingDurationSeconds, ImGuiInputTextFlags.AutoSelectAll))
                         {
-                            recordingDurationSeconds = Math.Max(0, recordingDurationSeconds);
+                            recordingDurationSeconds = Math.Max(1, recordingDurationSeconds);
                         }
 
                         if (recordOnTriggerButton) ImGui.BeginDisabled();
