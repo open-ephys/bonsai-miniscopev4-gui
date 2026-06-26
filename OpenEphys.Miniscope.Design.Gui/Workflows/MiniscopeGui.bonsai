@@ -7,8 +7,8 @@
                  xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns:p1="clr-namespace:OpenCV.Net;assembly=OpenCV.Net"
                  xmlns:p2="clr-namespace:OpenEphys.Miniscope;assembly=OpenEphys.Miniscope"
-                 xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
                  xmlns:p3="clr-namespace:OpenEphys.Miniscope.Design.Gui;assembly=OpenEphys.Miniscope.Design.Gui"
+                 xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
                  xmlns:ui="clr-namespace:Bonsai.Design;assembly=Bonsai.Design"
                  xmlns:imviz="clr-namespace:Bonsai.ImGui.Visualizers;assembly=Bonsai.ImGui.Visualizers"
                  xmlns="https://bonsai-rx.org/2018/workflow">
@@ -376,6 +376,17 @@
             <Expression xsi:type="rx:SelectMany">
               <Workflow>
                 <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="StringProperty">
+                      <Value>Starting acquisition.</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p3:LogInfo" />
+                  </Expression>
                   <Expression xsi:type="ExternalizedMapping">
                     <Property Name="Index" />
                   </Expression>
@@ -421,7 +432,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p2:UclaMiniscopeV4">
-                      <p2:Index>0</p2:Index>
+                      <p2:Index>1</p2:Index>
                       <p2:LedBrightness>0</p2:LedBrightness>
                       <p2:Focus>5</p2:Focus>
                       <p2:SensorGain>Low</p2:SensorGain>
@@ -463,6 +474,38 @@
                     <Combinator xsi:type="rx:Catch" />
                   </Expression>
                   <Expression xsi:type="WorkflowOutput" />
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Log Stop Acquisition</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Materialize" />
+                        </Expression>
+                        <Expression xsi:type="scr:ExpressionCondition">
+                          <scr:Expression>!it.HasValue &amp;&amp; it.Exception == null</scr:Expression>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                            <Value>Stopping acquisition.</Value>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p3:LogInfo" />
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
                   <Expression xsi:type="GroupWorkflow">
                     <Name>Calculate Dropped Frames</Name>
                     <Workflow>
@@ -527,29 +570,32 @@
                   </Expression>
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="11" Label="Source1" />
+                  <Edge From="0" To="1" Label="Source1" />
                   <Edge From="1" To="2" Label="Source1" />
-                  <Edge From="2" To="11" Label="Source2" />
-                  <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="4" To="11" Label="Source3" />
-                  <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="11" Label="Source4" />
-                  <Edge From="7" To="8" Label="Source1" />
-                  <Edge From="8" To="11" Label="Source5" />
-                  <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="10" To="11" Label="Source6" />
-                  <Edge From="11" To="14" Label="Source1" />
+                  <Edge From="3" To="14" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="5" To="14" Label="Source2" />
+                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="7" To="14" Label="Source3" />
+                  <Edge From="8" To="9" Label="Source1" />
+                  <Edge From="9" To="14" Label="Source4" />
+                  <Edge From="10" To="11" Label="Source1" />
+                  <Edge From="11" To="14" Label="Source5" />
                   <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="13" To="14" Label="Source2" />
-                  <Edge From="14" To="15" Label="Source1" />
+                  <Edge From="13" To="14" Label="Source6" />
+                  <Edge From="14" To="17" Label="Source1" />
                   <Edge From="15" To="16" Label="Source1" />
-                  <Edge From="15" To="21" Label="Source1" />
-                  <Edge From="16" To="17" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source2" />
                   <Edge From="17" To="18" Label="Source1" />
                   <Edge From="18" To="19" Label="Source1" />
-                  <Edge From="18" To="20" Label="Source1" />
+                  <Edge From="18" To="25" Label="Source1" />
+                  <Edge From="19" To="20" Label="Source1" />
+                  <Edge From="20" To="21" Label="Source1" />
                   <Edge From="21" To="22" Label="Source1" />
-                  <Edge From="22" To="23" Label="Source1" />
+                  <Edge From="21" To="23" Label="Source1" />
+                  <Edge From="21" To="24" Label="Source1" />
+                  <Edge From="25" To="26" Label="Source1" />
+                  <Edge From="26" To="27" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -559,20 +605,38 @@
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>Frame</Name>
             </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>FrameTime</Selector>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:BufferTime">
-                <rx:TimeSpan>PT2S</rx:TimeSpan>
-                <rx:TimeShift>PT0.1S</rx:TimeShift>
-              </Combinator>
-            </Expression>
-            <Expression xsi:type="scr:ExpressionTransform">
-              <scr:Expression>(it.Count &gt; 1) ? (it.Count - 1) * 1e3 / (it[it.Count - 1] - it[0]) : (it.Count == 1) ? it[0] / 1e3 : 0.0</scr:Expression>
-            </Expression>
-            <Expression xsi:type="rx:PublishSubject">
-              <Name>AverageFrameRate</Name>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>Calculate Average Frame Rate</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>FrameTime</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:BufferTime">
+                      <rx:TimeSpan>PT2S</rx:TimeSpan>
+                      <rx:TimeShift>PT0.1S</rx:TimeShift>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Expression>(it.Count &gt; 1) ? (it.Count - 1) * 1e3 / (it[it.Count - 1] - it[0]) : (it.Count == 1) ? it[0] / 1e3 : 0.0</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject">
+                    <Name>AverageFrameRate</Name>
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>MiniscopeStatus</Name>
@@ -622,15 +686,12 @@
             <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
             <Edge From="7" To="8" Label="Source1" />
-            <Edge From="8" To="9" Label="Source1" />
             <Edge From="9" To="10" Label="Source1" />
             <Edge From="10" To="11" Label="Source1" />
-            <Edge From="12" To="13" Label="Source1" />
+            <Edge From="11" To="12" Label="Source1" />
             <Edge From="13" To="14" Label="Source1" />
             <Edge From="14" To="15" Label="Source1" />
-            <Edge From="16" To="17" Label="Source1" />
-            <Edge From="17" To="18" Label="Source1" />
-            <Edge From="18" To="19" Label="Source1" />
+            <Edge From="15" To="16" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -757,33 +818,32 @@
                   </Expression>
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="7" Label="Source1" />
+                  <Edge From="0" To="6" Label="Source1" />
                   <Edge From="1" To="2" Label="Source1" />
                   <Edge From="2" To="5" Label="Source1" />
                   <Edge From="3" To="4" Label="Source1" />
                   <Edge From="4" To="5" Label="Source2" />
-                  <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="7" Label="Source2" />
-                  <Edge From="7" To="18" Label="Source1" />
-                  <Edge From="8" To="9" Label="Source1" />
-                  <Edge From="9" To="18" Label="Source2" />
-                  <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="11" To="18" Label="Source3" />
+                  <Edge From="5" To="6" Label="Source2" />
+                  <Edge From="6" To="17" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="8" To="17" Label="Source2" />
+                  <Edge From="9" To="10" Label="Source1" />
+                  <Edge From="10" To="17" Label="Source3" />
+                  <Edge From="11" To="12" Label="Source1" />
                   <Edge From="12" To="13" Label="Source1" />
                   <Edge From="13" To="14" Label="Source1" />
-                  <Edge From="14" To="15" Label="Source1" />
-                  <Edge From="15" To="18" Label="Source4" />
-                  <Edge From="16" To="17" Label="Source1" />
-                  <Edge From="17" To="18" Label="Source5" />
+                  <Edge From="14" To="17" Label="Source4" />
+                  <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source5" />
+                  <Edge From="17" To="18" Label="Source1" />
+                  <Edge From="17" To="20" Label="Source1" />
                   <Edge From="18" To="19" Label="Source1" />
-                  <Edge From="18" To="21" Label="Source1" />
-                  <Edge From="19" To="20" Label="Source1" />
+                  <Edge From="20" To="21" Label="Source1" />
+                  <Edge From="20" To="24" Label="Source1" />
                   <Edge From="21" To="22" Label="Source1" />
-                  <Edge From="21" To="25" Label="Source1" />
                   <Edge From="22" To="23" Label="Source1" />
-                  <Edge From="23" To="24" Label="Source1" />
+                  <Edge From="24" To="25" Label="Source1" />
                   <Edge From="25" To="26" Label="Source1" />
-                  <Edge From="26" To="27" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -968,7 +1028,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:SettingsPanel">
-                      <p3:AcquisitionStatus>false</p3:AcquisitionStatus>
+                      <p3:AcquisitionStatus>true</p3:AcquisitionStatus>
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="MemberSelector">
@@ -2187,7 +2247,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:Delay">
-                            <rx:DueTime>PT0S</rx:DueTime>
+                            <rx:DueTime>PT10M</rx:DueTime>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
