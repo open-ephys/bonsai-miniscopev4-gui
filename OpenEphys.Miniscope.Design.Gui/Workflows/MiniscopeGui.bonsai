@@ -25,6 +25,7 @@
         <Property Name="Suffix" />
         <Property Name="CameraIndex" />
         <Property Name="VideoCodec" />
+        <Property Name="RecordingDuration" />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Initialize Subjects</Name>
@@ -82,7 +83,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="IntProperty">
-                <Value>0</Value>
+                <Value>600</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
@@ -420,7 +421,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p2:UclaMiniscopeV4">
-                      <p2:Index>1</p2:Index>
+                      <p2:Index>0</p2:Index>
                       <p2:LedBrightness>0</p2:LedBrightness>
                       <p2:Focus>5</p2:Focus>
                       <p2:SensorGain>Low</p2:SensorGain>
