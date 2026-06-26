@@ -222,40 +222,47 @@ public class DataPanel
                                     ImGui.EndTabItem();
                                 }
 
-                                if (ImageHistogram != null && ImGui.BeginTabItem("Histogram"))
+                                if (ImGui.BeginTabItem("Histogram"))
                                 {
-                                    const int binCount = 256;
-
-                                    ImPlotAxisFlags flagsX = ImPlotAxisFlags.NoLabel | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines;
-                                    ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoTickLabels | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines;
-
-                                    var hist = ImageHistogram.Val0;
-
-                                    float[] bins = new float[binCount];
-                                    for (int i = 0; i < binCount; i++)
-                                        bins[i] = (float)hist.QueryValue(i);
-
-                                    float max = bins.Max();
-                                    if (max > 0f)
-                                        for (int i = 0; i < binCount; i++)
-                                            bins[i] /= max;
-
-                                    if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
+                                    if (ImageHistogram == null)
                                     {
-                                        double minValue = 0, maxValue = byte.MaxValue, axisOffset = 5;
-                                        int numLabels = histogramAxisTickLabels.Length;
+                                        ImGui.Text("No data to display");
+                                    }
+                                    else
+                                    {
+                                        const int binCount = 256;
 
+                                        ImPlotAxisFlags flagsX = ImPlotAxisFlags.NoLabel | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines;
+                                        ImPlotAxisFlags flagsY = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoTickLabels | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines;
 
-                                        ImPlot.SetupAxes("", "", flagsX, flagsY);
-                                        ImPlot.SetupAxisLimits(ImAxis.X1, minValue - axisOffset, maxValue + axisOffset, ImPlotCond.Always);
-                                        ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
+                                        var hist = ImageHistogram.Val0;
 
-                                        fixed (float* binPtr = bins)
+                                        float[] bins = new float[binCount];
+                                        for (int i = 0; i < binCount; i++)
+                                            bins[i] = (float)hist.QueryValue(i);
+
+                                        float max = bins.Max();
+                                        if (max > 0f)
+                                            for (int i = 0; i < binCount; i++)
+                                                bins[i] /= max;
+
+                                        if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
                                         {
-                                            ImPlot.PlotBars("##pixel_intensity", binPtr, hist.Bins.GetDimSize(0), 2.0f);
-                                        }
+                                            double minValue = 0, maxValue = byte.MaxValue, axisOffset = 5;
+                                            int numLabels = histogramAxisTickLabels.Length;
 
-                                        ImPlot.EndPlot();
+
+                                            ImPlot.SetupAxes("", "", flagsX, flagsY);
+                                            ImPlot.SetupAxisLimits(ImAxis.X1, minValue - axisOffset, maxValue + axisOffset, ImPlotCond.Always);
+                                            ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
+
+                                            fixed (float* binPtr = bins)
+                                            {
+                                                ImPlot.PlotBars("##pixel_intensity", binPtr, hist.Bins.GetDimSize(0), 2.0f);
+                                            }
+
+                                            ImPlot.EndPlot();
+                                        }
                                     }
 
                                     ImGui.EndTabItem();
