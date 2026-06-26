@@ -222,7 +222,7 @@ public class SettingsPanel
                         float inputWidth = ImGui.GetContentRegionAvail().X - browseWidth - openWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
 
                         ImGui.SetNextItemWidth(inputWidth);
-                        ImGui.InputText("##filename", ref fileName, bufSize);
+                        ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
                         ImGui.SameLine();
                         if (ImGui.Button($"{browseLabel}##choose_filename_button", new Vector2(browseWidth, 0)))
                         {
