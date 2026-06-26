@@ -17,15 +17,22 @@ public record SaturationSettingsDto(int Threshold, Scalar Color);
 /// Combines individual saturation setting values into a single <see cref="SaturationSettingsDto"/>.
 /// </summary>
 [Description("Combines individual saturation setting values into a single object.")]
-public class CreateSaturationSettingsDto : Transform<Tuple<int, Scalar>, SaturationSettingsDto>
+[Combinator]
+public class CreateSaturationSettingsDto
 {
     /// <summary>
-    /// Creates a <see cref="SaturationSettingsDto"/> from a sequence of tuples containing the saturation settings.
+    /// Creates a <see cref="SaturationSettingsDto"/> by combining the latest values from each individual saturation setting sequence.
     /// </summary>
-    /// <param name="source">A sequence of tuples containing the threshold and color values.</param>
+    /// <param name="threshold">The minimum pixel intensity considered saturated.</param>
+    /// <param name="color">The color used to highlight saturated pixels.</param>
     /// <returns>A sequence of <see cref="SaturationSettingsDto"/> objects.</returns>
-    public override IObservable<SaturationSettingsDto> Process(IObservable<Tuple<int, Scalar>> source)
+    public IObservable<SaturationSettingsDto> Process(
+        IObservable<int> threshold,
+        IObservable<Scalar> color)
     {
-        return source.Select(value => new SaturationSettingsDto(value.Item1, value.Item2));
+        return Observable.CombineLatest(
+            threshold,
+            color,
+            (threshold, color) => new SaturationSettingsDto(threshold, color));
     }
 }

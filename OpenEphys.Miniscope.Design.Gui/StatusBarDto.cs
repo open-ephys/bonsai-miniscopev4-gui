@@ -16,15 +16,22 @@ public record StatusBarDto(int CameraIndex, bool IsConnected);
 /// Combines individual status bar values into a single <see cref="StatusBarDto"/>.
 /// </summary>
 [Description("Combines individual status bar values into a single object.")]
-public class CreateStatusBarDto : Transform<Tuple<int, bool>, StatusBarDto>
+[Combinator]
+public class CreateStatusBarDto
 {
     /// <summary>
-    /// Creates a <see cref="StatusBarDto"/> from a sequence of tuples containing the status bar values.
+    /// Creates a <see cref="StatusBarDto"/> by combining the latest values from each individual status bar sequence.
     /// </summary>
-    /// <param name="source">A sequence of tuples containing the camera index, buffer size, connection state, status message, and recording error values.</param>
+    /// <param name="cameraIndex">The index of the camera to connect to.</param>
+    /// <param name="isConnected">Whether the miniscope is currently connected.</param>
     /// <returns>A sequence of <see cref="StatusBarDto"/> objects.</returns>
-    public override IObservable<StatusBarDto> Process(IObservable<Tuple<int, bool>> source)
+    public IObservable<StatusBarDto> Process(
+        IObservable<int> cameraIndex,
+        IObservable<bool> isConnected)
     {
-        return source.Select(value => new StatusBarDto(value.Item1, value.Item2));
+        return Observable.CombineLatest(
+            cameraIndex,
+            isConnected,
+            (cameraIndex, isConnected) => new StatusBarDto(cameraIndex, isConnected));
     }
 }

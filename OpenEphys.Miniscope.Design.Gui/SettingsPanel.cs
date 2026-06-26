@@ -110,7 +110,6 @@ public class SettingsPanel
                 bool commutatorConnected = dto.Commutator.IsConnected;
                 bool commutatorEnable = dto.Commutator.Enable;
                 bool commutatorEnableLed = dto.Commutator.EnableLed;
-                string commutatorStatus = dto.Commutator.StatusMessage;
 
                 float availableX = ImGui.GetContentRegionAvail().X;
                 float panelWidth = GetCurrentWidth(availableX);
@@ -459,14 +458,12 @@ public class SettingsPanel
                         if (ImGui.Combo("##comport", ref portIndex, portNames, portNames.Length) && portNames.Length > 0)
                         {
                             portName = portNames[portIndex];
-                            commutatorStatus = string.Empty;
                         }
 
                         ImGui.SameLine();
                         if (ImGui.Button("Refresh##comrefresh"))
                         {
                             portNames = SerialPort.GetPortNames();
-                            commutatorStatus = string.Empty;
                         }
 
                         if (commutatorConnected)
@@ -476,7 +473,6 @@ public class SettingsPanel
                         if (ImGui.Button(commutatorConnected ? "Disconnect##combutton" : "Connect##combutton"))
                         {
                             commutatorConnected = !commutatorConnected;
-                            commutatorStatus = string.Empty;
                         }
 
                         if (!commutatorConnected)
@@ -498,16 +494,11 @@ public class SettingsPanel
 
                         ImGui.Separator();
 
-                        bool hasCommutatorError = !string.IsNullOrEmpty(commutatorStatus);
-                        var statusColor = hasCommutatorError
-                            ? new Vector4(0.9f, 0.3f, 0.3f, 1f)
-                            : commutatorConnected
+                        var statusColor = commutatorConnected
                                 ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
                                 : new Vector4(0.6f, 0.6f, 0.6f, 1f);
                         ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
-                        var displayStatus = hasCommutatorError
-                            ? $"Status: {commutatorStatus}"
-                            : commutatorConnected ? "Status: Connected" : "Status: Disconnected";
+                        var displayStatus = commutatorConnected ? "Status: Connected" : "Status: Disconnected";
                         ImGui.Text(displayStatus);
                         ImGui.PopStyleColor();
 
@@ -522,7 +513,7 @@ public class SettingsPanel
                     new FileSettingsDto(recordButton, recordOnTriggerButton, videoCodec, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput),
                     new SaturationSettingsDto(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
                     new DffSettingsDto(backgroundFrames, backgroundThreshold, sigma),
-                    new CommutatorSettingsDto(portName, commutatorConnected, commutatorEnable, commutatorEnableLed, commutatorStatus));
+                    new CommutatorSettingsDto(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
 
                 observer.OnNext(Tuple.Create(value.Item1, updatedDto));
             },

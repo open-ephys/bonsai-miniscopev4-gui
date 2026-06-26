@@ -681,9 +681,6 @@
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:CombineLatest" />
-                  </Expression>
-                  <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:CreateStatusBarDto" />
                   </Expression>
                   <Expression xsi:type="Combinator">
@@ -816,9 +813,6 @@
                           <Name>LedRespectsDigitalIn</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:CombineLatest" />
-                        </Expression>
-                        <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p3:CreateMiniscopeSettingsDto" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
@@ -830,7 +824,6 @@
                         <Edge From="3" To="5" Label="Source4" />
                         <Edge From="4" To="5" Label="Source5" />
                         <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="6" To="7" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -891,9 +884,6 @@
                           <Name>SaturationColor</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:CombineLatest" />
-                        </Expression>
-                        <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p3:CreateSaturationSettingsDto" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
@@ -902,7 +892,6 @@
                         <Edge From="0" To="2" Label="Source1" />
                         <Edge From="1" To="2" Label="Source2" />
                         <Edge From="2" To="3" Label="Source1" />
-                        <Edge From="3" To="4" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -920,9 +909,6 @@
                           <Name>Sigma</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:CombineLatest" />
-                        </Expression>
-                        <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p3:CreateDffSettingsDto" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
@@ -932,7 +918,6 @@
                         <Edge From="1" To="3" Label="Source2" />
                         <Edge From="2" To="3" Label="Source3" />
                         <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="4" To="5" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -952,30 +937,19 @@
                         <Expression xsi:type="SubscribeSubject">
                           <Name>CommutatorEnableLed</Name>
                         </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>CommutatorStatus</Name>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:CombineLatest" />
-                        </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p3:CreateCommutatorSettingsDto" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
                       <Edges>
-                        <Edge From="0" To="5" Label="Source1" />
-                        <Edge From="1" To="5" Label="Source2" />
-                        <Edge From="2" To="5" Label="Source3" />
-                        <Edge From="3" To="5" Label="Source4" />
-                        <Edge From="4" To="5" Label="Source5" />
-                        <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="6" To="7" Label="Source1" />
+                        <Edge From="0" To="4" Label="Source1" />
+                        <Edge From="1" To="4" Label="Source2" />
+                        <Edge From="2" To="4" Label="Source3" />
+                        <Edge From="3" To="4" Label="Source4" />
+                        <Edge From="4" To="5" Label="Source1" />
                       </Edges>
                     </Workflow>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:CombineLatest" />
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:CreateSettingsPanelDto" />
@@ -2308,7 +2282,7 @@
                     <Property Name="Suffix" />
                   </Expression>
                   <Expression xsi:type="io:CsvWriter">
-                    <io:FileName>../data/temp_.csv</io:FileName>
+                    <io:FileName>.csv</io:FileName>
                     <io:Append>false</io:Append>
                     <io:Overwrite>false</io:Overwrite>
                     <io:Suffix>FileCount</io:Suffix>
@@ -2342,7 +2316,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="cv:VideoWriter">
-                      <cv:FileName>../data/temp_.avi</cv:FileName>
+                      <cv:FileName>.avi</cv:FileName>
                       <cv:Suffix>FileCount</cv:Suffix>
                       <cv:Buffered>true</cv:Buffered>
                       <cv:Overwrite>false</cv:Overwrite>

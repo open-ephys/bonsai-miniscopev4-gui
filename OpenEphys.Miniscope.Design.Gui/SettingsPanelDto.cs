@@ -19,16 +19,31 @@ public record SettingsPanelDto(MiniscopeSettingsDto Miniscope, FileSettingsDto F
 /// Combines individual settings DTOs into a single <see cref="SettingsPanelDto"/>.
 /// </summary>
 [Description("Combines all settings DTOs into a single object for use with the SettingsPanel combinator.")]
-public class CreateSettingsPanelDto : Transform<Tuple<MiniscopeSettingsDto, FileSettingsDto, SaturationSettingsDto, DffSettingsDto, CommutatorSettingsDto>, SettingsPanelDto>
+[Combinator]
+public class CreateSettingsPanelDto
 {
     /// <summary>
     /// Creates a <see cref="SettingsPanelDto"/> by combining the latest value from each settings DTO sequence.
     /// </summary>
-    /// <param name="source">A sequence of tuples containing one DTO per settings section.</param>
+    /// <param name="miniscope">The Miniscope acquisition settings.</param>
+    /// <param name="file">The file saving settings.</param>
+    /// <param name="saturation">The saturation overlay settings.</param>
+    /// <param name="dff">The dF/F calculation settings.</param>
+    /// <param name="commutator">The commutator connection and settings.</param>
     /// <returns>A sequence of <see cref="SettingsPanelDto"/> objects.</returns>
-    public override IObservable<SettingsPanelDto> Process(
-        IObservable<Tuple<MiniscopeSettingsDto, FileSettingsDto, SaturationSettingsDto, DffSettingsDto, CommutatorSettingsDto>> source)
+    public IObservable<SettingsPanelDto> Process(
+        IObservable<MiniscopeSettingsDto> miniscope,
+        IObservable<FileSettingsDto> file,
+        IObservable<SaturationSettingsDto> saturation,
+        IObservable<DffSettingsDto> dff,
+        IObservable<CommutatorSettingsDto> commutator)
     {
-        return source.Select(value => new SettingsPanelDto(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5));
+        return Observable.CombineLatest(
+            miniscope,
+            file,
+            saturation,
+            dff,
+            commutator,
+            (miniscope, file, saturation, dff, commutator) => new SettingsPanelDto(miniscope, file, saturation, dff, commutator));
     }
 }
