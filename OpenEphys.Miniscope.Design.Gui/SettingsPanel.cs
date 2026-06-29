@@ -54,7 +54,7 @@ public class SettingsPanel
     static readonly string[] FrameRateValues = Enum.GetNames(typeof(FrameRateV4)).OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray();
     static readonly string[] DigitalInNames = Enum.GetNames(typeof(MiniscopeDaqDigitalIn));
     static readonly MiniscopeDaqDigitalIn[] DigitalInValues = (MiniscopeDaqDigitalIn[])Enum.GetValues(typeof(MiniscopeDaqDigitalIn));
-    static readonly string[] CodecValues = new string[] { "Y800" };
+    static readonly string[] CodecValues = new string[] { "Y800", "DIB ", "MJPG", "XVID", "DX50", "FLV1", "I420", "MPEG", "mp4v", "ASV1" };
     static readonly string[] PathSuffixValues = Enum.GetNames(typeof(PathSuffix));
 
     /// <summary>
