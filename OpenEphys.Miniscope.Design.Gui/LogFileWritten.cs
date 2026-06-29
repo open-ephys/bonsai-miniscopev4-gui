@@ -21,6 +21,6 @@ public class LogFileWritten
     /// <returns>The unmodified <paramref name="source"/> sequence.</returns>
     public IObservable<string> Process(IObservable<string> source)
     {
-        return source.Do(path => MiniscopeLog.Log(LogLevel.Info, $"Recording to folder: {Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path) ? "." : path))}"));
+        return source.Do(path => MiniscopeLog.Log(LogLevel.Info, $"Started recording file template: {Path.GetFullPath(string.IsNullOrEmpty(path) ? "." : path)}"));
     }
 }
