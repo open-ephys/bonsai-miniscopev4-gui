@@ -54,7 +54,6 @@ public class SettingsPanel
     static readonly string[] FrameRateValues = Enum.GetNames(typeof(FrameRateV4)).OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray();
     static readonly string[] DigitalInNames = Enum.GetNames(typeof(MiniscopeDaqDigitalIn));
     static readonly MiniscopeDaqDigitalIn[] DigitalInValues = (MiniscopeDaqDigitalIn[])Enum.GetValues(typeof(MiniscopeDaqDigitalIn));
-    static readonly string[] CodecValues = new string[] { "Y800", "DIB ", "MJPG", "XVID", "DX50", "FLV1", "I420", "MPEG", "mp4v", "ASV1" };
     static readonly string[] PathSuffixValues = Enum.GetNames(typeof(PathSuffix));
 
     /// <summary>
@@ -89,9 +88,7 @@ public class SettingsPanel
                 PathSuffix suffix = dto.File.Suffix;
                 int recordingDurationSeconds = dto.File.RecordingDuration;
                 bool useRecordDuration = dto.File.UseRecordDuration;
-                string videoCodec = dto.File.VideoCodec;
-                int codecIndex = Array.IndexOf(CodecValues, videoCodec);
-                if (codecIndex < 0) codecIndex = 0;
+                bool isCompressed = dto.File.CompressVideo;
                 var triggerInput = dto.File.TriggerInput;
                 int triggerIndex = Array.IndexOf(DigitalInValues, triggerInput);
 
@@ -282,13 +279,8 @@ public class SettingsPanel
                                 suffix = (PathSuffix)currentPathSuffix;
 
                             ImGui.TableNextColumn();
-                            ImGui.AlignTextToFramePadding();
-                            ImGui.Text("Codec: ");
-                            ImGui.SameLine();
                             ImGui.SetNextItemWidth(-1f);
-
-                            if (ImGui.Combo("##codecs", ref codecIndex, CodecValues, CodecValues.Length))
-                                videoCodec = CodecValues[codecIndex];
+                            ImGui.Checkbox("Compress Video##compress_video", ref isCompressed);
 
                             ImGui.EndTable();
                         }
@@ -510,7 +502,7 @@ public class SettingsPanel
 
                 var updatedDto = new SettingsPanelDto(
                     new MiniscopeSettingsDto(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
-                    new FileSettingsDto(recordButton, recordOnTriggerButton, videoCodec, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput),
+                    new FileSettingsDto(recordButton, recordOnTriggerButton, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput),
                     new SaturationSettingsDto(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
                     new DffSettingsDto(backgroundFrames, backgroundThreshold, sigma),
                     new CommutatorSettingsDto(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
