@@ -109,6 +109,24 @@ public class DataPanel
                     float tabBarHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ItemSpacing.Y;
                     float imageChildHeight = totalHeight * fraction - tabBarHeight;
 
+                    if (!AcquisitionStatus)
+                    {
+                        if (!MiniscopeImage.TexID.IsNull)
+                        {
+                            MiniscopeImage = default;
+                        }
+
+                        if (!SaturationImage.TexID.IsNull)
+                        {
+                            SaturationImage = default;
+                        }
+
+                        if (!DFFImage.TexID.IsNull)
+                        {
+                            DFFImage = default;
+                        }
+                    }
+
                     if (ImGui.BeginChild("##Data", fillAvailable))
                     {
                         if (ImGui.BeginChild("##image_pane", new Vector2(-1, imageChildHeight), ImGuiChildFlags.None))
