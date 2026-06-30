@@ -2381,7 +2381,7 @@
                     <io:Append>false</io:Append>
                     <io:Overwrite>false</io:Overwrite>
                     <io:Suffix>FileCount</io:Suffix>
-                    <io:IncludeHeader>false</io:IncludeHeader>
+                    <io:IncludeHeader>true</io:IncludeHeader>
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:Materialize" />
