@@ -1,8 +1,8 @@
-.bonsai/Packages/
-.bonsai/*.exe
-.bonsai/*.exe.settings
-.bonsai/*.exe.WebView2/
-.bonsai/Settings/
+**/.bonsai/Packages/
+**/.bonsai/*.exe
+**/.bonsai/*.exe.settings
+**/.bonsai/*.exe.WebView2/
+**/.bonsai/Settings/
 
 .vs/
 artifacts/

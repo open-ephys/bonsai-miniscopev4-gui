@@ -1,0 +1,27 @@
+{
+    "_Notes": {
+        "CameraIndex":          "Index of the specific Miniscope V4 to record from",
+        "FramesPerSecond":      "Valid values: 10 Hz | 15 Hz | 20 Hz | 25 Hz | 30 Hz",
+        "SensorGain":           "Valid values: Low | Medium | High",
+        "Suffix":               "Valid values: None | FileCount | Timestamp",
+        "LedRespectsDigitalIn": "Valid values: None | DigitalIn0 | DigitalIn1",
+        "LedBrightness":        "Range [0, 100] (%)",
+        "Focus":                "Range [-100, 100]",
+        "RecordingDuration":    "Duration of recording in seconds",
+        "BufferSize":           "Number of frames used for time-series visualization",
+        "FileName":             "Absolute file path, used to save *.avi and *.csv files. The ~ character can be used as a placeholder for the user's home directory (e.g. C:\\Users\\username).",
+        "CompressVideo":        "Compress the video (true) or record the raw frames (false)"    
+    },
+
+    "CameraIndex":          0,
+    "FramesPerSecond":      "30 Hz",
+    "LedBrightness":        0,
+    "Focus":                0,
+    "SensorGain":           "Low",
+    "LedRespectsDigitalIn": "None",
+    "FileName":             "~/Documents/miniscope/run_",
+    "Suffix":               "FileCount",
+    "BufferSize":           100,
+    "RecordingDuration":    600,
+    "CompressVideo":        false
+}
