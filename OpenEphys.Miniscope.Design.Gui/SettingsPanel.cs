@@ -69,6 +69,7 @@ public class SettingsPanel
             const nuint bufSize = 1024;
             string fileName = string.Empty;
             Task<string> saveDialogTask = null;
+            bool isModalOpen = false;
 
             var portNames = SerialPort.GetPortNames();
 
@@ -250,12 +251,33 @@ public class SettingsPanel
                             }
                         }
 
+                        string noFolderFoundPopupName = "No folder found##no_folder_found";
+
                         ImGui.SameLine();
                         if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
                         {
                             var dir = GetDirectory(fileName);
                             if (Directory.Exists(dir))
                                 System.Diagnostics.Process.Start("explorer.exe", dir);
+
+                            else
+                            {
+                                ImGui.OpenPopup(noFolderFoundPopupName);
+                                isModalOpen = true;
+                            }
+                        }
+
+                        if (ImGui.BeginPopupModal(noFolderFoundPopupName, ref isModalOpen, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
+                        {
+                            ImGui.Text($"Could not find the folder '{GetDirectory(fileName)}'.");
+
+                            if (ImGui.Button("Okay##close_modal_window"))
+                            {
+                                ImGui.CloseCurrentPopup();
+                                isModalOpen = false;
+                            }
+
+                            ImGui.EndPopup();
                         }
 
                         if (saveDialogTask != null && saveDialogTask.IsCompleted)
