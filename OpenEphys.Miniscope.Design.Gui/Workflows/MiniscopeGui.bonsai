@@ -613,7 +613,7 @@
                     <Name>Source1</Name>
                   </Expression>
                   <Expression xsi:type="MemberSelector">
-                    <Selector>FrameTime</Selector>
+                    <Selector>HardwareTime</Selector>
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:BufferTime">
@@ -2365,7 +2365,7 @@
                   </Expression>
                   <Expression xsi:type="WorkflowOutput" />
                   <Expression xsi:type="MemberSelector">
-                    <Selector>FrameNumber,FrameTime,Quaternion.X,Quaternion.Y,Quaternion.Z,Quaternion.W,DigitalIn</Selector>
+                    <Selector>FrameNumber,HardwareTime,Quaternion.X,Quaternion.Y,Quaternion.Z,Quaternion.W,DigitalIn</Selector>
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:Timestamp" />
