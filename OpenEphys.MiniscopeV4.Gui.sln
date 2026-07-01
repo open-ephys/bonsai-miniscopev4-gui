@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 18.7.11903.348
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenEphys.MiniscopeV4.Gui", "OpenEphys.MiniscopeV4.Gui\OpenEphys.MiniscopeV4.Gui.csproj", "{91B40306-4CA7-421D-956F-DA82F41BA542}"
-	ProjectSection(ProjectDependencies) = postProject
-		{26130535-F9DF-6972-9B94-2E902DCDC8DF} = {26130535-F9DF-6972-9B94-2E902DCDC8DF}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
