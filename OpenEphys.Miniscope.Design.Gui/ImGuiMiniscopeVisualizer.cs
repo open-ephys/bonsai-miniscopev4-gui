@@ -6,7 +6,7 @@ namespace OpenEphys.Miniscope.Design.Gui;
 /// <summary>
 /// Defines a visualizer that initializes an ImGui-based visualizer for Miniscope data.
 /// </summary>
-public class ImGuiMiniscopeVisualizer : ImGuiMashupVisualizer
+public class ImGuiMiniscopeVisualizer : ImGuiMiniscopeMashupVisualizer
 {
     /// <inheritdoc/>
     protected override IEnumerable<IExtensionFactory> GetExtensions()

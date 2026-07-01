@@ -17,7 +17,7 @@ namespace OpenEphys.Miniscope.Design.Gui;
 /// Represents a mashup visualizer that hosts a Dear ImGui control and coordinates rendering between
 /// the visualizer and any nested mashup visualizers.
 /// </summary>
-public abstract class ImGuiMashupVisualizer : MashupVisualizer
+public abstract class ImGuiMiniscopeMashupVisualizer : MashupVisualizer
 {
     ImGuiControl imGuiControl;
 
@@ -31,7 +31,7 @@ public abstract class ImGuiMashupVisualizer : MashupVisualizer
     /// <inheritdoc/>
     public override void Load(IServiceProvider provider)
     {
-        if (provider.GetService(typeof(MashupVisualizer)) is ImGuiMashupVisualizer imGuiVisualizer &&
+        if (provider.GetService(typeof(MashupVisualizer)) is ImGuiMiniscopeMashupVisualizer imGuiVisualizer &&
             imGuiVisualizer.Control is ImGuiControl mashupControl)
         {
             foreach (var extension in GetExtensions())
@@ -40,7 +40,7 @@ public abstract class ImGuiMashupVisualizer : MashupVisualizer
         else
         {
             var context = (ITypeVisualizerContext)provider.GetService(typeof(ITypeVisualizerContext));
-            var visualizerBuilder = (ImGuiMashupVisualizerBuilder)ExpressionBuilder.GetVisualizerElement(context.Source).Builder;
+            var visualizerBuilder = (ImGuiMiniscopeMashupVisualizerBuilder)ExpressionBuilder.GetVisualizerElement(context.Source).Builder;
             var windowName = visualizerBuilder.Name ?? visualizerBuilder.GetType().Name;
 
             imGuiControl = new ImGuiMiniscopeControl
@@ -87,14 +87,14 @@ public abstract class ImGuiMashupVisualizer : MashupVisualizer
         return new Icon(stream);
     }
 
-    void RenderMashup(ImGuiMashupVisualizerBuilder builder)
+    void RenderMashup(ImGuiMiniscopeMashupVisualizerBuilder builder)
     {
         builder._Render.OnNext(Unit.Default);
         for (int i = 0; i < MashupSources.Count; i++)
         {
             var mashupSource = MashupSources[i];
-            if (mashupSource.Source.Builder is ImGuiMashupVisualizerBuilder nestedBuilder &&
-                mashupSource.Visualizer is ImGuiMashupVisualizer nestedMashup)
+            if (mashupSource.Source.Builder is ImGuiMiniscopeMashupVisualizerBuilder nestedBuilder &&
+                mashupSource.Visualizer is ImGuiMiniscopeMashupVisualizer nestedMashup)
             {
                 nestedMashup.RenderMashup(nestedBuilder);
             }
