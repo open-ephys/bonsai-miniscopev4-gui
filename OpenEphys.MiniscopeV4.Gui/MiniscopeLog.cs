@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Severity of a <see cref="LogEntry"/>.

@@ -1,7 +1,7 @@
 using System.Reactive.Concurrency;
 using System.Threading;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Provides the single, process-wide scheduler used to serialize every control-plane state

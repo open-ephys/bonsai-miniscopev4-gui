@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using Bonsai;
 using Hexa.NET.ImGui;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Calls <see cref="ImGui.SameLine()"/> so that the next rendered item is placed on the same line as the previous one.

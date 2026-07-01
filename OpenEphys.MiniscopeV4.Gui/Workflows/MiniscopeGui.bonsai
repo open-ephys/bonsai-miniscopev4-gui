@@ -7,7 +7,7 @@
                  xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns:p1="clr-namespace:OpenCV.Net;assembly=OpenCV.Net"
                  xmlns:p2="clr-namespace:OpenEphys.Miniscope;assembly=OpenEphys.Miniscope"
-                 xmlns:p3="clr-namespace:OpenEphys.Miniscope.Design.Gui;assembly=OpenEphys.Miniscope.Design.Gui"
+                 xmlns:p3="clr-namespace:OpenEphys.MiniscopeV4.Gui;assembly=OpenEphys.MiniscopeV4.Gui"
                  xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
                  xmlns:ui="clr-namespace:Bonsai.Design;assembly=Bonsai.Design"
                  xmlns:imviz="clr-namespace:Bonsai.ImGui.Visualizers;assembly=Bonsai.ImGui.Visualizers"

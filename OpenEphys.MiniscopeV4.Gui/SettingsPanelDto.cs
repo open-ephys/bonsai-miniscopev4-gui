@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Reactive.Linq;
 using Bonsai;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Represents the combined settings state for all panels in the GUI.

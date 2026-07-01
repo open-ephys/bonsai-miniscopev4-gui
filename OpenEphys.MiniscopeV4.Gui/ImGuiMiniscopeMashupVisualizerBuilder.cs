@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Subjects;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Represents a visualizer builder that exposes a render notification sequence used to coordinate

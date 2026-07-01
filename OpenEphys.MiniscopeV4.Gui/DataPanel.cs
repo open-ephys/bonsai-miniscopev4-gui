@@ -3,6 +3,7 @@ using Bonsai.ImGui.Visualizers;
 using Bonsai.Vision;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImPlot;
+using OpenEphys.Miniscope;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -11,7 +12,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Xml.Serialization;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Renders the image tabs and signal tabs inside a single child region that fills the available content area.

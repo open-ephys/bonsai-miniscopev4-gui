@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Title>OpenEphys.Miniscope.Design.Gui</Title>
+    <Title>OpenEphys.MiniscopeV4.Gui</Title>
     <Description>Bonsai library that contains a custom GUI for using Miniscopes.</Description>
     <PackageTags>Bonsai Rx Open Ephys Miniscope Imaging Calcium Gui</PackageTags>
     <TargetFramework>net472</TargetFramework>
@@ -19,8 +19,7 @@
     <PackageReference Include="Bonsai.ImGui.Visualizers" Version="0.2.0" />
     <PackageReference Include="Bonsai.ImPlot" Version="0.2.0" />
     <PackageReference Include="Bonsai.Vision" Version="2.9.0" />
-    <PackageReference Include="OpenEphys.Miniscope" Version="0.4.0" />
-    <PackageReference Include="OpenEphys.Miniscope.Design" Version="0.4.0" />
+    <PackageReference Include="OpenEphys.Miniscope" Version="0.5.0" />
     <PackageReference Include="OpenEphys.Commutator" Version="0.3.1" />
   </ItemGroup>
 
@@ -29,5 +28,4 @@
     <EmbeddedResource Include="Fonts\*" />
     <EmbeddedResource Include="Resources\icon.ico" />
   </ItemGroup>
-
 </Project>

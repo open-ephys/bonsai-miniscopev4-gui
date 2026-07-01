@@ -11,7 +11,7 @@ using Bonsai.ImGui;
 using Bonsai.ImGui.Design;
 using Hexa.NET.ImGui;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Represents a mashup visualizer that hosts a Dear ImGui control and coordinates rendering between
@@ -83,7 +83,7 @@ public abstract class ImGuiMiniscopeMashupVisualizer : MashupVisualizer
     static Icon LoadIcon()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream("OpenEphys.Miniscope.Design.Gui.Resources.icon.ico");
+        using var stream = assembly.GetManifestResourceStream("OpenEphys.MiniscopeV4.Gui.Resources.icon.ico");
         return new Icon(stream);
     }
 

@@ -7,7 +7,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Xml.Serialization;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Renders the ImGui status bar controls at the top of the GUI.

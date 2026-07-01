@@ -2,8 +2,9 @@
 using System.ComponentModel;
 using System.Reactive.Linq;
 using Bonsai;
+using OpenEphys.Miniscope;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Represents the Miniscope acquisition settings displayed and edited by the GUI.

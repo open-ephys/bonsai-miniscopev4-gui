@@ -3,8 +3,9 @@ using System.ComponentModel;
 using System.Reactive.Linq;
 using Bonsai;
 using Bonsai.IO;
+using OpenEphys.Miniscope;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Represents the file saving settings displayed and edited by the GUI.

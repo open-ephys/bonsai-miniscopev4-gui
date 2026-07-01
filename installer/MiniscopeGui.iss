@@ -37,7 +37,7 @@ DisableProgramGroupPage=yes
 OutputDir=..\artifacts
 OutputBaseFilename=MiniscopeGui-Setup-{#AppVersion}
 
-SetupIconFile=..\OpenEphys.Miniscope.Design.Gui\Resources\icon.ico
+SetupIconFile=..\OpenEphys.MiniscopeV4.Gui\Resources\icon.ico
 WizardStyle=modern
 
 Compression=lzma2/ultra64
@@ -66,7 +66,7 @@ Source: "..\launcher\Run.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\launcher\config.json"; DestDir: "{app}"; \
   Flags: onlyifdoesntexist uninsneveruninstall
 
-Source: "..\OpenEphys.Miniscope.Design.Gui\Workflows\MiniscopeGui.bonsai"; \
+Source: "..\OpenEphys.MiniscopeV4.Gui\Workflows\MiniscopeGui.bonsai"; \
   DestDir: "{app}"; Flags: ignoreversion
 
 Source: "..\launcher\.bonsai\Bonsai.config"; DestDir: "{app}\.bonsai"; Flags: ignoreversion
@@ -76,7 +76,7 @@ Source: "..\launcher\.bonsai\NuGet.config";  DestDir: "{app}\.bonsai"; Flags: ig
 Source: "..\launcher\lib\*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs
 #endif
 
-Source: "..\OpenEphys.Miniscope.Design.Gui\Resources\icon.ico"; \
+Source: "..\OpenEphys.MiniscopeV4.Gui\Resources\icon.ico"; \
   DestDir: "{app}"; Flags: ignoreversion
 
 ; ---------------------------------------------------------------------------

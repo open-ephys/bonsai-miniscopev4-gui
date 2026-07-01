@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Reactive.Linq;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Logs the absolute path of each incoming file path to the shared <see cref="MiniscopeLog"/> and

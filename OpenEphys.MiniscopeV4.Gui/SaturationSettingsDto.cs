@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using Bonsai;
 using OpenCV.Net;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Represents the saturation overlay settings displayed and edited by the GUI.

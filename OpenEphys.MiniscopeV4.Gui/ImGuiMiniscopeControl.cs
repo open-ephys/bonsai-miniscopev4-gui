@@ -1,7 +1,7 @@
 ﻿using Bonsai.ImGui.Design;
 using System.Windows.Forms;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 sealed class ImGuiMiniscopeControl : ImGuiControl
 {

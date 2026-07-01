@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Reactive.Linq;
 using Bonsai;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Observes the source sequence on the shared <see cref="ControlScheduler"/>, moving every

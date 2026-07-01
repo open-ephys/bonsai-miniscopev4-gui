@@ -2,6 +2,7 @@
 using Bonsai.IO;
 using Hexa.NET.ImGui;
 using OpenCV.Net;
+using OpenEphys.Miniscope;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -14,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Renders all settings panels in a collapsible sidebar and returns an updated <see cref="SettingsPanelDto"/>.

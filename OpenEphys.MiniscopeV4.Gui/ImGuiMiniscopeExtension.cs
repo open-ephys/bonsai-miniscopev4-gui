@@ -5,7 +5,7 @@ using Bonsai.ImGui;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImPlot;
 
-namespace OpenEphys.Miniscope.Design.Gui;
+namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>   
 /// Represents an extension context for ImGui that initializes an ImGui context and links it to the provided ImGui context.
@@ -64,7 +64,7 @@ public class ImGuiMiniscopeExtension : IExtensionContext
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        using Stream stream = assembly.GetManifestResourceStream("OpenEphys.Miniscope.Design.Gui.Fonts.Inter.ttf")!;
+        using Stream stream = assembly.GetManifestResourceStream("OpenEphys.MiniscopeV4.Gui.Fonts.Inter.ttf")!;
         using MemoryStream ms = new();
         stream.CopyTo(ms);
         return ms.ToArray();
