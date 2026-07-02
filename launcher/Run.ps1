@@ -41,7 +41,10 @@ if (-not (Test-Path $BonsaiExe)) {
     Write-Host "Bonsai installed."
 }
 
-if ($BootstrapOnly) { exit 0 }
+if ($BootstrapOnly) {
+    & $BonsaiExe --no-editor
+    exit 0
+}
 
 $WorkflowFile = @(
     (Join-Path $ScriptDir "MiniscopeGui.bonsai"),
