@@ -1,4 +1,4 @@
-﻿using Bonsai;
+using Bonsai;
 using Hexa.NET.ImGui;
 using System;
 using System.ComponentModel;
@@ -44,26 +44,23 @@ public class StatusBar
     [Browsable(false)]
     public bool RecordingStatus { get; set; }
 
-    static readonly Vector4 colorError = new(0.9f, 0.3f, 0.3f, 1f);
-    static readonly Vector4 colorWarning = new(0.9f, 0.8f, 0.3f, 1f);
-    static readonly Vector4 colorInfo = new(0.8f, 0.8f, 0.8f, 1f);
+    /// <summary>
+    /// Gets or sets a value indicating whether an automatic restart was triggered.
+    /// </summary>
+    /// <remarks>
+    /// Automatic restarts are not guaranteed to reset the recording timer; this value
+    /// can be set to force a reset of the recording timer.
+    /// </remarks>
+    [XmlIgnore]
+    [Browsable(false)]
+    public bool AutomaticRestartTriggered { get; set; }
 
-    static void RenderLogLines(LogEntry[] entries)
-    {
-        for (int i = 0; i < entries.Length; i++)
-        {
-            var entry = entries[i];
-            var color = entry.Level switch
-            {
-                LogLevel.Error => colorError,
-                LogLevel.Warning => colorWarning,
-                _ => colorInfo,
-            };
-            ImGui.PushStyleColor(ImGuiCol.Text, color);
-            ImGui.TextUnformatted($"[{entry.Timestamp:HH:mm:ss}] {entry.Message}");
-            ImGui.PopStyleColor();
-        }
-    }
+    static readonly Vector4 colorError = new(0.9f, 0.3f, 0.3f, 1f);
+
+    static readonly Vector4 colorStart = new(0.15f, 0.55f, 0.20f, 1f);
+    static readonly Vector4 colorStartHovered = new(0.20f, 0.67f, 0.25f, 1f);
+    static readonly Vector4 colorStop = new(0.70f, 0.20f, 0.20f, 1f);
+    static readonly Vector4 colorStopHovered = new(0.82f, 0.25f, 0.25f, 1f);
 
     /// <summary>
     /// Renders the status bar controls and returns an updated <see cref="StatusBarDto"/> alongside each source value.
@@ -79,154 +76,90 @@ public class StatusBar
             DateTime? acquisitionStart = null;
             DateTime? recordingStart = null;
 
-            int lastLogVersion = -1;
-            int miniScrollVersion = -1;
-            int fullScrollVersion = -1;
-            LogEntry[] logCache = Array.Empty<LogEntry>();
-
             var sourceObserver = Observer.Create<Tuple<TSource, StatusBarDto>>(value =>
             {
                 var dto = value.Item2;
                 var cameraIndex = dto.CameraIndex;
                 var isConnected = dto.IsConnected;
 
-                var style = ImGui.GetStyle();
-                var indexInputWidth = 60f;
+                if (AutomaticRestartTriggered)
+                {
+                    recordingStart = null;
+                    AutomaticRestartTriggered = false;
+                }
 
-                if (ImGui.BeginTable("##status_table", 2))
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text("Index: ");
+                ImGui.SameLine();
+
+                if (isConnected)
+                    ImGui.BeginDisabled();
+
+                ImGui.SetNextItemWidth(60f);
+                ImGui.InputInt("##statusbar_index", ref cameraIndex, 0, 0);
+
+                if (isConnected)
+                    ImGui.EndDisabled();
+
+                ImGui.SameLine();
+                var acqColor = isConnected ? colorStop : colorStart;
+                var acqColorHovered = isConnected ? colorStopHovered : colorStartHovered;
+                ImGui.PushStyleColor(ImGuiCol.Button, acqColor);
+                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, acqColorHovered);
+                ImGui.PushStyleColor(ImGuiCol.ButtonActive, acqColor);
+                var acqButtonSize = new Vector2(160f, ImGui.GetFrameHeight() * 1.6f);
+                if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn", acqButtonSize))
+                {
+                    isConnected = !isConnected;
+                }
+                ImGui.PopStyleColor(3);
+
+                var statusColor = isConnected
+                        ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
+                        : new Vector4(0.6f, 0.6f, 0.6f, 1f);
+                ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
+                ImGui.SameLine();
+                ImGui.Text(isConnected ? "Acquiring" : "Disconnected");
+                ImGui.PopStyleColor();
+
+                if (ImGui.BeginTable("##status_values", 3))
                 {
                     ImGui.TableNextColumn();
-                    var topY = ImGui.GetCursorScreenPos().Y;
-                    ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Index: ");
-                    ImGui.SameLine();
+                    ImGui.Text($"Frames per Second: {AverageFrameRate:F1}");
 
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"Frame Number: {FrameNumber}");
+
+                    ImGui.TableNextColumn();
+                    if (DroppedFrames > 0) ImGui.PushStyleColor(ImGuiCol.Text, colorError);
+                    ImGui.Text($"Dropped Frames: {DroppedFrames}");
+                    if (DroppedFrames > 0) ImGui.PopStyleColor();
+
+                    ImGui.TableNextColumn();
                     if (isConnected)
-                        ImGui.BeginDisabled();
-
-                    ImGui.SetNextItemWidth(indexInputWidth);
-                    ImGui.InputInt("##statusbar_index", ref cameraIndex, 0, 0);
-
-                    if (isConnected)
-                        ImGui.EndDisabled();
-
-                    ImGui.SameLine();
-                    if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn"))
                     {
-                        isConnected = !isConnected;
+                        acquisitionStart ??= DateTime.Now;
+                        elapsedAcquisitionTime = (DateTime.Now - acquisitionStart.Value).TotalSeconds;
                     }
-
-                    var statusColor = isConnected
-                            ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
-                            : new Vector4(0.6f, 0.6f, 0.6f, 1f);
-                    ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
-                    ImGui.SameLine();
-                    ImGui.Text(isConnected ? "Acquiring" : "Disconnected");
-                    ImGui.PopStyleColor();
-
-                    if (ImGui.BeginTable("##status_values", 3))
+                    else if (acquisitionStart != null)
                     {
-                        ImGui.TableNextColumn();
-                        ImGui.Text($"Frames per Second: {AverageFrameRate:F1}");
+                        acquisitionStart = null;
+                    }
+                    ImGui.Text($"Acquiring: {elapsedAcquisitionTime:F0} s");
 
-                        ImGui.TableNextColumn();
-                        ImGui.Text($"Frame Number: {FrameNumber}");
-
-                        ImGui.TableNextColumn();
-                        if (DroppedFrames > 0) ImGui.PushStyleColor(ImGuiCol.Text, colorError);
-                        ImGui.Text($"Dropped Frames: {DroppedFrames}");
-                        if (DroppedFrames > 0) ImGui.PopStyleColor();
-
-                        ImGui.TableNextColumn();
-                        if (isConnected)
-                        {
-                            acquisitionStart ??= DateTime.Now;
-                            elapsedAcquisitionTime = (DateTime.Now - acquisitionStart.Value).TotalSeconds;
-                        }
-                        else if (acquisitionStart != null)
-                        {
-                            acquisitionStart = null;
-                        }
-                        ImGui.Text($"Acquiring: {elapsedAcquisitionTime:F0} s");
-
-                        ImGui.TableNextColumn();
-                        if (RecordingStatus)
-                        {
-                            recordingStart ??= DateTime.Now;
-                            ImGui.Text($"Recording: {(DateTime.Now - recordingStart.Value).TotalSeconds:F0} s");
-                        }
-                        else if (recordingStart != null)
-                        {
-                            recordingStart = null;
-                        }
+                    ImGui.TableNextColumn();
+                    if (RecordingStatus)
+                    {
+                        recordingStart ??= DateTime.Now;
+                        ImGui.Text($"Recording: {(DateTime.Now - recordingStart.Value).TotalSeconds:F0} s");
+                    }
+                    else if (recordingStart != null)
+                    {
+                        recordingStart = null;
                     }
 
                     ImGui.EndTable();
-
-                    var capturedHeight = ImGui.GetCursorScreenPos().Y - topY;
-
-                    ImGui.TableNextColumn();
-
-                    int logVersion = MiniscopeLog.Version;
-                    if (logVersion != lastLogVersion)
-                    {
-                        logCache = MiniscopeLog.Snapshot();
-                        lastLogVersion = logVersion;
-                    }
-
-                    bool consoleHovered = false;
-                    if (ImGui.BeginChild("##console_mini", new Vector2(-1f, capturedHeight), ImGuiChildFlags.Borders, ImGuiWindowFlags.HorizontalScrollbar))
-                    {
-                        consoleHovered = ImGui.IsWindowHovered();
-                        if (logCache.Length == 0)
-                        {
-                            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.6f, 0.6f, 0.6f, 1f));
-                            ImGui.TextUnformatted("Console (click to expand)");
-                            ImGui.PopStyleColor();
-                        }
-                        else
-                        {
-                            RenderLogLines(logCache);
-                            if (logVersion != miniScrollVersion)
-                            {
-                                ImGui.SetScrollHereY(1f);
-                                miniScrollVersion = logVersion;
-                            }
-                        }
-                    }
-
-                    ImGui.EndChild();
-
-                    if (consoleHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-                        ImGui.OpenPopup("##console_full");
-
-                    ImGui.SetNextWindowSize(new Vector2(720f, 400f), ImGuiCond.Appearing);
-                    if (ImGui.BeginPopup("##console_full"))
-                    {
-                        if (ImGui.Button("Clear##console_clear"))
-                            MiniscopeLog.Clear();
-
-                        ImGui.SameLine();
-                        ImGui.TextUnformatted($"{logCache.Length} message(s)");
-
-                        if (ImGui.BeginChild("##console_full_scroll", new Vector2(700f, 340f), ImGuiChildFlags.Borders, ImGuiWindowFlags.HorizontalScrollbar))
-                        {
-                            RenderLogLines(logCache);
-
-                            if (logVersion != fullScrollVersion)
-                            {
-                                ImGui.SetScrollHereY(1f);
-                                fullScrollVersion = logVersion;
-                            }
-                        }
-
-                        ImGui.EndChild();
-
-                        ImGui.EndPopup();
-                    }
                 }
-
-                ImGui.EndTable();
 
                 ImGui.Separator();
 

@@ -113,7 +113,8 @@ public class SettingsPanel
                 float availableX = ImGui.GetContentRegionAvail().X;
                 float panelWidth = GetCurrentWidth(availableX);
 
-                ImGui.BeginChild("##settings_pane", new Vector2(panelWidth - ImGui.GetStyle().ChildBorderSize, -1), ImGuiChildFlags.Borders);
+                float consoleReserve = ConsoleLayout.ReservedHeight(ImGui.GetStyle().ItemSpacing.Y);
+                ImGui.BeginChild("##settings_pane", new Vector2(panelWidth - ImGui.GetStyle().ChildBorderSize, -consoleReserve), ImGuiChildFlags.Borders);
 
                 if (!settingsOpen)
                 {

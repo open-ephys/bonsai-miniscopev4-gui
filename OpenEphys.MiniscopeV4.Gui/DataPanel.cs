@@ -128,7 +128,8 @@ public class DataPanel
                         }
                     }
 
-                    if (ImGui.BeginChild("##Data", fillAvailable))
+                    float consoleReserve = ConsoleLayout.ReservedHeight(ImGui.GetStyle().ItemSpacing.Y);
+                    if (ImGui.BeginChild("##Data", new Vector2(-1f, -consoleReserve)))
                     {
                         if (ImGui.BeginChild("##image_pane", new Vector2(-1, imageChildHeight), ImGuiChildFlags.None))
                         {
