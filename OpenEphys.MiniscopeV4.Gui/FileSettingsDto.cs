@@ -18,7 +18,8 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// <param name="RecordingDuration">The configured recording duration, in seconds.</param>
 /// <param name="UseRecordDuration">Indicates whether recording should automatically stop after <paramref name="RecordingDuration"/> seconds.</param>
 /// <param name="TriggerInput">Indicates which digital input is used to trigger recording.</param>
-public record FileSettingsDto(bool RecordButton, bool RecordOnTriggerButton, bool CompressVideo, string FileName, PathSuffix Suffix, int RecordingDuration, bool UseRecordDuration, MiniscopeDaqDigitalIn TriggerInput);
+/// <param name="AutomaticRestart">Indicates whether a new recording should start automatically each time the recording duration elapses, until recording is manually stopped.</param>
+public record FileSettingsDto(bool RecordButton, bool RecordOnTriggerButton, bool CompressVideo, string FileName, PathSuffix Suffix, int RecordingDuration, bool UseRecordDuration, MiniscopeDaqDigitalIn TriggerInput, bool AutomaticRestart);
 
 /// <summary>
 /// Combines individual file setting values into a single <see cref="FileSettingsDto"/>.
@@ -38,6 +39,7 @@ public class CreateFileSettingsDto
     /// <param name="recordingDuration">The configured recording duration, in seconds.</param>
     /// <param name="useRecordDuration">Indicates whether recording should automatically stop after <paramref name="recordingDuration"/> seconds.</param>
     /// <param name="triggerInput">Indicates which digital input is used to trigger recording.</param>
+    /// <param name="automaticRestart">Indicates whether a new recording should start automatically each time the recording duration elapses.</param>
     /// <returns>A sequence of <see cref="FileSettingsDto"/> objects.</returns>
     public IObservable<FileSettingsDto> Process(
         IObservable<bool> recordButton,
@@ -47,7 +49,8 @@ public class CreateFileSettingsDto
         IObservable<PathSuffix> suffix,
         IObservable<int> recordingDuration,
         IObservable<bool> useRecordDuration,
-        IObservable<MiniscopeDaqDigitalIn> triggerInput)
+        IObservable<MiniscopeDaqDigitalIn> triggerInput,
+        IObservable<bool> automaticRestart)
     {
         return Observable.CombineLatest(
             recordButton,
@@ -58,6 +61,7 @@ public class CreateFileSettingsDto
             recordingDuration,
             useRecordDuration,
             triggerInput,
-            (recordButton, recordOnTriggerButton, compressVideo, fileName, suffix, recordingDuration, useRecordDuration, triggerInput) => new FileSettingsDto(recordButton, recordOnTriggerButton, compressVideo, fileName, suffix, recordingDuration, useRecordDuration, triggerInput));
+            automaticRestart,
+            (recordButton, recordOnTriggerButton, compressVideo, fileName, suffix, recordingDuration, useRecordDuration, triggerInput, automaticRestart) => new FileSettingsDto(recordButton, recordOnTriggerButton, compressVideo, fileName, suffix, recordingDuration, useRecordDuration, triggerInput, automaticRestart));
     }
 }
