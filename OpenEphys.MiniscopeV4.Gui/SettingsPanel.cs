@@ -28,12 +28,6 @@ public class SettingsPanel
     /// </summary>
     public bool AcquisitionStatus { get; set; }
 
-    /// <summary>
-    /// Gets or sets a value indicating whether a recording is currently in progress. Used to
-    /// present the record button as a red "Stop Recording" control while recording is active.
-    /// </summary>
-    public bool RecordingStatus { get; set; }
-
     const float ExpandedWidth = 375f;
     const float CollapsedWidth = 36f;
 
@@ -81,7 +75,10 @@ public class SettingsPanel
             string fileName = string.Empty;
             Task<string> saveDialogTask = null;
             bool isModalOpen = false;
-            bool triggeredMode = false;
+
+            bool recordRequested = false;
+            bool lastRecordButtonInput = false;
+            bool recordStateInitialized = false;
 
             var portNames = SerialPort.GetPortNames();
 
@@ -94,9 +91,21 @@ public class SettingsPanel
                 GainV4 sensorGain = dto.Miniscope.SensorGain;
                 FrameRateV4 frameRate = dto.Miniscope.FrameRate;
                 MiniscopeDaqDigitalIn ledRespectsDigitalIn = dto.Miniscope.LedRespectsDigitalIn;
+                var triggerMode = dto.File.TriggerMode;
 
-                bool recordButton = dto.File.RecordButton;
-                bool recordOnTriggerButton = dto.File.RecordOnTriggerButton;
+                if (!recordStateInitialized)
+                {
+                    recordRequested = dto.File.RecordButton;
+                    lastRecordButtonInput = dto.File.RecordButton;
+                    recordStateInitialized = true;
+                }
+                if (dto.File.RecordButton != lastRecordButtonInput)
+                {
+                    recordRequested = dto.File.RecordButton;
+                    lastRecordButtonInput = dto.File.RecordButton;
+                }
+
+                bool recordButton = recordRequested;
                 fileName = dto.File.FileName;
                 PathSuffix suffix = dto.File.Suffix;
                 int recordingDurationSeconds = dto.File.RecordingDuration;
@@ -315,22 +324,19 @@ public class SettingsPanel
                         ImGui.AlignTextToFramePadding();
                         ImGui.Text("Mode: ");
                         ImGui.SameLine();
-                        if (ImGui.RadioButton("Manual##record_mode_manual", !triggeredMode))
+                        if (ImGui.RadioButton("Manual##record_mode_manual", !triggerMode) && triggerMode)
                         {
-                            triggeredMode = false;
-                            recordOnTriggerButton = false;
+                            triggerMode = false;
+                            recordButton = false;
                         }
                         ImGui.SameLine();
-                        if (ImGui.RadioButton("Triggered##record_mode_triggered", triggeredMode))
+                        if (ImGui.RadioButton("TriggerMode##record_mode_triggered", triggerMode) && !triggerMode)
                         {
-                            triggeredMode = true;
+                            triggerMode = true;
                             recordButton = false;
                         }
 
-                        bool recording = RecordingStatus;
-                        Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
-
-                        if (!triggeredMode)
+                        if (!triggerMode)
                         {
                             ImGui.AlignTextToFramePadding();
                             ImGui.Text("Recording Duration [s]:");
@@ -351,24 +357,6 @@ public class SettingsPanel
                                 ImGui.EndTooltip();
                             }
                             if (!useRecordDuration) ImGui.EndDisabled();
-
-                            bool showActive = recording || recordButton;
-                            var recColor = showActive ? colorStop : colorRecord;
-                            var recColorHovered = showActive ? colorStopHovered : colorRecordHovered;
-                            ImGui.PushStyleColor(ImGuiCol.Button, recColor);
-                            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, recColorHovered);
-                            ImGui.PushStyleColor(ImGuiCol.ButtonActive, recColor);
-
-                            if (!AcquisitionStatus) ImGui.BeginDisabled();
-                            if (ImGui.Button(showActive ? "Stop Recording##record_button" : "Record##record_button", recordButtonSize))
-                            {
-                                recordButton = !showActive;
-                                if (recordButton)
-                                    recordOnTriggerButton = false;
-                            }
-                            if (!AcquisitionStatus) ImGui.EndDisabled();
-
-                            ImGui.PopStyleColor(3);
                         }
                         else
                         {
@@ -376,7 +364,7 @@ public class SettingsPanel
                             ImGui.Text("Digital Input: ");
                             ImGui.SameLine();
                             ImGui.SetNextItemWidth(-1f);
-                            if (!AcquisitionStatus || recordOnTriggerButton) ImGui.BeginDisabled();
+                            if (!AcquisitionStatus || recordButton) ImGui.BeginDisabled();
                             if (ImGui.BeginCombo("##trigger_input", DigitalInNames[triggerIndex]))
                             {
                                 foreach (var val in DigitalInValues)
@@ -392,29 +380,27 @@ public class SettingsPanel
                                 }
                                 ImGui.EndCombo();
                             }
-                            if (!AcquisitionStatus || recordOnTriggerButton) ImGui.EndDisabled();
-
-                            bool armed = recordOnTriggerButton;
-                            var armColor = armed ? colorStop : colorRecord;
-                            var armColorHovered = armed ? colorStopHovered : colorRecordHovered;
-                            ImGui.PushStyleColor(ImGuiCol.Button, armColor);
-                            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, armColorHovered);
-                            ImGui.PushStyleColor(ImGuiCol.ButtonActive, armColor);
-
-                            if (!AcquisitionStatus) ImGui.BeginDisabled();
-                            string armLabel = armed
-                                ? (recording ? "Recording — Disarm##arm_button" : "Disarm##arm_button")
-                                : "Arm Recording##arm_button";
-                            if (ImGui.Button(armLabel, recordButtonSize))
-                            {
-                                recordOnTriggerButton = !recordOnTriggerButton;
-                                if (recordOnTriggerButton)
-                                    recordButton = false;
-                            }
-                            if (!AcquisitionStatus) ImGui.EndDisabled();
-
-                            ImGui.PopStyleColor(3);
+                            if (!AcquisitionStatus || recordButton) ImGui.EndDisabled();
                         }
+
+                        var recColor = recordButton ? colorStop : colorRecord;
+                        var recColorHovered = recordButton ? colorStopHovered : colorRecordHovered;
+                        ImGui.PushStyleColor(ImGuiCol.Button, recColor);
+                        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, recColorHovered);
+                        ImGui.PushStyleColor(ImGuiCol.ButtonActive, recColor);
+
+                        Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
+                        if (!AcquisitionStatus) ImGui.BeginDisabled();
+                        string recordLabel = !triggerMode
+                            ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
+                            : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
+                        if (ImGui.Button(recordLabel, recordButtonSize))
+                        {
+                            recordButton = !recordButton;
+                        }
+                        if (!AcquisitionStatus) ImGui.EndDisabled();
+
+                        ImGui.PopStyleColor(3);
 
                         ImGui.EndChild();
                     }
@@ -494,9 +480,11 @@ public class SettingsPanel
 
                 ImGui.EndChild();
 
+                recordRequested = recordButton;
+
                 var updatedDto = new SettingsPanelDto(
                     new MiniscopeSettingsDto(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
-                    new FileSettingsDto(recordButton, recordOnTriggerButton, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput, automaticRestart),
+                    new FileSettingsDto(recordButton, triggerMode, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput, automaticRestart),
                     new CommutatorSettingsDto(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
 
                 observer.OnNext(Tuple.Create(value.Item1, updatedDto));

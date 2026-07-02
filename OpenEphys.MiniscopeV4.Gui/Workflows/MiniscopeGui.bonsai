@@ -45,7 +45,7 @@
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
-              <Name>RecordOnTriggerButton</Name>
+              <Name>TriggerMode</Name>
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="Value" DisplayName="CompressVideo" Category="Recording" />
@@ -73,7 +73,7 @@
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="cv:VideoWriter,sys:String">
               <MemberName>FileName</MemberName>
-              <Value />
+              <Value>../data/temp_</Value>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>FileName</Name>
@@ -192,7 +192,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="IntProperty">
-                <Value>0</Value>
+                <Value>1</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
@@ -294,6 +294,14 @@
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>TriggerInput</Name>
             </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="BooleanProperty">
+                <Value>false</Value>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject">
+              <Name>AutomaticRestart</Name>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
@@ -337,6 +345,7 @@
             <Edge From="65" To="66" Label="Source1" />
             <Edge From="67" To="68" Label="Source1" />
             <Edge From="69" To="70" Label="Source1" />
+            <Edge From="71" To="72" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -432,7 +441,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p2:UclaMiniscopeV4">
-                      <p2:Index>0</p2:Index>
+                      <p2:Index>1</p2:Index>
                       <p2:LedBrightness>0</p2:LedBrightness>
                       <p2:Focus>5</p2:Focus>
                       <p2:SensorGain>Low</p2:SensorGain>
@@ -784,6 +793,14 @@
                       <Property Name="DroppedFrames" />
                     </PropertyMappings>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>AutoRestartTriggered</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="AutomaticRestartTriggered" />
+                    </PropertyMappings>
+                  </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:StatusBar" />
                   </Expression>
@@ -826,27 +843,29 @@
                   <Edge From="3" To="4" Label="Source1" />
                   <Edge From="4" To="5" Label="Source2" />
                   <Edge From="5" To="6" Label="Source2" />
-                  <Edge From="6" To="16" Label="Source1" />
+                  <Edge From="6" To="18" Label="Source1" />
                   <Edge From="7" To="8" Label="Source1" />
-                  <Edge From="8" To="16" Label="Source2" />
+                  <Edge From="8" To="18" Label="Source2" />
                   <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="10" To="16" Label="Source3" />
+                  <Edge From="10" To="18" Label="Source3" />
                   <Edge From="11" To="12" Label="Source1" />
                   <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="13" To="16" Label="Source4" />
+                  <Edge From="13" To="18" Label="Source4" />
                   <Edge From="14" To="15" Label="Source1" />
-                  <Edge From="15" To="16" Label="Source5" />
+                  <Edge From="15" To="18" Label="Source5" />
                   <Edge From="16" To="17" Label="Source1" />
-                  <Edge From="16" To="19" Label="Source1" />
-                  <Edge From="17" To="18" Label="Source1" />
+                  <Edge From="17" To="18" Label="Source6" />
+                  <Edge From="18" To="19" Label="Source1" />
+                  <Edge From="18" To="21" Label="Source1" />
                   <Edge From="19" To="20" Label="Source1" />
-                  <Edge From="19" To="24" Label="Source1" />
-                  <Edge From="20" To="21" Label="Source1" />
                   <Edge From="21" To="22" Label="Source1" />
+                  <Edge From="21" To="26" Label="Source1" />
                   <Edge From="22" To="23" Label="Source1" />
+                  <Edge From="23" To="24" Label="Source1" />
                   <Edge From="24" To="25" Label="Source1" />
-                  <Edge From="25" To="26" Label="Source1" />
                   <Edge From="26" To="27" Label="Source1" />
+                  <Edge From="27" To="28" Label="Source1" />
+                  <Edge From="28" To="29" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -899,7 +918,7 @@
                           <Name>RecordButton</Name>
                         </Expression>
                         <Expression xsi:type="SubscribeSubject">
-                          <Name>RecordOnTriggerButton</Name>
+                          <Name>TriggerMode</Name>
                         </Expression>
                         <Expression xsi:type="SubscribeSubject">
                           <Name>CompressVideo</Name>
@@ -919,69 +938,25 @@
                         <Expression xsi:type="SubscribeSubject">
                           <Name>TriggerInput</Name>
                         </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>AutomaticRestart</Name>
+                        </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p3:CreateFileSettingsDto" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
                       <Edges>
-                        <Edge From="0" To="8" Label="Source1" />
-                        <Edge From="1" To="8" Label="Source2" />
-                        <Edge From="2" To="8" Label="Source3" />
-                        <Edge From="3" To="8" Label="Source4" />
-                        <Edge From="4" To="8" Label="Source5" />
-                        <Edge From="5" To="8" Label="Source6" />
-                        <Edge From="6" To="8" Label="Source7" />
-                        <Edge From="7" To="8" Label="Source8" />
-                        <Edge From="8" To="9" Label="Source1" />
-                      </Edges>
-                    </Workflow>
-                  </Expression>
-                  <Expression xsi:type="GroupWorkflow">
-                    <Name>Saturation</Name>
-                    <Workflow>
-                      <Nodes>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>SaturationThreshold</Name>
-                        </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>SaturationColor</Name>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:CreateSaturationSettingsDto" />
-                        </Expression>
-                        <Expression xsi:type="WorkflowOutput" />
-                      </Nodes>
-                      <Edges>
-                        <Edge From="0" To="2" Label="Source1" />
-                        <Edge From="1" To="2" Label="Source2" />
-                        <Edge From="2" To="3" Label="Source1" />
-                      </Edges>
-                    </Workflow>
-                  </Expression>
-                  <Expression xsi:type="GroupWorkflow">
-                    <Name>Dff</Name>
-                    <Workflow>
-                      <Nodes>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>BackgroundFrames</Name>
-                        </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>BackgroundThreshold</Name>
-                        </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>Sigma</Name>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:CreateDffSettingsDto" />
-                        </Expression>
-                        <Expression xsi:type="WorkflowOutput" />
-                      </Nodes>
-                      <Edges>
-                        <Edge From="0" To="3" Label="Source1" />
-                        <Edge From="1" To="3" Label="Source2" />
-                        <Edge From="2" To="3" Label="Source3" />
-                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="0" To="9" Label="Source1" />
+                        <Edge From="1" To="9" Label="Source2" />
+                        <Edge From="2" To="9" Label="Source3" />
+                        <Edge From="3" To="9" Label="Source4" />
+                        <Edge From="4" To="9" Label="Source5" />
+                        <Edge From="5" To="9" Label="Source6" />
+                        <Edge From="6" To="9" Label="Source7" />
+                        <Edge From="7" To="9" Label="Source8" />
+                        <Edge From="8" To="9" Label="Source9" />
+                        <Edge From="9" To="10" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -1153,7 +1128,7 @@
                           <Name>RecordButton</Name>
                         </Expression>
                         <Expression xsi:type="MemberSelector">
-                          <Selector>RecordOnTriggerButton</Selector>
+                          <Selector>TriggerMode</Selector>
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:DistinctUntilChanged" />
@@ -1172,7 +1147,7 @@
                           </Workflow>
                         </Expression>
                         <Expression xsi:type="MulticastSubject">
-                          <Name>RecordOnTriggerButton</Name>
+                          <Name>TriggerMode</Name>
                         </Expression>
                         <Expression xsi:type="MemberSelector">
                           <Selector>CompressVideo</Selector>
@@ -1228,6 +1203,15 @@
                         <Expression xsi:type="MulticastSubject">
                           <Name>TriggerInput</Name>
                         </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>AutomaticRestart</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:DistinctUntilChanged" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>AutomaticRestart</Name>
+                        </Expression>
                       </Nodes>
                       <Edges>
                         <Edge From="0" To="1" Label="Source1" />
@@ -1239,6 +1223,7 @@
                         <Edge From="1" To="19" Label="Source1" />
                         <Edge From="1" To="22" Label="Source1" />
                         <Edge From="1" To="25" Label="Source1" />
+                        <Edge From="1" To="28" Label="Source1" />
                         <Edge From="2" To="3" Label="Source1" />
                         <Edge From="3" To="4" Label="Source1" />
                         <Edge From="4" To="5" Label="Source1" />
@@ -1257,98 +1242,8 @@
                         <Edge From="23" To="24" Label="Source1" />
                         <Edge From="25" To="26" Label="Source1" />
                         <Edge From="26" To="27" Label="Source1" />
-                      </Edges>
-                    </Workflow>
-                  </Expression>
-                  <Expression xsi:type="GroupWorkflow">
-                    <Name>Saturation</Name>
-                    <Workflow>
-                      <Nodes>
-                        <Expression xsi:type="WorkflowInput">
-                          <Name>Source1</Name>
-                        </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>Saturation</Selector>
-                        </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>Threshold</Selector>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:DistinctUntilChanged" />
-                        </Expression>
-                        <Expression xsi:type="MulticastSubject">
-                          <Name>SaturationThreshold</Name>
-                        </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>Color</Selector>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:DistinctUntilChanged" />
-                        </Expression>
-                        <Expression xsi:type="MulticastSubject">
-                          <Name>SaturationColor</Name>
-                        </Expression>
-                      </Nodes>
-                      <Edges>
-                        <Edge From="0" To="1" Label="Source1" />
-                        <Edge From="1" To="2" Label="Source1" />
-                        <Edge From="1" To="5" Label="Source1" />
-                        <Edge From="2" To="3" Label="Source1" />
-                        <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="6" To="7" Label="Source1" />
-                      </Edges>
-                    </Workflow>
-                  </Expression>
-                  <Expression xsi:type="GroupWorkflow">
-                    <Name>Dff</Name>
-                    <Workflow>
-                      <Nodes>
-                        <Expression xsi:type="WorkflowInput">
-                          <Name>Source1</Name>
-                        </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>Dff</Selector>
-                        </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>BackgroundFrames</Selector>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:DistinctUntilChanged" />
-                        </Expression>
-                        <Expression xsi:type="MulticastSubject">
-                          <Name>BackgroundFrames</Name>
-                        </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>BackgroundThreshold</Selector>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:DistinctUntilChanged" />
-                        </Expression>
-                        <Expression xsi:type="MulticastSubject">
-                          <Name>BackgroundThreshold</Name>
-                        </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>Sigma</Selector>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:DistinctUntilChanged" />
-                        </Expression>
-                        <Expression xsi:type="MulticastSubject">
-                          <Name>Sigma</Name>
-                        </Expression>
-                      </Nodes>
-                      <Edges>
-                        <Edge From="0" To="1" Label="Source1" />
-                        <Edge From="1" To="2" Label="Source1" />
-                        <Edge From="1" To="5" Label="Source1" />
-                        <Edge From="1" To="8" Label="Source1" />
-                        <Edge From="2" To="3" Label="Source1" />
-                        <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="6" To="7" Label="Source1" />
-                        <Edge From="8" To="9" Label="Source1" />
-                        <Edge From="9" To="10" Label="Source1" />
+                        <Edge From="28" To="29" Label="Source1" />
+                        <Edge From="29" To="30" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -1418,25 +1313,21 @@
                   </Expression>
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="7" Label="Source1" />
-                  <Edge From="1" To="6" Label="Source1" />
-                  <Edge From="2" To="6" Label="Source2" />
-                  <Edge From="3" To="6" Label="Source3" />
-                  <Edge From="4" To="6" Label="Source4" />
-                  <Edge From="5" To="6" Label="Source5" />
-                  <Edge From="6" To="7" Label="Source2" />
-                  <Edge From="7" To="10" Label="Source1" />
+                  <Edge From="0" To="5" Label="Source1" />
+                  <Edge From="1" To="4" Label="Source1" />
+                  <Edge From="2" To="4" Label="Source2" />
+                  <Edge From="3" To="4" Label="Source3" />
+                  <Edge From="4" To="5" Label="Source2" />
+                  <Edge From="5" To="8" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source2" />
                   <Edge From="8" To="9" Label="Source1" />
-                  <Edge From="9" To="10" Label="Source2" />
-                  <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="10" To="13" Label="Source1" />
+                  <Edge From="8" To="11" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
                   <Edge From="11" To="12" Label="Source1" />
-                  <Edge From="13" To="14" Label="Source1" />
-                  <Edge From="14" To="15" Label="Source1" />
-                  <Edge From="14" To="16" Label="Source1" />
-                  <Edge From="14" To="17" Label="Source1" />
-                  <Edge From="14" To="18" Label="Source1" />
-                  <Edge From="14" To="19" Label="Source1" />
+                  <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="12" To="14" Label="Source1" />
+                  <Edge From="12" To="15" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -1452,6 +1343,57 @@
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
                     <Name>BufferSize</Name>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Saturation</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>SaturationThreshold</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>SaturationColor</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p3:CreateSaturationSettingsDto" />
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Dff</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>BackgroundFrames</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>BackgroundThreshold</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Sigma</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p3:CreateDffSettingsDto" />
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="3" Label="Source1" />
+                        <Edge From="1" To="3" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source3" />
+                        <Edge From="3" To="4" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p3:CreateDataPanelDto" />
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:WithLatestFrom" />
@@ -1887,65 +1829,166 @@
                     <Selector>Item2</Selector>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:DistinctUntilChanged" />
+                    <Combinator xsi:type="p3:ObserveOnControl" />
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>BufferSize</Selector>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p3:ObserveOnControl" />
+                    <Combinator xsi:type="rx:DistinctUntilChanged" />
                   </Expression>
                   <Expression xsi:type="MulticastSubject">
                     <Name>BufferSize</Name>
                   </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Saturation</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Saturation</Selector>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Threshold</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:DistinctUntilChanged" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>SaturationThreshold</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Color</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:DistinctUntilChanged" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>SaturationColor</Name>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="1" To="5" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Dff</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Dff</Selector>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>BackgroundFrames</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:DistinctUntilChanged" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>BackgroundFrames</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>BackgroundThreshold</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:DistinctUntilChanged" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>BackgroundThreshold</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Sigma</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:DistinctUntilChanged" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>Sigma</Name>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="1" To="5" Label="Source1" />
+                        <Edge From="1" To="8" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
+                        <Edge From="8" To="9" Label="Source1" />
+                        <Edge From="9" To="10" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="2" Label="Source1" />
-                  <Edge From="1" To="2" Label="Source2" />
-                  <Edge From="2" To="37" Label="Source1" />
-                  <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="4" To="5" Label="Source1" />
-                  <Edge From="4" To="8" Label="Source1" />
-                  <Edge From="4" To="12" Label="Source1" />
-                  <Edge From="4" To="16" Label="Source1" />
-                  <Edge From="4" To="22" Label="Source1" />
-                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="0" To="5" Label="Source1" />
+                  <Edge From="1" To="4" Label="Source1" />
+                  <Edge From="2" To="4" Label="Source2" />
+                  <Edge From="3" To="4" Label="Source3" />
+                  <Edge From="4" To="5" Label="Source2" />
+                  <Edge From="5" To="40" Label="Source1" />
                   <Edge From="6" To="7" Label="Source1" />
-                  <Edge From="7" To="37" Label="Source2" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="7" To="11" Label="Source1" />
+                  <Edge From="7" To="15" Label="Source1" />
+                  <Edge From="7" To="19" Label="Source1" />
+                  <Edge From="7" To="25" Label="Source1" />
                   <Edge From="8" To="9" Label="Source1" />
                   <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="11" To="37" Label="Source3" />
+                  <Edge From="10" To="40" Label="Source2" />
+                  <Edge From="11" To="12" Label="Source1" />
                   <Edge From="12" To="13" Label="Source1" />
                   <Edge From="13" To="14" Label="Source1" />
-                  <Edge From="14" To="15" Label="Source1" />
-                  <Edge From="15" To="37" Label="Source4" />
+                  <Edge From="14" To="40" Label="Source3" />
+                  <Edge From="15" To="16" Label="Source1" />
                   <Edge From="16" To="17" Label="Source1" />
                   <Edge From="17" To="18" Label="Source1" />
-                  <Edge From="17" To="20" Label="Source1" />
-                  <Edge From="18" To="19" Label="Source1" />
-                  <Edge From="19" To="37" Label="Source5" />
+                  <Edge From="18" To="40" Label="Source4" />
+                  <Edge From="19" To="20" Label="Source1" />
                   <Edge From="20" To="21" Label="Source1" />
-                  <Edge From="21" To="37" Label="Source6" />
-                  <Edge From="22" To="23" Label="Source1" />
+                  <Edge From="20" To="23" Label="Source1" />
+                  <Edge From="21" To="22" Label="Source1" />
+                  <Edge From="22" To="40" Label="Source5" />
                   <Edge From="23" To="24" Label="Source1" />
-                  <Edge From="24" To="37" Label="Source7" />
+                  <Edge From="24" To="40" Label="Source6" />
                   <Edge From="25" To="26" Label="Source1" />
-                  <Edge From="26" To="29" Label="Source1" />
-                  <Edge From="26" To="32" Label="Source2" />
-                  <Edge From="27" To="28" Label="Source1" />
-                  <Edge From="28" To="29" Label="Source2" />
-                  <Edge From="28" To="32" Label="Source1" />
-                  <Edge From="29" To="30" Label="Source1" />
+                  <Edge From="26" To="27" Label="Source1" />
+                  <Edge From="27" To="40" Label="Source7" />
+                  <Edge From="28" To="29" Label="Source1" />
+                  <Edge From="29" To="32" Label="Source1" />
+                  <Edge From="29" To="35" Label="Source2" />
                   <Edge From="30" To="31" Label="Source1" />
-                  <Edge From="31" To="37" Label="Source8" />
+                  <Edge From="31" To="32" Label="Source2" />
+                  <Edge From="31" To="35" Label="Source1" />
                   <Edge From="32" To="33" Label="Source1" />
                   <Edge From="33" To="34" Label="Source1" />
-                  <Edge From="34" To="37" Label="Source9" />
+                  <Edge From="34" To="40" Label="Source8" />
                   <Edge From="35" To="36" Label="Source1" />
-                  <Edge From="36" To="37" Label="Source10" />
-                  <Edge From="37" To="38" Label="Source1" />
-                  <Edge From="37" To="39" Label="Source1" />
-                  <Edge From="39" To="40" Label="Source1" />
+                  <Edge From="36" To="37" Label="Source1" />
+                  <Edge From="37" To="40" Label="Source9" />
+                  <Edge From="38" To="39" Label="Source1" />
+                  <Edge From="39" To="40" Label="Source10" />
                   <Edge From="40" To="41" Label="Source1" />
-                  <Edge From="41" To="42" Label="Source1" />
+                  <Edge From="40" To="42" Label="Source1" />
+                  <Edge From="42" To="43" Label="Source1" />
+                  <Edge From="43" To="44" Label="Source1" />
+                  <Edge From="43" To="47" Label="Source1" />
+                  <Edge From="43" To="48" Label="Source1" />
+                  <Edge From="44" To="45" Label="Source1" />
+                  <Edge From="45" To="46" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -1997,6 +2040,28 @@
               </Workflow>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
+              <Name>TriggerMode</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:WithLatestFrom" />
+            </Expression>
+            <Expression xsi:type="scr:ExpressionTransform">
+              <scr:Expression>it.Item1 &amp;&amp; !it.Item2</scr:Expression>
+            </Expression>
+            <Expression xsi:type="rx:Condition">
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                </Edges>
+              </Workflow>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
               <Name>Frame</Name>
             </Expression>
             <Expression xsi:type="MemberSelector">
@@ -2016,7 +2081,7 @@
               </Operand>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>RecordOnTriggerButton</Name>
+              <Name>RecordButton</Name>
             </Expression>
             <Expression xsi:type="rx:Condition">
               <Workflow>
@@ -2042,6 +2107,15 @@
                   <Edge From="3" To="4" Label="Source1" />
                 </Edges>
               </Workflow>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>TriggerMode</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:WithLatestFrom" />
+            </Expression>
+            <Expression xsi:type="scr:ExpressionTransform">
+              <scr:Expression>it.Item1 &amp;&amp; it.Item2</scr:Expression>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:WithLatestFrom" />
@@ -2152,36 +2226,26 @@
                         <Expression xsi:type="SubscribeSubject">
                           <Name>RecordButton</Name>
                         </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>RecordOnTriggerButton</Name>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="rx:CombineLatest" />
-                        </Expression>
-                        <Expression xsi:type="scr:ExpressionTransform">
-                          <scr:Expression>!it.Item1 &amp;&amp; !it.Item2</scr:Expression>
-                        </Expression>
                         <Expression xsi:type="rx:Condition">
                           <Workflow>
                             <Nodes>
                               <Expression xsi:type="WorkflowInput">
                                 <Name>Source1</Name>
                               </Expression>
+                              <Expression xsi:type="BitwiseNot" />
                               <Expression xsi:type="WorkflowOutput" />
                             </Nodes>
                             <Edges>
                               <Edge From="0" To="1" Label="Source1" />
+                              <Edge From="1" To="2" Label="Source1" />
                             </Edges>
                           </Workflow>
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
                       <Edges>
-                        <Edge From="0" To="2" Label="Source1" />
-                        <Edge From="1" To="2" Label="Source2" />
-                        <Edge From="2" To="3" Label="Source1" />
-                        <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -2210,20 +2274,16 @@
                         </Expression>
                         <Expression xsi:type="BitwiseNot" />
                         <Expression xsi:type="SubscribeSubject">
-                          <Name>RecordOnTriggerButton</Name>
+                          <Name>TriggerMode</Name>
                         </Expression>
-                        <Expression xsi:type="rx:Condition">
-                          <Workflow>
-                            <Nodes>
-                              <Expression xsi:type="WorkflowInput">
-                                <Name>Source1</Name>
-                              </Expression>
-                              <Expression xsi:type="WorkflowOutput" />
-                            </Nodes>
-                            <Edges>
-                              <Edge From="0" To="1" Label="Source1" />
-                            </Edges>
-                          </Workflow>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:WithLatestFrom" />
+                        </Expression>
+                        <Expression xsi:type="scr:ExpressionTransform">
+                          <scr:Expression>it.Item1 &amp;&amp; it.Item2</scr:Expression>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>RecordButton</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:WithLatestFrom" />
@@ -2252,12 +2312,14 @@
                         <Edge From="2" To="3" Label="Source1" />
                         <Edge From="3" To="4" Label="Source2" />
                         <Edge From="4" To="5" Label="Source1" />
-                        <Edge From="5" To="8" Label="Source1" />
-                        <Edge From="6" To="7" Label="Source1" />
-                        <Edge From="7" To="8" Label="Source2" />
-                        <Edge From="8" To="9" Label="Source1" />
-                        <Edge From="9" To="10" Label="Source1" />
+                        <Edge From="5" To="7" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source2" />
+                        <Edge From="7" To="8" Label="Source1" />
+                        <Edge From="8" To="10" Label="Source1" />
+                        <Edge From="9" To="10" Label="Source2" />
                         <Edge From="10" To="11" Label="Source1" />
+                        <Edge From="11" To="12" Label="Source1" />
+                        <Edge From="12" To="13" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -2294,7 +2356,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:Delay">
-                            <rx:DueTime>PT10M</rx:DueTime>
+                            <rx:DueTime>PT3S</rx:DueTime>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
@@ -2375,7 +2437,7 @@
                     <Property Name="Suffix" />
                   </Expression>
                   <Expression xsi:type="io:CsvWriter">
-                    <io:FileName>.csv</io:FileName>
+                    <io:FileName>../data/temp_.csv</io:FileName>
                     <io:Append>false</io:Append>
                     <io:Overwrite>false</io:Overwrite>
                     <io:Suffix>FileCount</io:Suffix>
@@ -2409,7 +2471,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="cv:VideoWriter">
-                      <cv:FileName>.avi</cv:FileName>
+                      <cv:FileName>../data/temp_.avi</cv:FileName>
                       <cv:Suffix>FileCount</cv:Suffix>
                       <cv:Buffered>true</cv:Buffered>
                       <cv:Overwrite>false</cv:Overwrite>
@@ -2498,7 +2560,7 @@
               <Combinator xsi:type="rx:Repeat" />
             </Expression>
             <Expression xsi:type="GroupWorkflow">
-              <Name>Reset Trigger Button</Name>
+              <Name>Reset Button On Disconnect</Name>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -2519,15 +2581,6 @@
                       </Edges>
                     </Workflow>
                   </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>RecordOnTriggerButton</Name>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:WithLatestFrom" />
-                  </Expression>
-                  <Expression xsi:type="scr:ExpressionTransform">
-                    <scr:Expression>it.Item1 &amp;&amp; it.Item2</scr:Expression>
-                  </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:ObserveOnControl" />
                   </Expression>
@@ -2537,17 +2590,14 @@
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="MulticastSubject">
-                    <Name>RecordOnTriggerButton</Name>
+                    <Name>RecordButton</Name>
                   </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
-                  <Edge From="1" To="3" Label="Source1" />
-                  <Edge From="2" To="3" Label="Source2" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
                   <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="4" To="5" Label="Source1" />
-                  <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="7" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -2573,14 +2623,35 @@
                       </Edges>
                     </Workflow>
                   </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>UseRecordDuration</Name>
+                  <Expression xsi:type="rx:Condition">
+                    <Name>RecordDurationIsTrue</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>UseRecordDuration</Name>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:WithLatestFrom" />
-                  </Expression>
-                  <Expression xsi:type="scr:ExpressionTransform">
-                    <scr:Expression>it.Item1 &amp;&amp; it.Item2</scr:Expression>
+                  <Expression xsi:type="rx:Condition">
+                    <Name>AutoRestartIsFalse</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>AutomaticRestart</Name>
+                        </Expression>
+                        <Expression xsi:type="BitwiseNot" />
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:ObserveOnControl" />
@@ -2593,15 +2664,43 @@
                   <Expression xsi:type="MulticastSubject">
                     <Name>RecordButton</Name>
                   </Expression>
+                  <Expression xsi:type="rx:Condition">
+                    <Name>AutoRestartIsTrue</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>AutomaticRestart</Name>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p3:ObserveOnControl" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="BooleanProperty">
+                      <Value>true</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject">
+                    <Name>AutoRestartTriggered</Name>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
-                  <Edge From="1" To="3" Label="Source1" />
-                  <Edge From="2" To="3" Label="Source2" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="2" To="7" Label="Source1" />
                   <Edge From="3" To="4" Label="Source1" />
                   <Edge From="4" To="5" Label="Source1" />
                   <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="8" To="9" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -2663,9 +2762,6 @@
                   <Expression xsi:type="MulticastSubject">
                     <Name>RecordButton</Name>
                   </Expression>
-                  <Expression xsi:type="MulticastSubject">
-                    <Name>RecordOnTriggerButton</Name>
-                  </Expression>
                   <Expression xsi:type="WorkflowOutput" />
                 </Nodes>
                 <Edges>
@@ -2677,45 +2773,51 @@
                   <Edge From="5" To="6" Label="Source1" />
                   <Edge From="6" To="7" Label="Source1" />
                   <Edge From="7" To="8" Label="Source1" />
-                  <Edge From="8" To="9" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
-            <Edge From="1" To="13" Label="Source1" />
-            <Edge From="2" To="3" Label="Source1" />
-            <Edge From="3" To="6" Label="Source1" />
+            <Edge From="1" To="3" Label="Source1" />
+            <Edge From="2" To="3" Label="Source2" />
+            <Edge From="3" To="4" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
-            <Edge From="5" To="6" Label="Source2" />
-            <Edge From="6" To="9" Label="Source1" />
-            <Edge From="7" To="8" Label="Source1" />
-            <Edge From="8" To="9" Label="Source2" />
-            <Edge From="9" To="10" Label="Source1" />
-            <Edge From="10" To="11" Label="Source1" />
+            <Edge From="5" To="20" Label="Source1" />
+            <Edge From="6" To="7" Label="Source1" />
+            <Edge From="7" To="10" Label="Source1" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="10" Label="Source2" />
+            <Edge From="10" To="16" Label="Source1" />
             <Edge From="11" To="12" Label="Source1" />
-            <Edge From="12" To="13" Label="Source2" />
-            <Edge From="13" To="14" Label="Source1" />
+            <Edge From="12" To="14" Label="Source1" />
+            <Edge From="13" To="14" Label="Source2" />
             <Edge From="14" To="15" Label="Source1" />
-            <Edge From="15" To="16" Label="Source1" />
+            <Edge From="15" To="16" Label="Source2" />
             <Edge From="16" To="17" Label="Source1" />
-            <Edge From="17" To="32" Label="Source1" />
+            <Edge From="17" To="18" Label="Source1" />
             <Edge From="18" To="19" Label="Source1" />
-            <Edge From="19" To="20" Label="Source1" />
-            <Edge From="20" To="32" Label="Source2" />
+            <Edge From="19" To="20" Label="Source2" />
+            <Edge From="20" To="21" Label="Source1" />
             <Edge From="21" To="22" Label="Source1" />
             <Edge From="22" To="23" Label="Source1" />
-            <Edge From="23" To="32" Label="Source3" />
-            <Edge From="24" To="25" Label="Source1" />
-            <Edge From="25" To="32" Label="Source4" />
+            <Edge From="23" To="24" Label="Source1" />
+            <Edge From="24" To="39" Label="Source1" />
+            <Edge From="25" To="26" Label="Source1" />
             <Edge From="26" To="27" Label="Source1" />
-            <Edge From="27" To="28" Label="Source1" />
-            <Edge From="28" To="32" Label="Source5" />
+            <Edge From="27" To="39" Label="Source2" />
+            <Edge From="28" To="29" Label="Source1" />
             <Edge From="29" To="30" Label="Source1" />
-            <Edge From="30" To="31" Label="Source1" />
-            <Edge From="31" To="32" Label="Source6" />
-            <Edge From="32" To="33" Label="Source1" />
+            <Edge From="30" To="39" Label="Source3" />
+            <Edge From="31" To="32" Label="Source1" />
+            <Edge From="32" To="39" Label="Source4" />
+            <Edge From="33" To="34" Label="Source1" />
+            <Edge From="34" To="35" Label="Source1" />
+            <Edge From="35" To="39" Label="Source5" />
+            <Edge From="36" To="37" Label="Source1" />
+            <Edge From="37" To="38" Label="Source1" />
+            <Edge From="38" To="39" Label="Source6" />
+            <Edge From="39" To="40" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
