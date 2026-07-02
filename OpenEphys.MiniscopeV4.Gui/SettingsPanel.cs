@@ -214,7 +214,7 @@ public class SettingsPanel
                         }
 
                         const string browseLabel = "...";
-                        const string openLabel = "Open";
+                        const string openLabel = "Browse";
                         float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
                         float openWidth = ImGui.CalcTextSize(openLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
                         float inputWidth = ImGui.GetContentRegionAvail().X - browseWidth - openWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
