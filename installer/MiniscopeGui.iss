@@ -112,7 +112,7 @@ Name: "{group}\{#AppName} Settings"; \
 Filename: "powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\Run.ps1"" -BootstrapOnly"; \
   WorkingDir: "{app}"; \
-  StatusMsg: "Downloading Bonsai..."; \
+  StatusMsg: "Downloading and installing Bonsai (this might take a while)..."; \
   Flags: runhidden waituntilterminated
 
 Filename: "powershell.exe"; \
