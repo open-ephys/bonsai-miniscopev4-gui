@@ -107,7 +107,7 @@ public class StatusBar
                 ImGui.PushStyleColor(ImGuiCol.Button, acqColor);
                 ImGui.PushStyleColor(ImGuiCol.ButtonHovered, acqColorHovered);
                 ImGui.PushStyleColor(ImGuiCol.ButtonActive, acqColor);
-                var acqButtonSize = new Vector2(160f, ImGui.GetFrameHeight() * 1.6f);
+                var acqButtonSize = new Vector2(140f, 0f);
                 if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn", acqButtonSize))
                 {
                     isConnected = !isConnected;
