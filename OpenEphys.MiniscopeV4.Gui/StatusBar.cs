@@ -88,39 +88,78 @@ public class StatusBar
                     AutomaticRestartTriggered = false;
                 }
 
-                ImGui.AlignTextToFramePadding();
-                ImGui.Text("Index: ");
-                ImGui.SameLine();
-
-                if (isConnected)
-                    ImGui.BeginDisabled();
-
-                ImGui.SetNextItemWidth(60f);
-                ImGui.InputInt("##statusbar_index", ref cameraIndex, 0, 0);
-
-                if (isConnected)
-                    ImGui.EndDisabled();
-
-                ImGui.SameLine();
-                var acqColor = isConnected ? colorStop : colorStart;
-                var acqColorHovered = isConnected ? colorStopHovered : colorStartHovered;
-                ImGui.PushStyleColor(ImGuiCol.Button, acqColor);
-                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, acqColorHovered);
-                ImGui.PushStyleColor(ImGuiCol.ButtonActive, acqColor);
-                var acqButtonSize = new Vector2(140f, 0f);
-                if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn", acqButtonSize))
+                if (ImGui.BeginTable("##statusbar", 2))
                 {
-                    isConnected = !isConnected;
-                }
-                ImGui.PopStyleColor(3);
+                    ImGui.TableNextColumn();
 
-                var statusColor = isConnected
-                        ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
-                        : new Vector4(0.6f, 0.6f, 0.6f, 1f);
-                ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
-                ImGui.SameLine();
-                ImGui.Text(isConnected ? "Acquiring" : "Disconnected");
-                ImGui.PopStyleColor();
+                    ImGui.AlignTextToFramePadding();
+                    ImGui.Text("Index: ");
+                    ImGui.SameLine();
+
+                    if (isConnected)
+                        ImGui.BeginDisabled();
+
+                    ImGui.SetNextItemWidth(60f);
+                    ImGui.InputInt("##statusbar_index", ref cameraIndex, 0, 0);
+
+                    if (isConnected)
+                        ImGui.EndDisabled();
+
+                    ImGui.SameLine();
+                    var acqColor = isConnected ? colorStop : colorStart;
+                    var acqColorHovered = isConnected ? colorStopHovered : colorStartHovered;
+                    ImGui.PushStyleColor(ImGuiCol.Button, acqColor);
+                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, acqColorHovered);
+                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, acqColor);
+                    var acqButtonSize = new Vector2(140f, 0f);
+                    if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn", acqButtonSize))
+                    {
+                        isConnected = !isConnected;
+                    }
+                    ImGui.PopStyleColor(3);
+
+                    var statusColor = isConnected
+                            ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
+                            : new Vector4(0.6f, 0.6f, 0.6f, 1f);
+                    ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
+                    ImGui.SameLine();
+                    ImGui.Text(isConnected ? "Acquiring" : "Disconnected");
+                    ImGui.PopStyleColor();
+
+                    ImGui.TableNextColumn();
+
+                    if (ImGui.BeginTable("##status_timers", 2))
+                    {
+                        ImGui.TableNextColumn();
+
+                        if (isConnected)
+                        {
+                            acquisitionStart ??= DateTime.Now;
+                            elapsedAcquisitionTime = (DateTime.Now - acquisitionStart.Value).TotalSeconds;
+                        }
+                        else if (acquisitionStart != null)
+                        {
+                            acquisitionStart = null;
+                        }
+                        ImGui.Text($"Acquiring: {elapsedAcquisitionTime:F0} s");
+
+                        ImGui.TableNextColumn();
+
+                        if (RecordingStatus)
+                        {
+                            recordingStart ??= DateTime.Now;
+                            ImGui.Text($"Recording: {(DateTime.Now - recordingStart.Value).TotalSeconds:F0} s");
+                        }
+                        else if (recordingStart != null)
+                        {
+                            recordingStart = null;
+                        }
+
+                        ImGui.EndTable();
+                    }
+                    
+                    ImGui.EndTable();
+                }
 
                 if (ImGui.BeginTable("##status_values", 3))
                 {
@@ -134,29 +173,6 @@ public class StatusBar
                     if (DroppedFrames > 0) ImGui.PushStyleColor(ImGuiCol.Text, colorError);
                     ImGui.Text($"Dropped Frames: {DroppedFrames}");
                     if (DroppedFrames > 0) ImGui.PopStyleColor();
-
-                    ImGui.TableNextColumn();
-                    if (isConnected)
-                    {
-                        acquisitionStart ??= DateTime.Now;
-                        elapsedAcquisitionTime = (DateTime.Now - acquisitionStart.Value).TotalSeconds;
-                    }
-                    else if (acquisitionStart != null)
-                    {
-                        acquisitionStart = null;
-                    }
-                    ImGui.Text($"Acquiring: {elapsedAcquisitionTime:F0} s");
-
-                    ImGui.TableNextColumn();
-                    if (RecordingStatus)
-                    {
-                        recordingStart ??= DateTime.Now;
-                        ImGui.Text($"Recording: {(DateTime.Now - recordingStart.Value).TotalSeconds:F0} s");
-                    }
-                    else if (recordingStart != null)
-                    {
-                        recordingStart = null;
-                    }
 
                     ImGui.EndTable();
                 }
