@@ -145,7 +145,7 @@ public class SettingsPanel
                     ImGui.SetNextItemOpen(true, ImGuiCond.Once);
                     if (ImGui.CollapsingHeader("Miniscope##miniscope_header"))
                     {
-                        ImGui.BeginChild("##miniscope_group", new Vector2(-1, 125), ImGuiChildFlags.Borders);
+                        ImGui.BeginChild("##miniscope_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
 
                         ImGui.AlignTextToFramePadding();
                         ImGui.Text("Focus: ");
@@ -166,7 +166,7 @@ public class SettingsPanel
                         double brightnessMin = 0, brightnessMax = 100;
                         ImGui.SliderScalar("##ledbrightness", ImGuiDataType.Double, &ledBrightness, &brightnessMin, &brightnessMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
 
-                        if (ImGui.BeginTable("##row2", 2))
+                        if (ImGui.BeginTable("##row2", 2, ImGuiTableFlags.SizingStretchSame))
                         {
                             ImGui.TableNextColumn();
                             ImGui.AlignTextToFramePadding();
@@ -212,221 +212,221 @@ public class SettingsPanel
                     ImGui.SetNextItemOpen(true, ImGuiCond.Once);
                     if (ImGui.CollapsingHeader("File##file_header"))
                     {
-                        if (ImGui.BeginChild("##file_group", new Vector2(-1, 285), ImGuiChildFlags.Borders))
+                        ImGui.BeginChild("##file_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
+
+                        ImGui.Text("File Name Template");
+                        if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
                         {
-                            ImGui.Text("File Name Template");
-                            if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
-                            {
-                                ImGui.BeginTooltip();
-                                ImGui.Text("Choose the location and format to save all files.");
-                                ImGui.Text("Video files will have '.avi' added the file format, and CSV files will have '.csv' added.");
-                                ImGui.Text("If Suffix is set, the selected suffix will be added after the format and before the extension.");
-                                ImGui.EndTooltip();
-                            }
+                            ImGui.BeginTooltip();
+                            ImGui.Text("Choose the location and format to save all files.");
+                            ImGui.Text("Video files will have '.avi' added the file format, and CSV files will have '.csv' added.");
+                            ImGui.Text("If Suffix is set, the selected suffix will be added after the format and before the extension.");
+                            ImGui.EndTooltip();
+                        }
 
-                            const string browseLabel = "...";
-                            const string openLabel = "Browse";
-                            float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
-                            float openWidth = ImGui.CalcTextSize(openLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
-                            float inputWidth = ImGui.GetContentRegionAvail().X - browseWidth - openWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
+                        const string browseLabel = "...";
+                        const string openLabel = "Browse";
+                        float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
+                        float openWidth = ImGui.CalcTextSize(openLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
+                        float inputWidth = ImGui.GetContentRegionAvail().X - browseWidth - openWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
 
-                            ImGui.SetNextItemWidth(inputWidth);
-                            ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
-                            ImGui.SameLine();
-                            if (ImGui.Button($"{browseLabel}##choose_filename_button", new Vector2(browseWidth, 0)))
+                        ImGui.SetNextItemWidth(inputWidth);
+                        ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
+                        ImGui.SameLine();
+                        if (ImGui.Button($"{browseLabel}##choose_filename_button", new Vector2(browseWidth, 0)))
+                        {
+                            if (saveDialogTask == null || saveDialogTask.IsCompleted)
                             {
-                                if (saveDialogTask == null || saveDialogTask.IsCompleted)
+                                saveDialogTask = Task.Run(() =>
                                 {
-                                    saveDialogTask = Task.Run(() =>
+                                    string result = string.Empty;
+                                    Thread t = new(() =>
                                     {
-                                        string result = string.Empty;
-                                        Thread t = new(() =>
+                                        SaveFileDialog dlg = new()
                                         {
-                                            SaveFileDialog dlg = new()
-                                            {
-                                                InitialDirectory = GetDirectory(fileName),
-                                                Filter = "All Files|*.*",
-                                                Title = "Choose where to save Miniscope data.",
-                                                AddExtension = false,
-                                                CheckFileExists = false,
-                                                CheckPathExists = false,
-                                                FileName = Path.GetFileName(fileName)
-                                            };
-                                            if (dlg.ShowDialog() == DialogResult.OK)
-                                                result = dlg.FileName;
-                                        });
-                                        t.SetApartmentState(ApartmentState.STA);
-                                        t.Start();
-                                        t.Join();
-                                        return result;
+                                            InitialDirectory = GetDirectory(fileName),
+                                            Filter = "All Files|*.*",
+                                            Title = "Choose where to save Miniscope data.",
+                                            AddExtension = false,
+                                            CheckFileExists = false,
+                                            CheckPathExists = false,
+                                            FileName = Path.GetFileName(fileName)
+                                        };
+                                        if (dlg.ShowDialog() == DialogResult.OK)
+                                            result = dlg.FileName;
                                     });
-                                }
+                                    t.SetApartmentState(ApartmentState.STA);
+                                    t.Start();
+                                    t.Join();
+                                    return result;
+                                });
                             }
+                        }
 
-                            string noFolderFoundPopupName = "No folder found##no_folder_found";
+                        string noFolderFoundPopupName = "No folder found##no_folder_found";
 
-                            ImGui.SameLine();
-                            if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
+                        ImGui.SameLine();
+                        if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
+                        {
+                            var dir = GetDirectory(fileName);
+                            if (Directory.Exists(dir))
+                                System.Diagnostics.Process.Start("explorer.exe", dir);
+
+                            else
                             {
-                                var dir = GetDirectory(fileName);
-                                if (Directory.Exists(dir))
-                                    System.Diagnostics.Process.Start("explorer.exe", dir);
-
-                                else
-                                {
-                                    ImGui.OpenPopup(noFolderFoundPopupName);
-                                    isModalOpen = true;
-                                }
+                                ImGui.OpenPopup(noFolderFoundPopupName);
+                                isModalOpen = true;
                             }
+                        }
 
-                            if (ImGui.BeginPopupModal(noFolderFoundPopupName, ref isModalOpen, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
+                        if (ImGui.BeginPopupModal(noFolderFoundPopupName, ref isModalOpen, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
+                        {
+                            ImGui.Text($"Could not find the folder '{GetDirectory(fileName)}'.");
+
+                            if (ImGui.Button("Okay##close_modal_window"))
                             {
-                                ImGui.Text($"Could not find the folder '{GetDirectory(fileName)}'.");
-
-                                if (ImGui.Button("Okay##close_modal_window"))
-                                {
-                                    ImGui.CloseCurrentPopup();
-                                    isModalOpen = false;
-                                }
-
-                                ImGui.EndPopup();
+                                ImGui.CloseCurrentPopup();
+                                isModalOpen = false;
                             }
 
-                            if (saveDialogTask != null && saveDialogTask.IsCompleted)
-                            {
-                                var result = saveDialogTask.Result;
-                                if (!string.IsNullOrEmpty(result))
-                                    fileName = result;
-                                saveDialogTask = null;
-                            }
+                            ImGui.EndPopup();
+                        }
 
-                            if (ImGui.BeginTable("##writer_parameters", 2))
-                            {
-                                ImGui.TableNextColumn();
-                                ImGui.AlignTextToFramePadding();
-                                ImGui.Text("Suffix:");
-                                ImGui.SameLine();
-                                ImGui.SetNextItemWidth(-1f);
+                        if (saveDialogTask != null && saveDialogTask.IsCompleted)
+                        {
+                            var result = saveDialogTask.Result;
+                            if (!string.IsNullOrEmpty(result))
+                                fileName = result;
+                            saveDialogTask = null;
+                        }
 
-                                int currentPathSuffix = (int)suffix;
-                                if (ImGui.Combo("##path_suffix", ref currentPathSuffix, PathSuffixValues, PathSuffixValues.Length))
-                                    suffix = (PathSuffix)currentPathSuffix;
-
-                                ImGui.TableNextColumn();
-                                ImGui.SetNextItemWidth(-1f);
-                                ImGui.Checkbox("Compress Video##compress_video", ref isCompressed);
-
-                                ImGui.EndTable();
-                            }
-
-                            ImGui.Separator();
-
+                        if (ImGui.BeginTable("##writer_parameters", 2, ImGuiTableFlags.SizingStretchSame))
+                        {
+                            ImGui.TableNextColumn();
                             ImGui.AlignTextToFramePadding();
-                            ImGui.Text("Mode: ");
+                            ImGui.Text("Suffix:");
                             ImGui.SameLine();
-                            if (ImGui.RadioButton("Manual##record_mode_manual", !triggerMode) && triggerMode)
-                            {
-                                triggerMode = false;
-                                recordButton = false;
-                            }
-                            ImGui.SameLine();
-                            if (ImGui.RadioButton("Triggered##record_mode_triggered", triggerMode) && !triggerMode)
-                            {
-                                triggerMode = true;
-                                recordButton = false;
-                            }
+                            ImGui.SetNextItemWidth(-1f);
 
-                            var recordingSettingsHeight = ImGui.GetFrameHeightWithSpacing() * 2 + ImGui.GetStyle().ItemSpacing.Y * 2;
+                            int currentPathSuffix = (int)suffix;
+                            if (ImGui.Combo("##path_suffix", ref currentPathSuffix, PathSuffixValues, PathSuffixValues.Length))
+                                suffix = (PathSuffix)currentPathSuffix;
 
-                            if (ImGui.BeginChild("##recording_settings", new Vector2(-1, recordingSettingsHeight), ImGuiChildFlags.None))
+                            ImGui.TableNextColumn();
+                            ImGui.SetNextItemWidth(-1f);
+                            ImGui.Checkbox("Compress Video##compress_video", ref isCompressed);
+
+                            ImGui.EndTable();
+                        }
+
+                        ImGui.Separator();
+
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.Text("Mode: ");
+                        ImGui.SameLine();
+                        if (ImGui.RadioButton("Manual##record_mode_manual", !triggerMode) && triggerMode)
+                        {
+                            triggerMode = false;
+                            recordButton = false;
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.RadioButton("Triggered##record_mode_triggered", triggerMode) && !triggerMode)
+                        {
+                            triggerMode = true;
+                            recordButton = false;
+                        }
+
+                        var recordingSettingsHeight = ImGui.GetFrameHeightWithSpacing() * 2 + ImGui.GetStyle().ItemSpacing.Y * 2;
+
+                        if (ImGui.BeginChild("##recording_settings", new Vector2(-1, recordingSettingsHeight), ImGuiChildFlags.None))
+                        {
+                            if (!triggerMode)
                             {
-                                if (!triggerMode)
+                                ImGui.Checkbox("Use Recording Duration##use_record_duration", ref useRecordDuration);
+
+                                if (!useRecordDuration) ImGui.BeginDisabled();
+
+                                if (ImGui.BeginTable("##record_duration_table", 2, ImGuiTableFlags.SizingStretchSame))
                                 {
-                                    ImGui.Checkbox("Use Recording Duration##use_record_duration", ref useRecordDuration);
+                                    ImGui.TableNextColumn();
 
-                                    if (!useRecordDuration) ImGui.BeginDisabled();
-
-                                    if (ImGui.BeginTable("##record_duration_table", 2))
-                                    {
-                                        ImGui.TableNextColumn();
-
-                                        ImGui.AlignTextToFramePadding();
-                                        ImGui.Text("Duration [s]:");
-                                        ImGui.SameLine();
-                                        ImGui.SetNextItemWidth(-1f);
-                                        if (ImGui.InputInt("##recording_duration", ref recordingDurationSeconds, 0, 0, ImGuiInputTextFlags.AutoSelectAll))
-                                        {
-                                            recordingDurationSeconds = Math.Max(1, recordingDurationSeconds);
-                                        }
-
-                                        ImGui.TableNextColumn();
-                                        ImGui.Checkbox("Auto Restart##automatic_restart", ref automaticRestart);
-                                        if (ImGui.BeginItemTooltip())
-                                        {
-                                            ImGui.Text("When enabled, a new recording starts automatically each time the\nrecording duration elapses, until you press Stop Recording.");
-                                            ImGui.EndTooltip();
-                                        }
-
-                                        ImGui.EndTable();
-                                    }
-
-                                    if (!useRecordDuration) ImGui.EndDisabled();
-                                }
-                                else
-                                {
                                     ImGui.AlignTextToFramePadding();
-                                    ImGui.Text("Digital Input: ");
+                                    ImGui.Text("Duration [s]:");
                                     ImGui.SameLine();
                                     ImGui.SetNextItemWidth(-1f);
-                                    if (recordButton) ImGui.BeginDisabled();
-                                    if (ImGui.BeginCombo("##trigger_input", DigitalInNames[triggerIndex]))
+                                    if (ImGui.InputInt("##recording_duration", ref recordingDurationSeconds, 0, 0, ImGuiInputTextFlags.AutoSelectAll))
                                     {
-                                        foreach (var val in DigitalInValues)
-                                        {
-                                            if (val == MiniscopeDaqDigitalIn.None) continue;
-
-                                            bool selected = triggerInput == val;
-                                            if (ImGui.Selectable(val.ToString(), selected))
-                                                triggerInput = val;
-
-                                            if (selected)
-                                                ImGui.SetItemDefaultFocus();
-                                        }
-                                        ImGui.EndCombo();
+                                        recordingDurationSeconds = Math.Max(1, recordingDurationSeconds);
                                     }
-                                    if (recordButton) ImGui.EndDisabled();
+
+                                    ImGui.TableNextColumn();
+                                    ImGui.Checkbox("Auto Restart##automatic_restart", ref automaticRestart);
+                                    if (ImGui.BeginItemTooltip())
+                                    {
+                                        ImGui.Text("When enabled, a new recording starts automatically each time the\nrecording duration elapses, until you press Stop Recording.");
+                                        ImGui.EndTooltip();
+                                    }
+
+                                    ImGui.EndTable();
                                 }
+
+                                if (!useRecordDuration) ImGui.EndDisabled();
                             }
-
-                            ImGui.EndChild();
-
-                            var recColor = recordButton ? colorStop : colorRecord;
-                            var recColorHovered = recordButton ? colorStopHovered : colorRecordHovered;
-                            ImGui.PushStyleColor(ImGuiCol.Button, recColor);
-                            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, recColorHovered);
-                            ImGui.PushStyleColor(ImGuiCol.ButtonActive, recColor);
-
-                            Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
-                            if (!AcquisitionStatus) ImGui.BeginDisabled();
-                            string recordLabel = !triggerMode
-                                ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
-                                : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
-                            if (ImGui.Button(recordLabel, recordButtonSize))
+                            else
                             {
-                                recordButton = !recordButton;
-                            }
-                            if (!AcquisitionStatus) ImGui.EndDisabled();
+                                ImGui.AlignTextToFramePadding();
+                                ImGui.Text("Digital Input: ");
+                                ImGui.SameLine();
+                                ImGui.SetNextItemWidth(-1f);
+                                if (recordButton) ImGui.BeginDisabled();
+                                if (ImGui.BeginCombo("##trigger_input", DigitalInNames[triggerIndex]))
+                                {
+                                    foreach (var val in DigitalInValues)
+                                    {
+                                        if (val == MiniscopeDaqDigitalIn.None) continue;
 
-                            ImGui.PopStyleColor(3);
+                                        bool selected = triggerInput == val;
+                                        if (ImGui.Selectable(val.ToString(), selected))
+                                            triggerInput = val;
+
+                                        if (selected)
+                                            ImGui.SetItemDefaultFocus();
+                                    }
+                                    ImGui.EndCombo();
+                                }
+                                if (recordButton) ImGui.EndDisabled();
+                            }
                         }
+
+                        ImGui.EndChild();
+
+                        var recColor = recordButton ? colorStop : colorRecord;
+                        var recColorHovered = recordButton ? colorStopHovered : colorRecordHovered;
+                        ImGui.PushStyleColor(ImGuiCol.Button, recColor);
+                        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, recColorHovered);
+                        ImGui.PushStyleColor(ImGuiCol.ButtonActive, recColor);
+
+                        Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
+                        if (!AcquisitionStatus) ImGui.BeginDisabled();
+                        string recordLabel = !triggerMode
+                            ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
+                            : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
+                        if (ImGui.Button(recordLabel, recordButtonSize))
+                        {
+                            recordButton = !recordButton;
+                        }
+                        if (!AcquisitionStatus) ImGui.EndDisabled();
+
+                        ImGui.PopStyleColor(3);
 
                         ImGui.EndChild();
                     }
 
                     if (ImGui.CollapsingHeader("Commutator##commutator_header"))
                     {
-                        ImGui.BeginChild("##commutator_child", new Vector2(-1, 100), ImGuiChildFlags.Borders);
+                        ImGui.BeginChild("##commutator_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
 
+                        ImGui.AlignTextToFramePadding();
                         ImGui.Text("COM Port: ");
                         ImGui.SameLine();
 
@@ -468,7 +468,7 @@ public class SettingsPanel
                         if (!commutatorConnected)
                             ImGui.BeginDisabled();
 
-                        if (ImGui.BeginTable("##commutator_checkboxes", 2))
+                        if (ImGui.BeginTable("##commutator_checkboxes", 2, ImGuiTableFlags.SizingStretchSame))
                         {
                             ImGui.TableNextColumn();
                             ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
