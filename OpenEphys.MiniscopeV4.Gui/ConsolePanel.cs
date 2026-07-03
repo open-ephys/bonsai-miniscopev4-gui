@@ -55,10 +55,36 @@ public class ConsolePanel
             var sourceObserver = Observer.Create<TSource>(value =>
             {
                 ImGui.InvisibleButton("##console_splitter", new Vector2(-1f, ConsoleLayout.SplitterThickness));
-                if (ImGui.IsItemActive())
+
+                bool hovered = ImGui.IsItemHovered();
+                bool active = ImGui.IsItemActive();
+
+                if (active)
                     ConsoleLayout.ConsoleHeight -= ImGui.GetIO().MouseDelta.Y;
-                if (ImGui.IsItemHovered() || ImGui.IsItemActive())
+                if (hovered || active)
                     ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNs);
+                var drawList = ImGui.GetWindowDrawList();
+
+                Vector2 min = ImGui.GetItemRectMin();
+                Vector2 max = ImGui.GetItemRectMax();
+
+                float y = (min.Y + max.Y) * 0.5f;
+
+                uint color =
+                    active ? ImGui.GetColorU32(ImGuiCol.SeparatorActive) :
+                    hovered ? ImGui.GetColorU32(ImGuiCol.SeparatorHovered) :
+                              ImGui.GetColorU32(ImGuiCol.Separator);
+
+                float thickness =
+                    active ? 3.0f :
+                    hovered ? 2.0f :
+                              1.0f;
+
+                drawList.AddLine(
+                    new Vector2(min.X, y),
+                    new Vector2(max.X, y),
+                    color,
+                    thickness);
 
                 int logVersion = MiniscopeLog.Version;
                 if (logVersion != lastLogVersion)
@@ -67,7 +93,7 @@ public class ConsolePanel
                     lastLogVersion = logVersion;
                 }
 
-                if (ImGui.BeginChild("##console", new Vector2(-1f, ConsoleLayout.ConsoleHeight), ImGuiChildFlags.Borders))
+                if (ImGui.BeginChild("##console", new Vector2(-1f, -1f), ImGuiChildFlags.Borders))
                 {
                     if (ImGui.Button("Clear##console_clear"))
                         MiniscopeLog.Clear();
