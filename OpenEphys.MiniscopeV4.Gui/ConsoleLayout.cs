@@ -1,3 +1,4 @@
+using Hexa.NET.ImGui;
 using System;
 
 namespace OpenEphys.MiniscopeV4.Gui;
@@ -8,13 +9,12 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// and the data panel) so they can reserve room for the console at the bottom of the window.
 /// Mirrors the process-wide static pattern used by <see cref="MiniscopeLog"/>.
 /// </summary>
-public static class ConsoleLayout
+static class ConsoleLayout
 {
     /// <summary>Thickness, in pixels, of the draggable splitter above the console.</summary>
     public const float SplitterThickness = 6f;
 
     const float MinHeight = 60f;
-    const float MaxHeight = 600f;
 
     static float consoleHeight = 130f;
 
@@ -24,7 +24,7 @@ public static class ConsoleLayout
     public static float ConsoleHeight
     {
         get => consoleHeight;
-        set => consoleHeight = Math.Max(MinHeight, Math.Min(MaxHeight, value));
+        set => consoleHeight = Math.Max(MinHeight, Math.Min(ImGui.GetWindowHeight() * 0.4f, value));
     }
 
     /// <summary>

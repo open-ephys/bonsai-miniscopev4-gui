@@ -54,8 +54,6 @@ public class ConsolePanel
 
             var sourceObserver = Observer.Create<TSource>(value =>
             {
-                // Draggable splitter above the console. Dragging down (positive MouseDelta.Y)
-                // shrinks the console, since the console sits below the splitter.
                 ImGui.InvisibleButton("##console_splitter", new Vector2(-1f, ConsoleLayout.SplitterThickness));
                 if (ImGui.IsItemActive())
                     ConsoleLayout.ConsoleHeight -= ImGui.GetIO().MouseDelta.Y;
