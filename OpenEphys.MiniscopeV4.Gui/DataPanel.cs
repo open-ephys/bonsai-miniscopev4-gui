@@ -87,10 +87,33 @@ public class DataPanel
     [Browsable(false)]
     public bool AcquisitionStatus { get; set; }
 
+    /// <summary>
+    /// Gets or sets the average frame rate, in Hz, used to display the acquisition frame rate.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public double AverageFrameRate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the frame number of the current frame.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public int FrameNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of dropped frames since acquisition started.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public int DroppedFrames { get; set; }
+
     static readonly Vector2 fillAvailable = new(-1, -1);
     static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle;
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
     static readonly string[] histogramAxisTickLabels = new string[] { "0%", "20%", "40%", "60%", "80%", "100%" };
+
+    static readonly Vector4 colorError = new(0.9f, 0.3f, 0.3f, 1f);
 
     /// <summary>
     /// Renders the data panel for each source value and forwards the value unchanged.
@@ -161,6 +184,23 @@ public class DataPanel
                                 if (ImGui.BeginTabItem("Image##Image"))
                                 {
                                     RenderImageArea("##image_area_raw", imageAreaHeight, displaySize, MiniscopeImage);
+
+                                    if (ImGui.BeginTable("##status_values", 3))
+                                    {
+                                        ImGui.TableNextColumn();
+                                        ImGui.Text($"Frames per Second: {AverageFrameRate:F1}");
+
+                                        ImGui.TableNextColumn();
+                                        ImGui.Text($"Frame Number: {FrameNumber}");
+
+                                        ImGui.TableNextColumn();
+                                        if (DroppedFrames > 0) ImGui.PushStyleColor(ImGuiCol.Text, colorError);
+                                        ImGui.Text($"Dropped Frames: {DroppedFrames}");
+                                        if (DroppedFrames > 0) ImGui.PopStyleColor();
+
+                                        ImGui.EndTable();
+                                    }
+
                                     ImGui.EndTabItem();
                                 }
 

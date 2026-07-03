@@ -17,27 +17,6 @@ namespace OpenEphys.MiniscopeV4.Gui;
 public class StatusBar
 {
     /// <summary>
-    /// Gets or sets the average frame rate, in Hz, used to display the acquisition frame rate.
-    /// </summary>
-    [XmlIgnore]
-    [Browsable(false)]
-    public double AverageFrameRate { get; set; }
-
-    /// <summary>
-    /// Gets or sets the frame number of the current frame.
-    /// </summary>
-    [XmlIgnore]
-    [Browsable(false)]
-    public int FrameNumber { get; set; }
-
-    /// <summary>
-    /// Gets or sets the number of dropped frames since acquisition started.
-    /// </summary>
-    [XmlIgnore]
-    [Browsable(false)]
-    public int DroppedFrames { get; set; }
-
-    /// <summary>
     /// Gets or sets a value indicating whether a recording is currently in progress.
     /// </summary>
     [XmlIgnore]
@@ -54,8 +33,6 @@ public class StatusBar
     [XmlIgnore]
     [Browsable(false)]
     public bool AutomaticRestartTriggered { get; set; }
-
-    static readonly Vector4 colorError = new(0.9f, 0.3f, 0.3f, 1f);
 
     static readonly Vector4 colorStart = new(0.15f, 0.55f, 0.20f, 1f);
     static readonly Vector4 colorStartHovered = new(0.20f, 0.67f, 0.25f, 1f);
@@ -158,22 +135,6 @@ public class StatusBar
                         ImGui.EndTable();
                     }
                     
-                    ImGui.EndTable();
-                }
-
-                if (ImGui.BeginTable("##status_values", 3))
-                {
-                    ImGui.TableNextColumn();
-                    ImGui.Text($"Frames per Second: {AverageFrameRate:F1}");
-
-                    ImGui.TableNextColumn();
-                    ImGui.Text($"Frame Number: {FrameNumber}");
-
-                    ImGui.TableNextColumn();
-                    if (DroppedFrames > 0) ImGui.PushStyleColor(ImGuiCol.Text, colorError);
-                    ImGui.Text($"Dropped Frames: {DroppedFrames}");
-                    if (DroppedFrames > 0) ImGui.PopStyleColor();
-
                     ImGui.EndTable();
                 }
 
