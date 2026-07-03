@@ -321,20 +321,20 @@ public class SettingsPanel
 
                         ImGui.Separator();
 
+                        if (recordButton) ImGui.BeginDisabled();
                         ImGui.AlignTextToFramePadding();
                         ImGui.Text("Mode: ");
                         ImGui.SameLine();
                         if (ImGui.RadioButton("Manual##record_mode_manual", !triggerMode) && triggerMode)
                         {
                             triggerMode = false;
-                            recordButton = false;
                         }
                         ImGui.SameLine();
                         if (ImGui.RadioButton("Triggered##record_mode_triggered", triggerMode) && !triggerMode)
                         {
                             triggerMode = true;
-                            recordButton = false;
                         }
+                        if (recordButton) ImGui.EndDisabled();
 
                         var recordingSettingsHeight = ImGui.GetFrameHeightWithSpacing() * 2 + ImGui.GetStyle().ItemSpacing.Y * 2;
 
@@ -342,6 +342,7 @@ public class SettingsPanel
                         {
                             if (!triggerMode)
                             {
+                                if (recordButton) ImGui.BeginDisabled();
                                 ImGui.Checkbox("Use Recording Duration##use_record_duration", ref useRecordDuration);
 
                                 if (!useRecordDuration) ImGui.BeginDisabled();
@@ -371,6 +372,7 @@ public class SettingsPanel
                                 }
 
                                 if (!useRecordDuration) ImGui.EndDisabled();
+                                if (recordButton) ImGui.EndDisabled();
                             }
                             else
                             {
