@@ -14,7 +14,7 @@ static class ConsoleLayout
     /// <summary>Thickness, in pixels, of the draggable splitter above the console.</summary>
     public const float SplitterThickness = 6f;
 
-    const float MinHeight = 60f;
+    const float MinHeight = 65f;
 
     static float consoleHeight = 130f;
 
