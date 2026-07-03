@@ -172,7 +172,7 @@ public class DataPanel
                             var availableSize = ImGui.GetContentRegionAvail();
                             availableSize.Y -= tabBarHeight;
 
-                            float controlFooterHeight = ImGui.GetFrameHeightWithSpacing() * 3f;
+                            float controlFooterHeight = ImGui.GetFrameHeightWithSpacing() + ImGui.GetStyle().ItemSpacing.Y;
                             float imageAreaHeight = Math.Max(0f, availableSize.Y - controlFooterHeight);
 
                             var displaySize = CalculateDisplaySize(
@@ -188,13 +188,16 @@ public class DataPanel
                                     if (ImGui.BeginTable("##status_values", 3))
                                     {
                                         ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
                                         ImGui.Text($"Frames per Second: {AverageFrameRate:F1}");
 
                                         ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
                                         ImGui.Text($"Frame Number: {FrameNumber}");
 
                                         ImGui.TableNextColumn();
                                         if (DroppedFrames > 0) ImGui.PushStyleColor(ImGuiCol.Text, colorError);
+                                        ImGui.AlignTextToFramePadding();
                                         ImGui.Text($"Dropped Frames: {DroppedFrames}");
                                         if (DroppedFrames > 0) ImGui.PopStyleColor();
 
@@ -208,23 +211,29 @@ public class DataPanel
                                 {
                                     RenderImageArea("##image_area_saturation", imageAreaHeight, displaySize, SaturationImage);
 
-                                    ImGui.AlignTextToFramePadding();
-                                    ImGui.Text("Threshold: ");
-                                    ImGui.SameLine();
-                                    ImGui.SetNextItemWidth(-1f);
-                                    ImGui.SliderInt("##saturation_threshold", ref satThreshold, byte.MinValue, byte.MaxValue - 1, ImGuiSliderFlags.AlwaysClamp);
-
-                                    ImGui.AlignTextToFramePadding();
-                                    ImGui.Text("Color: ");
-                                    ImGui.SameLine();
-                                    ImGui.SetNextItemWidth(-1f);
-                                    if (ImGui.ColorEdit4("##saturation_color", ref satColor, ImGuiColorEditFlags.Uint8 | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoOptions))
+                                    if (ImGui.BeginTable("##saturation_controls", 2))
                                     {
-                                        satColor.X = Math.Max(0f, Math.Min(1f, satColor.X));
-                                        satColor.Y = Math.Max(0f, Math.Min(1f, satColor.Y));
-                                        satColor.Z = Math.Max(0f, Math.Min(1f, satColor.Z));
-                                    }
+                                        ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
+                                        ImGui.Text("Threshold: ");
+                                        ImGui.SameLine();
+                                        ImGui.SetNextItemWidth(-1f);
+                                        ImGui.SliderInt("##saturation_threshold", ref satThreshold, byte.MinValue, byte.MaxValue - 1, ImGuiSliderFlags.AlwaysClamp);
 
+                                        ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
+                                        ImGui.Text("Color: ");
+                                        ImGui.SameLine();
+                                        ImGui.SetNextItemWidth(-1f);
+                                        if (ImGui.ColorEdit4("##saturation_color", ref satColor, ImGuiColorEditFlags.Uint8 | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoOptions))
+                                        {
+                                            satColor.X = Math.Max(0f, Math.Min(1f, satColor.X));
+                                            satColor.Y = Math.Max(0f, Math.Min(1f, satColor.Y));
+                                            satColor.Z = Math.Max(0f, Math.Min(1f, satColor.Z));
+                                        }
+
+                                        ImGui.EndTable();
+                                    }
                                     ImGui.EndTabItem();
                                 }
 
@@ -232,27 +241,35 @@ public class DataPanel
                                 {
                                     RenderImageArea("##image_area_dff", imageAreaHeight, displaySize, DFFImage);
 
-                                    ImGui.AlignTextToFramePadding();
-                                    ImGui.Text("Background Frames: ");
-                                    ImGui.SameLine();
-                                    ImGui.SetNextItemWidth(-1f);
-                                    int backgroundFramesMin = 2, backgroundFramesMax = 1000;
-                                    if (ImGui.InputInt("##background_frames", ref backgroundFrames))
-                                        backgroundFrames = Math.Max(backgroundFramesMin, Math.Min(backgroundFramesMax, backgroundFrames));
+                                    if (ImGui.BeginTable("##dff_controls", 3))
+                                    {
+                                        ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
+                                        ImGui.Text("Frames: ");
+                                        ImGui.SameLine();
+                                        ImGui.SetNextItemWidth(-1f);
+                                        int backgroundFramesMin = 2, backgroundFramesMax = 1000;
+                                        if (ImGui.InputInt("##background_frames", ref backgroundFrames))
+                                            backgroundFrames = Math.Max(backgroundFramesMin, Math.Min(backgroundFramesMax, backgroundFrames));
 
-                                    ImGui.AlignTextToFramePadding();
-                                    ImGui.Text("Background Threshold: ");
-                                    ImGui.SameLine();
-                                    ImGui.SetNextItemWidth(-1f);
-                                    double bgThreshMin = 0, bgThreshMax = 255;
-                                    ImGui.SliderScalar("##background_threshold", ImGuiDataType.Double, &backgroundThreshold, &bgThreshMin, &bgThreshMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
+                                        ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
+                                        ImGui.Text("Threshold: ");
+                                        ImGui.SameLine();
+                                        ImGui.SetNextItemWidth(-1f);
+                                        double bgThreshMin = 0, bgThreshMax = 255;
+                                        ImGui.SliderScalar("##background_threshold", ImGuiDataType.Double, &backgroundThreshold, &bgThreshMin, &bgThreshMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
 
-                                    ImGui.AlignTextToFramePadding();
-                                    ImGui.Text("Sigma: ");
-                                    ImGui.SameLine();
-                                    ImGui.SetNextItemWidth(-1f);
-                                    if (ImGui.InputInt("##sigma", ref sigma))
-                                        sigma = Math.Max(0, sigma);
+                                        ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
+                                        ImGui.Text("Sigma: ");
+                                        ImGui.SameLine();
+                                        ImGui.SetNextItemWidth(-1f);
+                                        if (ImGui.InputInt("##sigma", ref sigma))
+                                            sigma = Math.Max(0, sigma);
+
+                                        ImGui.EndTable();
+                                    }
 
                                     ImGui.EndTabItem();
                                 }
