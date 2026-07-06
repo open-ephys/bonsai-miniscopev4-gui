@@ -74,6 +74,13 @@ public class DataPanel
     public RollingPlotPointSeries<Tuple<bool, bool>> DigitalInSeries { get; set; }
 
     /// <summary>
+    /// Gets or sets the rolling series of Euler angle values plotted in the time series tab.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public RollingPlotPointSeries<TaitBryanAngles> EulerAnglesSeries { get; set; }
+
+    /// <summary>
     /// Gets or sets the pixel intensity histogram plotted in the histogram tab.
     /// </summary>
     [XmlIgnore]
@@ -284,35 +291,18 @@ public class DataPanel
                         {
                             if (ImGui.BeginTabBar("##SignalTabBar"))
                             {
+                                ImPlotAxisFlags axisFlags = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoMenus | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines | ImPlotAxisFlags.NoTickLabels;
+
                                 if (ImGui.BeginTabItem("Quaternion"))
                                 {
-                                    if (AcquisitionStatus)
-                                    {
-                                        ImGui.BeginDisabled();
-                                    }
-
-                                    var bufferInputWidth = 60f;
-                                    ImGui.AlignTextToFramePadding();
-                                    ImGui.Text("Buffer Size: ");
-                                    ImGui.SameLine();
-                                    ImGui.SetNextItemWidth(bufferInputWidth);
-                                    if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
-                                    {
-                                        bufferSize = Math.Max(2, bufferSize);
-                                    }
-
-                                    if (AcquisitionStatus)
-                                    {
-                                        ImGui.EndDisabled();
-                                    }
-
+                                    PlotBufferSizeControl(ref bufferSize);
+                                    
                                     if (QuaternionSeries == null && DigitalInSeries == null)
                                     {
                                         ImGui.Text("No data to display");
                                     }
                                     else if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
                                     {
-                                        ImPlotAxisFlags axisFlags = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoMenus | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines | ImPlotAxisFlags.NoTickLabels;
                                         ImPlot.SetupAxes("", "", axisFlags, axisFlags);
                                         ImPlot.SetupAxisLimits(ImAxis.Y1, -1.05, 1.05, ImPlotCond.Always);
 
@@ -346,6 +336,29 @@ public class DataPanel
 
                                     ImGui.EndTabItem();
                                 }
+
+                                if (ImGui.BeginTabItem("Euler Angles"))
+                                {
+                                    PlotBufferSizeControl(ref bufferSize);
+
+                                    if (EulerAnglesSeries == null)
+                                    {
+                                        ImGui.Text("No data to display");
+                                    }
+                                    else if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
+                                    {
+                                        ImPlot.SetupAxes("", "", axisFlags, axisFlags);
+                                        ImPlot.SetupAxisLimits(ImAxis.Y1, -180.0, 180.0, ImPlotCond.Always);
+                                        for (int i = 0; i < EulerAnglesSeries.Series.Length; i++)
+                                        {
+                                            var line = EulerAnglesSeries.Series[i];
+                                            ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
+                                        }
+                                        ImPlot.EndPlot();
+                                    }
+                                    ImGui.EndTabItem();
+                                }
+
 
                                 if (ImGui.BeginTabItem("Histogram"))
                                 {
@@ -463,5 +476,22 @@ public class DataPanel
             var line = series.Series[index];
             ImPlot.PlotStairsG(digitalInLabels[index], line.Getter, null, series.Count);
         }
+    }
+
+    void PlotBufferSizeControl(ref int bufferSize)
+    {
+        if (AcquisitionStatus) ImGui.BeginDisabled();
+
+        var bufferInputWidth = 60f;
+        ImGui.AlignTextToFramePadding();
+        ImGui.Text("Buffer Size: ");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(bufferInputWidth);
+        if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
+        {
+            bufferSize = Math.Max(2, bufferSize);
+        }
+
+        if (AcquisitionStatus) ImGui.EndDisabled(); 
     }
 }

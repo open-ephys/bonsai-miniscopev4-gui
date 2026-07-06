@@ -441,11 +441,15 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p2:UclaMiniscopeV4">
-                      <p2:Index>0</p2:Index>
+                      <p2:Index>1</p2:Index>
                       <p2:LedBrightness>0</p2:LedBrightness>
                       <p2:Focus>0</p2:Focus>
                       <p2:SensorGain>Low</p2:SensorGain>
                       <p2:FramesPerSecond>Fps30</p2:FramesPerSecond>
+                      <p2:Quat_X>0</p2:Quat_X>
+                      <p2:Quat_Y>0</p2:Quat_Y>
+                      <p2:Quat_Z>0</p2:Quat_Z>
+                      <p2:Quat_W>1</p2:Quat_W>
                       <p2:LedRespectsDigitalIn>None</p2:LedRespectsDigitalIn>
                     </Combinator>
                   </Expression>
@@ -987,7 +991,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:SettingsPanel">
-                      <p3:AcquisitionStatus>false</p3:AcquisitionStatus>
+                      <p3:AcquisitionStatus>true</p3:AcquisitionStatus>
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="MemberSelector">
@@ -1769,6 +1773,73 @@
                             <Property Name="DigitalInSeries" />
                           </PropertyMappings>
                         </Expression>
+                        <Expression xsi:type="rx:SelectMany">
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Frame</Name>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p3:ObserveOnControl" />
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>Quaternion</Selector>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p2:QuaternionToEuler" />
+                              </Expression>
+                              <Expression xsi:type="ExternalizedMapping">
+                                <Property Name="Capacity" />
+                              </Expression>
+                              <Expression xsi:type="imviz:RollingBufferBuilder">
+                                <imviz:Capacity>100</imviz:Capacity>
+                                <imviz:IndexSelector />
+                                <imviz:ValueSelector>Yaw,Pitch,Roll</imviz:ValueSelector>
+                              </Expression>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>MiniscopeConnected</Name>
+                              </Expression>
+                              <Expression xsi:type="rx:Condition">
+                                <Workflow>
+                                  <Nodes>
+                                    <Expression xsi:type="WorkflowInput">
+                                      <Name>Source1</Name>
+                                    </Expression>
+                                    <Expression xsi:type="BitwiseNot" />
+                                    <Expression xsi:type="WorkflowOutput" />
+                                  </Nodes>
+                                  <Edges>
+                                    <Edge From="0" To="1" Label="Source1" />
+                                    <Edge From="1" To="2" Label="Source1" />
+                                  </Edges>
+                                </Workflow>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="rx:TakeUntil" />
+                              </Expression>
+                              <Expression xsi:type="WorkflowOutput" />
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                              <Edge From="1" To="2" Label="Source1" />
+                              <Edge From="2" To="3" Label="Source1" />
+                              <Edge From="3" To="5" Label="Source1" />
+                              <Edge From="4" To="5" Label="Source2" />
+                              <Edge From="5" To="8" Label="Source1" />
+                              <Edge From="6" To="7" Label="Source1" />
+                              <Edge From="7" To="8" Label="Source2" />
+                              <Edge From="8" To="9" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
+                        <Expression xsi:type="imviz:LatestOnNewFrame">
+                          <Name>ImageTick</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="EulerAnglesSeries" />
+                          </PropertyMappings>
+                        </Expression>
                         <Expression xsi:type="SubscribeSubject">
                           <Name>MiniscopeConnected</Name>
                         </Expression>
@@ -1790,6 +1861,9 @@
                         </Expression>
                         <Expression xsi:type="MemberSelector">
                           <Selector>FrameNumber</Selector>
+                        </Expression>
+                        <Expression xsi:type="imviz:LatestOnNewFrame">
+                          <Name>ImageTick</Name>
                         </Expression>
                         <Expression xsi:type="PropertyMapping">
                           <PropertyMappings>
@@ -1814,7 +1888,7 @@
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
                       <Edges>
-                        <Edge From="0" To="42" Label="Source1" />
+                        <Edge From="0" To="46" Label="Source1" />
                         <Edge From="1" To="2" Label="Source1" />
                         <Edge From="2" To="3" Label="Source1" />
                         <Edge From="2" To="6" Label="Source1" />
@@ -1823,47 +1897,52 @@
                         <Edge From="2" To="20" Label="Source1" />
                         <Edge From="3" To="4" Label="Source1" />
                         <Edge From="4" To="5" Label="Source1" />
-                        <Edge From="5" To="42" Label="Source2" />
+                        <Edge From="5" To="46" Label="Source2" />
                         <Edge From="6" To="7" Label="Source1" />
                         <Edge From="7" To="8" Label="Source1" />
                         <Edge From="8" To="9" Label="Source1" />
-                        <Edge From="9" To="42" Label="Source3" />
+                        <Edge From="9" To="46" Label="Source3" />
                         <Edge From="10" To="11" Label="Source1" />
                         <Edge From="11" To="12" Label="Source1" />
                         <Edge From="12" To="13" Label="Source1" />
-                        <Edge From="13" To="42" Label="Source4" />
+                        <Edge From="13" To="46" Label="Source4" />
                         <Edge From="14" To="15" Label="Source1" />
                         <Edge From="15" To="16" Label="Source1" />
                         <Edge From="15" To="18" Label="Source1" />
                         <Edge From="16" To="17" Label="Source1" />
-                        <Edge From="17" To="42" Label="Source5" />
+                        <Edge From="17" To="46" Label="Source5" />
                         <Edge From="18" To="19" Label="Source1" />
-                        <Edge From="19" To="42" Label="Source6" />
+                        <Edge From="19" To="46" Label="Source6" />
                         <Edge From="20" To="21" Label="Source1" />
                         <Edge From="21" To="22" Label="Source1" />
-                        <Edge From="22" To="42" Label="Source7" />
+                        <Edge From="22" To="46" Label="Source7" />
                         <Edge From="23" To="24" Label="Source1" />
                         <Edge From="24" To="27" Label="Source1" />
                         <Edge From="24" To="30" Label="Source2" />
+                        <Edge From="24" To="33" Label="Source1" />
                         <Edge From="25" To="26" Label="Source1" />
                         <Edge From="26" To="27" Label="Source2" />
                         <Edge From="26" To="30" Label="Source1" />
                         <Edge From="27" To="28" Label="Source1" />
                         <Edge From="28" To="29" Label="Source1" />
-                        <Edge From="29" To="42" Label="Source8" />
+                        <Edge From="29" To="46" Label="Source8" />
                         <Edge From="30" To="31" Label="Source1" />
                         <Edge From="31" To="32" Label="Source1" />
-                        <Edge From="32" To="42" Label="Source9" />
+                        <Edge From="32" To="46" Label="Source9" />
                         <Edge From="33" To="34" Label="Source1" />
-                        <Edge From="34" To="42" Label="Source10" />
-                        <Edge From="35" To="36" Label="Source1" />
-                        <Edge From="36" To="42" Label="Source11" />
-                        <Edge From="37" To="38" Label="Source1" />
+                        <Edge From="34" To="35" Label="Source1" />
+                        <Edge From="35" To="46" Label="Source10" />
+                        <Edge From="36" To="37" Label="Source1" />
+                        <Edge From="37" To="46" Label="Source11" />
                         <Edge From="38" To="39" Label="Source1" />
-                        <Edge From="39" To="42" Label="Source12" />
+                        <Edge From="39" To="46" Label="Source12" />
                         <Edge From="40" To="41" Label="Source1" />
-                        <Edge From="41" To="42" Label="Source13" />
+                        <Edge From="41" To="42" Label="Source1" />
                         <Edge From="42" To="43" Label="Source1" />
+                        <Edge From="43" To="46" Label="Source13" />
+                        <Edge From="44" To="45" Label="Source1" />
+                        <Edge From="45" To="46" Label="Source14" />
+                        <Edge From="46" To="47" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
