@@ -67,6 +67,13 @@ public class DataPanel
     public RollingPlotPointSeries<Quaternion> QuaternionSeries { get; set; }
 
     /// <summary>
+    /// Gets or sets the latest quaternion orientation rendered in the 3D orientation tab.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public Quaternion CurrentQuaternion { get; set; }
+
+    /// <summary>
     /// Gets or sets the rolling series of digital input values plotted in the time series tab.
     /// </summary>
     [XmlIgnore]
@@ -359,6 +366,18 @@ public class DataPanel
                                     ImGui.EndTabItem();
                                 }
 
+                                if (ImGui.BeginTabItem("Orientation"))
+                                {
+                                    if (CurrentQuaternion == null || CurrentQuaternion.Length() == 0)
+                                    {
+                                        ImGui.Text("No data to display");
+                                    }
+                                    else
+                                    {
+                                        OrientationView.Draw(CurrentQuaternion);
+                                    }
+                                    ImGui.EndTabItem();
+                                }
 
                                 if (ImGui.BeginTabItem("Histogram"))
                                 {
