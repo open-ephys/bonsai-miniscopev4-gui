@@ -327,6 +327,13 @@ public class DataPanel
 
                                         if (DigitalInSeries != null)
                                         {
+                                            // NB: Plot a dummy line to ensure the digital lines are plotted above the axis line.
+                                            float* xs = stackalloc float[2] { 0, 1 };
+                                            float* ys = stackalloc float[2] { 0, 0 };
+                                            ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, 0.0f);
+                                            ImPlot.PlotDigital("##dummy", xs, ys, 2);
+                                            ImPlot.PopStyleVar();
+
                                             for (int i = 0; i < DigitalInSeries.Series.Length; i++)
                                             {
                                                 var line = DigitalInSeries.Series[i];
