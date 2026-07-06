@@ -633,8 +633,14 @@
                       <rx:TimeShift>PT0.1S</rx:TimeShift>
                     </Combinator>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeConnected</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:CombineLatest" />
+                  </Expression>
                   <Expression xsi:type="scr:ExpressionTransform">
-                    <scr:Expression>(it.Count &gt; 1) ? (it.Count - 1) * 1e3 / (it[it.Count - 1] - it[0]) : (it.Count == 1) ? it[0] / 1e3 : 0.0</scr:Expression>
+                    <scr:Expression>(it.Item1.Count &gt; 1) &amp;&amp; it.Item2 ? (it.Item1.Count - 1 )* 1e3 / (it.Item1[it.Item1.Count - 1] - it.Item1[0]) : 0.0</scr:Expression>
                   </Expression>
                   <Expression xsi:type="rx:PublishSubject">
                     <Name>AverageFrameRate</Name>
@@ -644,9 +650,11 @@
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
                   <Edge From="1" To="2" Label="Source1" />
-                  <Edge From="2" To="3" Label="Source1" />
-                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="2" To="4" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source2" />
                   <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -1422,8 +1430,8 @@
                               <Expression xsi:type="Combinator">
                                 <Combinator xsi:type="cv:SolidColor">
                                   <cv:Size>
-                                    <cv:Width>640</cv:Width>
-                                    <cv:Height>480</cv:Height>
+                                    <cv:Width>608</cv:Width>
+                                    <cv:Height>608</cv:Height>
                                   </cv:Size>
                                   <cv:Depth>U8</cv:Depth>
                                   <cv:Channels>3</cv:Channels>
@@ -1806,8 +1814,8 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p3:DataPanel">
-                            <p3:ImageHeight>480</p3:ImageHeight>
-                            <p3:ImageWidth>640</p3:ImageWidth>
+                            <p3:ImageHeight>608</p3:ImageHeight>
+                            <p3:ImageWidth>608</p3:ImageWidth>
                             <p3:ImageHeightFraction>0.6</p3:ImageHeightFraction>
                           </Combinator>
                         </Expression>
