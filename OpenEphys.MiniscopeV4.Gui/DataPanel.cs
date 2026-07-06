@@ -120,11 +120,11 @@ public class DataPanel
     /// </summary>
     /// <param name="source">The sequence of values tied to the render tick of DearImGui.</param>
     /// <returns>The unmodified <paramref name="source"/> sequence.</returns>
-    public unsafe IObservable<Tuple<TSource, DataPanelDto>> Process<TSource>(IObservable<Tuple<TSource, DataPanelDto>> source)
+    public unsafe IObservable<Tuple<TSource, DataDisplaySettings>> Process<TSource>(IObservable<Tuple<TSource, DataDisplaySettings>> source)
     {
-        return Observable.Create<Tuple<TSource, DataPanelDto>>(observer =>
+        return Observable.Create<Tuple<TSource, DataDisplaySettings>>(observer =>
         {
-            var sourceObserver = Observer.Create<Tuple<TSource, DataPanelDto>>(
+            var sourceObserver = Observer.Create<Tuple<TSource, DataDisplaySettings>>(
                 value =>
                 {
                     var dto = value.Item2;
@@ -402,12 +402,12 @@ public class DataPanel
                         ImGui.EndChild();
                     }
 
-                    var updatedDto = new DataPanelDto(
+                    var updatedDisplaySettings = new DataDisplaySettings(
                         bufferSize,
-                        new SaturationSettingsDto(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
-                        new DffSettingsDto(backgroundFrames, backgroundThreshold, sigma));
+                        new SaturationSettings(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
+                        new DffSettings(backgroundFrames, backgroundThreshold, sigma));
 
-                    observer.OnNext(Tuple.Create(value.Item1, updatedDto));
+                    observer.OnNext(Tuple.Create(value.Item1, updatedDisplaySettings));
                 },
                 observer.OnError,
                 observer.OnCompleted);
