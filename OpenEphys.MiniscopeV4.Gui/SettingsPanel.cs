@@ -1,7 +1,6 @@
 ﻿using Bonsai;
 using Bonsai.IO;
 using Hexa.NET.ImGui;
-using OpenCV.Net;
 using OpenEphys.Miniscope;
 using System;
 using System.ComponentModel;
@@ -31,6 +30,11 @@ public class SettingsPanel
 
     const float ExpandedWidth = 375f;
     const float CollapsedWidth = 36f;
+
+    static readonly Vector4 colorRecord = new(0.15f, 0.55f, 0.20f, 1f);
+    static readonly Vector4 colorRecordHovered = new(0.20f, 0.67f, 0.25f, 1f);
+    static readonly Vector4 colorStop = new(0.70f, 0.20f, 0.20f, 1f);
+    static readonly Vector4 colorStopHovered = new(0.82f, 0.25f, 0.25f, 1f);
 
     bool settingsOpen = true;
 
@@ -72,6 +76,10 @@ public class SettingsPanel
             Task<string> saveDialogTask = null;
             bool isModalOpen = false;
 
+            bool recordRequested = false;
+            bool lastRecordButtonInput = false;
+            bool recordStateInitialized = false;
+
             var portNames = SerialPort.GetPortNames();
 
             var sourceObserver = Observer.Create<Tuple<TSource, SettingsPanelDto>>(value =>
@@ -83,27 +91,29 @@ public class SettingsPanel
                 GainV4 sensorGain = dto.Miniscope.SensorGain;
                 FrameRateV4 frameRate = dto.Miniscope.FrameRate;
                 MiniscopeDaqDigitalIn ledRespectsDigitalIn = dto.Miniscope.LedRespectsDigitalIn;
+                var triggerMode = dto.File.TriggerMode;
 
-                bool recordButton = dto.File.RecordButton;
-                bool recordOnTriggerButton = dto.File.RecordOnTriggerButton;
+                if (!recordStateInitialized)
+                {
+                    recordRequested = dto.File.RecordButton;
+                    lastRecordButtonInput = dto.File.RecordButton;
+                    recordStateInitialized = true;
+                }
+                if (dto.File.RecordButton != lastRecordButtonInput)
+                {
+                    recordRequested = dto.File.RecordButton;
+                    lastRecordButtonInput = dto.File.RecordButton;
+                }
+
+                bool recordButton = recordRequested;
                 fileName = dto.File.FileName;
                 PathSuffix suffix = dto.File.Suffix;
                 int recordingDurationSeconds = dto.File.RecordingDuration;
                 bool useRecordDuration = dto.File.UseRecordDuration;
                 bool isCompressed = dto.File.CompressVideo;
+                bool automaticRestart = dto.File.AutomaticRestart;
                 var triggerInput = dto.File.TriggerInput;
                 int triggerIndex = Array.IndexOf(DigitalInValues, triggerInput);
-
-                var satThreshold = dto.Saturation.Threshold;
-                var satColor = new Vector4(
-                    (float)dto.Saturation.Color.Val2 / 255,
-                    (float)dto.Saturation.Color.Val1 / 255,
-                    (float)dto.Saturation.Color.Val0 / 255,
-                    (float)dto.Saturation.Color.Val3 / 255);
-
-                int backgroundFrames = dto.Dff.BackgroundFrames;
-                double backgroundThreshold = dto.Dff.BackgroundThreshold;
-                int sigma = dto.Dff.Sigma;
 
                 string portName = dto.Commutator.PortName;
                 bool commutatorConnected = dto.Commutator.IsConnected;
@@ -113,7 +123,8 @@ public class SettingsPanel
                 float availableX = ImGui.GetContentRegionAvail().X;
                 float panelWidth = GetCurrentWidth(availableX);
 
-                ImGui.BeginChild("##settings_pane", new Vector2(panelWidth - ImGui.GetStyle().ChildBorderSize, -1), ImGuiChildFlags.Borders);
+                float consoleReserve = ConsoleLayout.ReservedHeight(ImGui.GetStyle().ItemSpacing.Y);
+                ImGui.BeginChild("##settings_pane", new Vector2(panelWidth - ImGui.GetStyle().ChildBorderSize, -consoleReserve), ImGuiChildFlags.Borders);
 
                 if (!settingsOpen)
                 {
@@ -134,7 +145,7 @@ public class SettingsPanel
                     ImGui.SetNextItemOpen(true, ImGuiCond.Once);
                     if (ImGui.CollapsingHeader("Miniscope##miniscope_header"))
                     {
-                        ImGui.BeginChild("##miniscope_group", new Vector2(-1, 125), ImGuiChildFlags.Borders);
+                        ImGui.BeginChild("##miniscope_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
 
                         ImGui.AlignTextToFramePadding();
                         ImGui.Text("Focus: ");
@@ -155,7 +166,7 @@ public class SettingsPanel
                         double brightnessMin = 0, brightnessMax = 100;
                         ImGui.SliderScalar("##ledbrightness", ImGuiDataType.Double, &ledBrightness, &brightnessMin, &brightnessMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
 
-                        if (ImGui.BeginTable("##row2", 2))
+                        if (ImGui.BeginTable("##row2", 2, ImGuiTableFlags.SizingStretchSame))
                         {
                             ImGui.TableNextColumn();
                             ImGui.AlignTextToFramePadding();
@@ -201,7 +212,7 @@ public class SettingsPanel
                     ImGui.SetNextItemOpen(true, ImGuiCond.Once);
                     if (ImGui.CollapsingHeader("File##file_header"))
                     {
-                        ImGui.BeginChild("##file_group", new Vector2(-1, 220), ImGuiChildFlags.Borders);
+                        ImGui.BeginChild("##file_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
 
                         ImGui.Text("File Name Template");
                         if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
@@ -214,7 +225,7 @@ public class SettingsPanel
                         }
 
                         const string browseLabel = "...";
-                        const string openLabel = "Open";
+                        const string openLabel = "Browse";
                         float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
                         float openWidth = ImGui.CalcTextSize(openLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
                         float inputWidth = ImGui.GetContentRegionAvail().X - browseWidth - openWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
@@ -289,7 +300,7 @@ public class SettingsPanel
                             saveDialogTask = null;
                         }
 
-                        if (ImGui.BeginTable("##writer_parameters", 2))
+                        if (ImGui.BeginTable("##writer_parameters", 2, ImGuiTableFlags.SizingStretchSame))
                         {
                             ImGui.TableNextColumn();
                             ImGui.AlignTextToFramePadding();
@@ -308,150 +319,116 @@ public class SettingsPanel
                             ImGui.EndTable();
                         }
 
+                        ImGui.Separator();
+
+                        if (recordButton) ImGui.BeginDisabled();
                         ImGui.AlignTextToFramePadding();
-                        ImGui.Text("Recording Duration [s]:");
+                        ImGui.Text("Mode: ");
                         ImGui.SameLine();
-                        ImGui.SetNextItemWidth(-1f);
-                        if (ImGui.InputInt("##recording_duration", ref recordingDurationSeconds, ImGuiInputTextFlags.AutoSelectAll))
+                        if (ImGui.RadioButton("Manual##record_mode_manual", !triggerMode) && triggerMode)
                         {
-                            recordingDurationSeconds = Math.Max(1, recordingDurationSeconds);
+                            triggerMode = false;
                         }
-
-                        if (recordOnTriggerButton) ImGui.BeginDisabled();
-                        ImGui.Checkbox("Use Recording Duration##use_record_duration", ref useRecordDuration);
-                        if (recordOnTriggerButton) ImGui.EndDisabled();
-
-                        if (ImGui.BeginTable("##buttons", 2))
+                        ImGui.SameLine();
+                        if (ImGui.RadioButton("Triggered##record_mode_triggered", triggerMode) && !triggerMode)
                         {
-                            ImGui.TableNextColumn();
+                            triggerMode = true;
+                        }
+                        if (recordButton) ImGui.EndDisabled();
 
-                            bool buttonActive = false;
-                            if (recordButton)
+                        var recordingSettingsHeight = ImGui.GetFrameHeightWithSpacing() * 2 + ImGui.GetStyle().ItemSpacing.Y * 2;
+
+                        if (ImGui.BeginChild("##recording_settings", new Vector2(-1, recordingSettingsHeight), ImGuiChildFlags.None))
+                        {
+                            if (!triggerMode)
                             {
-                                ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonActive));
-                                buttonActive = true;
-                            }
+                                if (recordButton) ImGui.BeginDisabled();
+                                ImGui.Checkbox("Use Recording Duration##use_record_duration", ref useRecordDuration);
 
-                            if (!AcquisitionStatus) ImGui.BeginDisabled();
+                                if (!useRecordDuration) ImGui.BeginDisabled();
 
-                            Vector2 buttonSize = new(-1f, ImGui.GetFrameHeight() * 2);
-                            if (ImGui.Button("Record##record_button", buttonSize))
-                            {
-                                recordButton = !recordButton;
-                                if (recordButton)
-                                    recordOnTriggerButton = false;
-                            }
-
-                            if (!AcquisitionStatus) ImGui.EndDisabled();
-
-                            if (buttonActive)
-                                ImGui.PopStyleColor();
-
-                            ImGui.TableNextColumn();
-
-                            buttonActive = false;
-                            if (recordOnTriggerButton)
-                            {
-                                ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonActive));
-                                buttonActive = true;
-                            }
-
-                            if (useRecordDuration || !AcquisitionStatus) ImGui.BeginDisabled();
-
-                            if (ImGui.Button("Record on Trigger##record_on_trigger_button", buttonSize))
-                            {
-                                recordOnTriggerButton = !recordOnTriggerButton;
-                                if (recordOnTriggerButton)
-                                    recordButton = false;
-                            }
-
-                            if (useRecordDuration || !AcquisitionStatus) ImGui.EndDisabled();
-
-                            if (buttonActive)
-                                ImGui.PopStyleColor();
-
-                            ImGui.TableNextColumn();
-                            ImGui.TableNextColumn();
-                            ImGui.SetNextItemWidth(-1f);
-                            if (useRecordDuration || !AcquisitionStatus || recordOnTriggerButton) ImGui.BeginDisabled();
-                            if (ImGui.BeginCombo("##trigger_input", DigitalInNames[triggerIndex]))
-                            {
-                                foreach (var val in DigitalInValues)
+                                if (ImGui.BeginTable("##record_duration_table", 2, ImGuiTableFlags.SizingStretchSame))
                                 {
-                                    if (val == MiniscopeDaqDigitalIn.None) continue;
+                                    ImGui.TableNextColumn();
 
-                                    bool selected = triggerInput == val;
-                                    if (ImGui.Selectable(val.ToString(), selected))
-                                        triggerInput = val;
+                                    ImGui.AlignTextToFramePadding();
+                                    ImGui.Text("Duration [s]:");
+                                    ImGui.SameLine();
+                                    ImGui.SetNextItemWidth(-1f);
+                                    if (ImGui.InputInt("##recording_duration", ref recordingDurationSeconds, 0, 0, ImGuiInputTextFlags.AutoSelectAll))
+                                    {
+                                        recordingDurationSeconds = Math.Max(1, recordingDurationSeconds);
+                                    }
 
-                                    if (selected)
-                                        ImGui.SetItemDefaultFocus();
+                                    ImGui.TableNextColumn();
+                                    ImGui.Checkbox("Auto Restart##automatic_restart", ref automaticRestart);
+                                    if (ImGui.BeginItemTooltip())
+                                    {
+                                        ImGui.Text("When enabled, a new recording starts automatically each time the\nrecording duration elapses, until you press Stop Recording.");
+                                        ImGui.EndTooltip();
+                                    }
+
+                                    ImGui.EndTable();
                                 }
-                                ImGui.EndCombo();
+
+                                if (!useRecordDuration) ImGui.EndDisabled();
+                                if (recordButton) ImGui.EndDisabled();
                             }
-                            if (useRecordDuration || !AcquisitionStatus || recordOnTriggerButton) ImGui.EndDisabled();
+                            else
+                            {
+                                ImGui.AlignTextToFramePadding();
+                                ImGui.Text("Digital Input: ");
+                                ImGui.SameLine();
+                                ImGui.SetNextItemWidth(-1f);
+                                if (recordButton) ImGui.BeginDisabled();
+                                if (ImGui.BeginCombo("##trigger_input", DigitalInNames[triggerIndex]))
+                                {
+                                    foreach (var val in DigitalInValues)
+                                    {
+                                        if (val == MiniscopeDaqDigitalIn.None) continue;
 
-                            ImGui.EndTable();
+                                        bool selected = triggerInput == val;
+                                        if (ImGui.Selectable(val.ToString(), selected))
+                                            triggerInput = val;
+
+                                        if (selected)
+                                            ImGui.SetItemDefaultFocus();
+                                    }
+                                    ImGui.EndCombo();
+                                }
+                                if (recordButton) ImGui.EndDisabled();
+                            }
                         }
 
                         ImGui.EndChild();
-                    }
 
-                    if (ImGui.CollapsingHeader("Saturation##saturation_header"))
-                    {
-                        ImGui.BeginChild("##saturation_group", new Vector2(-1, 70), ImGuiChildFlags.Borders);
+                        var recColor = recordButton ? colorStop : colorRecord;
+                        var recColorHovered = recordButton ? colorStopHovered : colorRecordHovered;
+                        ImGui.PushStyleColor(ImGuiCol.Button, recColor);
+                        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, recColorHovered);
+                        ImGui.PushStyleColor(ImGuiCol.ButtonActive, recColor);
 
-                        ImGui.Text("Threshold: ");
-                        ImGui.SameLine();
-                        ImGui.SetNextItemWidth(-1f);
-
-                        ImGui.SliderInt("##saturation_threshold", &satThreshold, byte.MinValue, byte.MaxValue - 1, ImGuiSliderFlags.AlwaysClamp);
-
-                        ImGui.Text("Color: ");
-                        ImGui.SameLine();
-                        ImGui.SetNextItemWidth(-1f);
-
-                        if (ImGui.ColorEdit4("##saturation_color", ref satColor, ImGuiColorEditFlags.Uint8 | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoOptions))
+                        Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
+                        if (!AcquisitionStatus) ImGui.BeginDisabled();
+                        string recordLabel = !triggerMode
+                            ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
+                            : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
+                        if (ImGui.Button(recordLabel, recordButtonSize))
                         {
-                            satColor.X = Math.Max(0f, Math.Min(1f, satColor.X));
-                            satColor.Y = Math.Max(0f, Math.Min(1f, satColor.Y));
-                            satColor.Z = Math.Max(0f, Math.Min(1f, satColor.Z));
+                            recordButton = !recordButton;
                         }
+                        if (!AcquisitionStatus) ImGui.EndDisabled();
 
-                        ImGui.EndChild();
-                    }
-
-                    if (ImGui.CollapsingHeader("dF/F##dff_header"))
-                    {
-                        ImGui.BeginChild("##dff_group", new Vector2(-1, 110), ImGuiChildFlags.Borders);
-
-                        ImGui.Text("Background Frames: ");
-                        ImGui.SameLine();
-                        ImGui.SetNextItemWidth(-1f);
-
-                        int backgroundFramesMin = 2, backgroundFramesMax = 1000;
-                        if (ImGui.InputInt("##background_frames", ref backgroundFrames))
-                            backgroundFrames = Math.Max(backgroundFramesMin, Math.Min(backgroundFramesMax, backgroundFrames));
-
-                        ImGui.Text("Background Threshold: ");
-                        ImGui.SameLine();
-                        ImGui.SetNextItemWidth(-1f);
-                        double bgThreshMin = 0, bgThreshMax = 255;
-                        ImGui.SliderScalar("##background_threshold", ImGuiDataType.Double, &backgroundThreshold, &bgThreshMin, &bgThreshMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
-
-                        ImGui.Text("Sigma: ");
-                        ImGui.SameLine();
-                        ImGui.SetNextItemWidth(-1f);
-                        if (ImGui.InputInt("##sigma", ref sigma))
-                            sigma = Math.Max(0, sigma);
+                        ImGui.PopStyleColor(3);
 
                         ImGui.EndChild();
                     }
 
                     if (ImGui.CollapsingHeader("Commutator##commutator_header"))
                     {
-                        ImGui.BeginChild("##commutator_child", new Vector2(-1, 100), ImGuiChildFlags.Borders);
+                        ImGui.BeginChild("##commutator_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
 
+                        ImGui.AlignTextToFramePadding();
                         ImGui.Text("COM Port: ");
                         ImGui.SameLine();
 
@@ -493,7 +470,7 @@ public class SettingsPanel
                         if (!commutatorConnected)
                             ImGui.BeginDisabled();
 
-                        if (ImGui.BeginTable("##commutator_checkboxes", 2))
+                        if (ImGui.BeginTable("##commutator_checkboxes", 2, ImGuiTableFlags.SizingStretchSame))
                         {
                             ImGui.TableNextColumn();
                             ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
@@ -523,11 +500,11 @@ public class SettingsPanel
 
                 ImGui.EndChild();
 
+                recordRequested = recordButton;
+
                 var updatedDto = new SettingsPanelDto(
                     new MiniscopeSettingsDto(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
-                    new FileSettingsDto(recordButton, recordOnTriggerButton, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput),
-                    new SaturationSettingsDto(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
-                    new DffSettingsDto(backgroundFrames, backgroundThreshold, sigma),
+                    new FileSettingsDto(recordButton, triggerMode, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput, automaticRestart),
                     new CommutatorSettingsDto(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
 
                 observer.OnNext(Tuple.Create(value.Item1, updatedDto));
