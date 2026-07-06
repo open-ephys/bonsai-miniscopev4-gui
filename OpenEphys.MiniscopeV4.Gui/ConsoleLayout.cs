@@ -7,7 +7,6 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// Shared layout state for the bottom console panel. The console height is edited by the
 /// <see cref="ConsolePanel"/> splitter and read by the panels above it (the settings sidebar
 /// and the data panel) so they can reserve room for the console at the bottom of the window.
-/// Mirrors the process-wide static pattern used by <see cref="MiniscopeLog"/>.
 /// </summary>
 static class ConsoleLayout
 {

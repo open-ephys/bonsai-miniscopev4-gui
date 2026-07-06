@@ -73,7 +73,7 @@
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="cv:VideoWriter,sys:String">
               <MemberName>FileName</MemberName>
-              <Value>../data/temp_</Value>
+              <Value />
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>FileName</Name>
@@ -192,7 +192,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="IntProperty">
-                <Value>1</Value>
+                <Value>0</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
@@ -233,7 +233,7 @@
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="p2:UclaMiniscopeV4,sys:Double">
               <MemberName>Focus</MemberName>
-              <Value>5</Value>
+              <Value>0</Value>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>Focus</Name>
@@ -441,9 +441,9 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p2:UclaMiniscopeV4">
-                      <p2:Index>1</p2:Index>
+                      <p2:Index>0</p2:Index>
                       <p2:LedBrightness>0</p2:LedBrightness>
-                      <p2:Focus>5</p2:Focus>
+                      <p2:Focus>0</p2:Focus>
                       <p2:SensorGain>Low</p2:SensorGain>
                       <p2:FramesPerSecond>Fps30</p2:FramesPerSecond>
                       <p2:LedRespectsDigitalIn>None</p2:LedRespectsDigitalIn>
@@ -2369,7 +2369,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:Delay">
-                            <rx:DueTime>PT2S</rx:DueTime>
+                            <rx:DueTime>PT10M</rx:DueTime>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
@@ -2454,7 +2454,7 @@
                     <Property Name="Suffix" />
                   </Expression>
                   <Expression xsi:type="io:CsvWriter">
-                    <io:FileName>../data/temp_.csv</io:FileName>
+                    <io:FileName>.csv</io:FileName>
                     <io:Append>false</io:Append>
                     <io:Overwrite>false</io:Overwrite>
                     <io:Suffix>FileCount</io:Suffix>
@@ -2488,7 +2488,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="cv:VideoWriter">
-                      <cv:FileName>../data/temp_.avi</cv:FileName>
+                      <cv:FileName>.avi</cv:FileName>
                       <cv:Suffix>FileCount</cv:Suffix>
                       <cv:Buffered>true</cv:Buffered>
                       <cv:Overwrite>false</cv:Overwrite>
