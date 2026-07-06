@@ -19,17 +19,17 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// <param name="UseRecordDuration">Indicates whether recording should automatically stop after <paramref name="RecordingDuration"/> seconds.</param>
 /// <param name="TriggerInput">Indicates which digital input is used to trigger recording.</param>
 /// <param name="AutomaticRestart">Indicates whether a new recording should start automatically each time the recording duration elapses, until recording is manually stopped.</param>
-public record FileSettingsDto(bool RecordButton, bool TriggerMode, bool CompressVideo, string FileName, PathSuffix Suffix, int RecordingDuration, bool UseRecordDuration, MiniscopeDaqDigitalIn TriggerInput, bool AutomaticRestart);
+public record FileSettings(bool RecordButton, bool TriggerMode, bool CompressVideo, string FileName, PathSuffix Suffix, int RecordingDuration, bool UseRecordDuration, MiniscopeDaqDigitalIn TriggerInput, bool AutomaticRestart);
 
 /// <summary>
-/// Combines individual file setting values into a single <see cref="FileSettingsDto"/>.
+/// Combines individual file setting values into a single <see cref="FileSettings"/>.
 /// </summary>
 [Description("Combines individual file setting values into a single object.")]
 [Combinator]
-public class CreateFileSettingsDto
+public class CreateFileSettings
 {
     /// <summary>
-    /// Creates a <see cref="FileSettingsDto"/> by combining the latest values from each individual file setting sequence.
+    /// Creates a <see cref="FileSettings"/> by combining the latest values from each individual file setting sequence.
     /// </summary>
     /// <param name="recordButton">Indicates whether the record button is engaged (records when not triggered, arms when triggered).</param>
     /// <param name="triggerMode">Indicates whether recording is started on a trigger (true) or manually (false).</param>
@@ -40,8 +40,8 @@ public class CreateFileSettingsDto
     /// <param name="useRecordDuration">Indicates whether recording should automatically stop after <paramref name="recordingDuration"/> seconds.</param>
     /// <param name="triggerInput">Indicates which digital input is used to trigger recording.</param>
     /// <param name="automaticRestart">Indicates whether a new recording should start automatically each time the recording duration elapses.</param>
-    /// <returns>A sequence of <see cref="FileSettingsDto"/> objects.</returns>
-    public IObservable<FileSettingsDto> Process(
+    /// <returns>A sequence of <see cref="FileSettings"/> objects.</returns>
+    public IObservable<FileSettings> Process(
         IObservable<bool> recordButton,
         IObservable<bool> triggerMode,
         IObservable<bool> compressVideo,
@@ -62,6 +62,6 @@ public class CreateFileSettingsDto
             useRecordDuration,
             triggerInput,
             automaticRestart,
-            (recordButton, triggerMode, compressVideo, fileName, suffix, recordingDuration, useRecordDuration, triggerInput, automaticRestart) => new FileSettingsDto(recordButton, triggerMode, compressVideo, fileName, suffix, recordingDuration, useRecordDuration, triggerInput, automaticRestart));
+            (recordButton, triggerMode, compressVideo, fileName, suffix, recordingDuration, useRecordDuration, triggerInput, automaticRestart) => new FileSettings(recordButton, triggerMode, compressVideo, fileName, suffix, recordingDuration, useRecordDuration, triggerInput, automaticRestart));
     }
 }

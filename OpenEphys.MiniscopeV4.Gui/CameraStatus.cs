@@ -10,28 +10,28 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// </summary>
 /// <param name="CameraIndex">The index of the camera to connect to.</param>
 /// <param name="IsConnected">Whether the miniscope is currently connected.</param>
-public record StatusBarDto(int CameraIndex, bool IsConnected);
+public record CameraStatus(int CameraIndex, bool IsConnected);
 
 /// <summary>
-/// Combines individual status bar values into a single <see cref="StatusBarDto"/>.
+/// Combines individual status bar values into a single <see cref="CameraStatus"/>.
 /// </summary>
 [Description("Combines individual status bar values into a single object.")]
 [Combinator]
-public class CreateStatusBarDto
+public class CreateCameraStatus
 {
     /// <summary>
-    /// Creates a <see cref="StatusBarDto"/> by combining the latest values from each individual status bar sequence.
+    /// Creates a <see cref="CameraStatus"/> by combining the latest values from each individual status bar sequence.
     /// </summary>
     /// <param name="cameraIndex">The index of the camera to connect to.</param>
     /// <param name="isConnected">Whether the miniscope is currently connected.</param>
-    /// <returns>A sequence of <see cref="StatusBarDto"/> objects.</returns>
-    public IObservable<StatusBarDto> Process(
+    /// <returns>A sequence of <see cref="CameraStatus"/> objects.</returns>
+    public IObservable<CameraStatus> Process(
         IObservable<int> cameraIndex,
         IObservable<bool> isConnected)
     {
         return Observable.CombineLatest(
             cameraIndex,
             isConnected,
-            (cameraIndex, isConnected) => new StatusBarDto(cameraIndex, isConnected));
+            (cameraIndex, isConnected) => new CameraStatus(cameraIndex, isConnected));
     }
 }

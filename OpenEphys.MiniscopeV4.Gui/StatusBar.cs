@@ -40,20 +40,20 @@ public class StatusBar
     static readonly Vector4 colorStopHovered = new(0.82f, 0.25f, 0.25f, 1f);
 
     /// <summary>
-    /// Renders the status bar controls and returns an updated <see cref="StatusBarDto"/> alongside each source value.
+    /// Renders the status bar controls and returns an updated <see cref="CameraStatus"/> alongside each source value.
     /// </summary>
     /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
     /// <returns>A sequence of values paired with the status bar state updated from the rendered controls.</returns>
-    public IObservable<Tuple<TSource, StatusBarDto>> Process<TSource>(IObservable<Tuple<TSource, StatusBarDto>> source)
+    public IObservable<Tuple<TSource, CameraStatus>> Process<TSource>(IObservable<Tuple<TSource, CameraStatus>> source)
     {
         double elapsedAcquisitionTime = 0;
 
-        return Observable.Create<Tuple<TSource, StatusBarDto>>(observer =>
+        return Observable.Create<Tuple<TSource, CameraStatus>>(observer =>
         {
             DateTime? acquisitionStart = null;
             DateTime? recordingStart = null;
 
-            var sourceObserver = Observer.Create<Tuple<TSource, StatusBarDto>>(value =>
+            var sourceObserver = Observer.Create<Tuple<TSource, CameraStatus>>(value =>
             {
                 var dto = value.Item2;
                 var cameraIndex = dto.CameraIndex;
@@ -140,7 +140,7 @@ public class StatusBar
 
                 ImGui.Separator();
 
-                observer.OnNext(Tuple.Create(value.Item1, new StatusBarDto(cameraIndex, isConnected)));
+                observer.OnNext(Tuple.Create(value.Item1, new CameraStatus(cameraIndex, isConnected)));
             },
             observer.OnError,
             observer.OnCompleted);

@@ -768,7 +768,7 @@
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p3:CreateStatusBarDto" />
+                    <Combinator xsi:type="p3:CreateCameraStatus" />
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:WithLatestFrom" />
@@ -877,7 +877,7 @@
                           <Name>LedRespectsDigitalIn</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:CreateMiniscopeSettingsDto" />
+                          <Combinator xsi:type="p3:CreateMiniscopeSettings" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
@@ -923,7 +923,7 @@
                           <Name>AutomaticRestart</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:CreateFileSettingsDto" />
+                          <Combinator xsi:type="p3:CreateFileSettings" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
@@ -958,7 +958,7 @@
                           <Name>CommutatorEnableLed</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:CreateCommutatorSettingsDto" />
+                          <Combinator xsi:type="p3:CreateCommutatorSettings" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
@@ -972,7 +972,7 @@
                     </Workflow>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p3:CreateSettingsPanelDto" />
+                    <Combinator xsi:type="p3:CreateHardwareSettings" />
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:WithLatestFrom" />
@@ -1308,7 +1308,7 @@
                           <Name>SaturationColor</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:CreateSaturationSettingsDto" />
+                          <Combinator xsi:type="p3:CreateSaturationSettings" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
@@ -1333,7 +1333,7 @@
                           <Name>Sigma</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:CreateDffSettingsDto" />
+                          <Combinator xsi:type="p3:CreateDffSettings" />
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
                       </Nodes>
@@ -1346,7 +1346,7 @@
                     </Workflow>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p3:CreateDataPanelDto" />
+                    <Combinator xsi:type="p3:CreateDataDisplaySettings" />
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:WithLatestFrom" />

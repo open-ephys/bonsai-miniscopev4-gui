@@ -17,7 +17,7 @@ using System.Windows.Forms;
 namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
-/// Renders all settings panels in a collapsible sidebar and returns an updated <see cref="SettingsPanelDto"/>.
+/// Renders all settings panels in a collapsible sidebar and returns an updated <see cref="HardwareSettings"/>.
 /// </summary>
 [Combinator]
 [Description("Renders all settings panels in a collapsible right-hand sidebar.")]
@@ -62,14 +62,14 @@ public class SettingsPanel
     static readonly string[] PathSuffixValues = Enum.GetNames(typeof(PathSuffix));
 
     /// <summary>
-    /// Renders the settings sidebar and returns an updated <see cref="SettingsPanelDto"/> alongside each source value.
+    /// Renders the settings sidebar and returns an updated <see cref="HardwareSettings"/> alongside each source value.
     /// </summary>
     /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
     /// <returns>A sequence of values paired with the settings updated from the rendered controls.</returns>
-    public unsafe IObservable<Tuple<TSource, SettingsPanelDto>> Process<TSource>(
-        IObservable<Tuple<TSource, SettingsPanelDto>> source)
+    public unsafe IObservable<Tuple<TSource, HardwareSettings>> Process<TSource>(
+        IObservable<Tuple<TSource, HardwareSettings>> source)
     {
-        return Observable.Create<Tuple<TSource, SettingsPanelDto>>(observer =>
+        return Observable.Create<Tuple<TSource, HardwareSettings>>(observer =>
         {
             const nuint bufSize = 1024;
             string fileName = string.Empty;
@@ -82,7 +82,7 @@ public class SettingsPanel
 
             var portNames = SerialPort.GetPortNames();
 
-            var sourceObserver = Observer.Create<Tuple<TSource, SettingsPanelDto>>(value =>
+            var sourceObserver = Observer.Create<Tuple<TSource, HardwareSettings>>(value =>
             {
                 var dto = value.Item2;
 
@@ -502,12 +502,12 @@ public class SettingsPanel
 
                 recordRequested = recordButton;
 
-                var updatedDto = new SettingsPanelDto(
-                    new MiniscopeSettingsDto(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
-                    new FileSettingsDto(recordButton, triggerMode, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput, automaticRestart),
-                    new CommutatorSettingsDto(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
+                var updatedHardwareSettings = new HardwareSettings(
+                    new MiniscopeSettings(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
+                    new FileSettings(recordButton, triggerMode, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput, automaticRestart),
+                    new CommutatorSettings(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
 
-                observer.OnNext(Tuple.Create(value.Item1, updatedDto));
+                observer.OnNext(Tuple.Create(value.Item1, updatedHardwareSettings));
             },
             observer.OnError,
             observer.OnCompleted);
