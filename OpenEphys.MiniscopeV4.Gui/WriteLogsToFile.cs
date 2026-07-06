@@ -7,13 +7,13 @@ using Bonsai;
 namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
-/// Directs the shared <see cref="MiniscopeLog"/> to mirror its messages to a plain text log file for as long
+/// Directs the shared <see cref="MiniscopeLog"/> to mirror its messages to a CSV log file for as long
 /// as the sequence is subscribed. Opening and closing the file brackets a recording: the file is created when
 /// the sequence is subscribed and closed when it is unsubscribed, so every message logged in between — including
 /// any error that stops the recording — is captured for the user to look back on.
 /// </summary>
 [Combinator]
-[Description("Mirrors the shared console log to a plain text .log file while the sequence is subscribed (i.e. while recording).")]
+[Description("Mirrors the shared console log to a CSV file while the sequence is subscribed (i.e. while recording).")]
 [WorkflowElementCategory(ElementCategory.Sink)]
 public class WriteLogsToFile
 {

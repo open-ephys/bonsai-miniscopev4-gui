@@ -48,23 +48,9 @@ public class GenerateRecordingFileNames
     [Description("The suffix applied to the base name, before each file extension.")]
     public PathSuffix Suffix { get; set; }
 
-    /// <summary>
-    /// Gets or sets the extension used for the metadata CSV file.
-    /// </summary>
-    [Description("The extension used for the metadata CSV file.")]
-    public string CsvExtension { get; set; } = ".csv";
-
-    /// <summary>
-    /// Gets or sets the extension used for the recorded video file.
-    /// </summary>
-    [Description("The extension used for the recorded video file.")]
-    public string ImageExtension { get; set; } = ".avi";
-
-    /// <summary>
-    /// Gets or sets the extension used for the recording log file.
-    /// </summary>
-    [Description("The extension used for the recording log file.")]
-    public string LogExtension { get; set; } = ".log";
+    const string CsvExtension = ".csv";
+    const string ImageExtension = ".avi";
+    const string LogExtension = ".log";
 
     /// <summary>
     /// Generates a synchronized <see cref="RecordingFileNames"/> set each time the <paramref name="source"/>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using Bonsai.IO;
@@ -36,14 +37,17 @@ public readonly record struct LogEntry(DateTime Timestamp, int FrameNumber, LogL
 /// console panel reads <see cref="Snapshot"/> to render the scrollback history.
 /// </summary>
 /// <remarks>
-/// While a recording is active the log can additionally mirror every message to a plain text file. Call
+/// While a recording is active the log can additionally mirror every message to a CSV file. Call
 /// <see cref="StartFile"/> when a recording begins and <see cref="StopFile"/> when it ends; in between, any
 /// message passed to <see cref="Log"/> is appended to the file as well as the in-memory queue.
 /// </remarks>
 public static class MiniscopeLog
 {
     const string FileTimestampFormat = "yyyy-MM-dd HH:mm:ss.fff";
+    const char Delimiter = ',';
 
+    static readonly string DelimiterText = Delimiter.ToString();
+    static readonly char[] QuoteRequiredCharacters = { Delimiter, '"', '\n', '\r' };
     static readonly ConcurrentQueue<LogEntry> entries = new();
     static readonly object fileGate = new();
     static StreamWriter fileWriter;
@@ -110,15 +114,22 @@ public static class MiniscopeLog
     }
 
     /// <summary>
-    /// Begins mirroring subsequent messages to the specified log file. Any file already open is closed first.
-    /// A failure to open the file is reported to the log but does not throw, so it never interrupts a recording.
+    /// Begins mirroring subsequent messages to the specified CSV file. Any file already open is closed first.
     /// </summary>
-    /// <param name="path">The path of the log file to write.</param>
+    /// <remarks>
+    /// Only a single log file can be open at a time: the log owns one process-wide writer, so overlapping
+    /// recordings are not supported. Starting a new file while one is already open replaces it and logs a
+    /// warning, since that indicates a previous recording was not stopped cleanly. A failure to open the file
+    /// is reported to the log but does not throw, so it never interrupts a recording.
+    /// </remarks>
+    /// <param name="path">The path of the CSV log file to write.</param>
     internal static void StartFile(string path)
     {
         Exception failure = null;
+        bool replacedOpenFile;
         lock (fileGate)
         {
+            replacedOpenFile = fileWriter != null;
             CloseFile();
             try
             {
@@ -128,14 +139,18 @@ public static class MiniscopeLog
                 PathHelper.EnsureDirectory(path);
                 var stream = new FileStream(path, FileMode.CreateNew);
                 fileWriter = new StreamWriter(stream) { AutoFlush = true };
-                fileWriter.WriteLine($"# Recording log started {DateTime.Now.ToString(FileTimestampFormat)}");
+                fileWriter.WriteLine(HeaderRow());
+                fileWriter.WriteLine(FormatRow(new LogEntry(DateTime.Now, Volatile.Read(ref currentFrameNumber), LogLevel.Info, "Recording started")));
             }
             catch (Exception ex)
             {
-                fileWriter = null;
+                CloseFile();
                 failure = ex;
             }
         }
+
+        if (replacedOpenFile)
+            Warning("A previous log file was still open; it has been closed before starting a new one.");
 
         if (failure != null)
             Error($"Could not open log file '{path}': {failure.Message}");
@@ -146,19 +161,24 @@ public static class MiniscopeLog
     /// </summary>
     internal static void StopFile()
     {
+        Exception failure = null;
         lock (fileGate)
         {
             if (fileWriter == null)
                 return;
 
-            try { fileWriter.WriteLine($"# Recording log closed {DateTime.Now.ToString(FileTimestampFormat)}"); }
-            catch { }
+            try { fileWriter.WriteLine(FormatRow(new LogEntry(DateTime.Now, Volatile.Read(ref currentFrameNumber), LogLevel.Info, "Recording stopped"))); }
+            catch (Exception ex) { failure = ex; }
             CloseFile();
         }
+
+        if (failure != null)
+            Error($"Failed to write to log file: {failure.Message}");
     }
 
     static void WriteToFile(LogEntry entry)
     {
+        Exception failure = null;
         lock (fileGate)
         {
             if (fileWriter == null)
@@ -166,23 +186,63 @@ public static class MiniscopeLog
 
             try
             {
-                fileWriter.WriteLine($"{entry.Timestamp.ToString(FileTimestampFormat)} [Frame {entry.FrameNumber}] [{entry.Level}] {entry.Message}");
+                fileWriter.WriteLine(FormatRow(entry));
             }
-            catch
+            catch (Exception ex)
             {
-                // Writing to the log file is best-effort and must never interrupt a recording.
+                CloseFile();
+                failure = ex;
             }
         }
+
+        if (failure != null)
+            Error($"Failed to write to log file: {failure.Message}");
     }
 
-    // Disposes the current writer, if any. Callers must hold fileGate.
+    static string FormatRow(LogEntry entry)
+    {
+        return string.Join(
+            DelimiterText,
+            CsvField(entry.Timestamp.ToString(FileTimestampFormat, CultureInfo.InvariantCulture)),
+            CsvField(entry.FrameNumber.ToString(CultureInfo.InvariantCulture)),
+            CsvField(entry.Level.ToString()),
+            CsvField(entry.Message));
+    }
+
+    static string HeaderRow()
+    {
+        return string.Join(
+            DelimiterText,
+            CsvField("Timestamp"),
+            CsvField("FrameNumber"),
+            CsvField("Level"),
+            CsvField("Message"));
+    }
+
+    // Quotes a field per RFC-4180 if it contains the delimiter, a quote, or a line break; otherwise returns it
+    // as-is.
+    static string CsvField(string value)
+    {
+        value ??= string.Empty;
+        if (value.IndexOfAny(QuoteRequiredCharacters) >= 0)
+            return "\"" + value.Replace("\"", "\"\"") + "\"";
+
+        return value;
+    }
+
+    // Disposes the current writer, if any. Callers must hold fileGate. The writer is cleared before any failure
+    // is reported, so the Error() call cannot recurse back into a file write.
     static void CloseFile()
     {
         if (fileWriter == null)
             return;
 
+        Exception failure = null;
         try { fileWriter.Dispose(); }
-        catch { }
+        catch (Exception ex) { failure = ex; }
         fileWriter = null;
+
+        if (failure != null)
+            Error($"Failed to close log file: {failure.Message}");
     }
 }
