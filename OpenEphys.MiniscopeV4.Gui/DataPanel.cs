@@ -284,7 +284,7 @@ public class DataPanel
                         {
                             if (ImGui.BeginTabBar("##SignalTabBar"))
                             {
-                                if (ImGui.BeginTabItem("Time Series"))
+                                if (ImGui.BeginTabItem("Quaternion"))
                                 {
                                     if (AcquisitionStatus)
                                     {
@@ -306,52 +306,36 @@ public class DataPanel
                                         ImGui.EndDisabled();
                                     }
 
-                                    ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0, 0));
-                                    int numRows = 3, numCols = 1;
-                                    float* rowRatios = stackalloc float[3] { 2f, 1f, 1f };
-
                                     if (QuaternionSeries == null && DigitalInSeries == null)
                                     {
                                         ImGui.Text("No data to display");
                                     }
-                                    else if (ImPlot.BeginSubplots("##time_series_subplots", numRows, numCols, fillAvailable, ImPlotSubplotFlags.LinkAllX |ImPlotSubplotFlags.NoResize, rowRatios, null))
+                                    else if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
                                     {
                                         ImPlotAxisFlags axisFlags = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoMenus | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines | ImPlotAxisFlags.NoTickLabels;
+                                        ImPlot.SetupAxes("", "", axisFlags, axisFlags);
+                                        ImPlot.SetupAxisLimits(ImAxis.Y1, -1.05, 1.05, ImPlotCond.Always);
 
-                                        if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
+                                        if (QuaternionSeries != null)
                                         {
-                                            ImPlot.SetupAxes("", "Quaternion", axisFlags, axisFlags);
-                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -1.05, 1.05, ImPlotCond.Always);
-
-                                            if (QuaternionSeries != null)
+                                            for (int i = 0; i < QuaternionSeries.Series.Length; i++)
                                             {
-                                                for (int i = 0; i < QuaternionSeries.Series.Length; i++)
-                                                {
-                                                    var line = QuaternionSeries.Series[i];
-                                                    ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
-                                                }
+                                                var line = QuaternionSeries.Series[i];
+                                                ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
                                             }
-
-                                            ImPlot.EndPlot();
                                         }
 
-                                        if (ImPlot.BeginPlot("##digital_in1_series", fillAvailable, plotFlags | ImPlotFlags.NoLegend))
+                                        if (DigitalInSeries != null)
                                         {
-                                            ImPlot.SetNextLineStyle(ImPlot.GetColormapColor(4));
-                                            PlotDigitalSeries(DigitalInSeries, 1, axisFlags);
-                                            ImPlot.EndPlot();
+                                            for (int i = 0; i < DigitalInSeries.Series.Length; i++)
+                                            {
+                                                var line = DigitalInSeries.Series[i];
+                                                ImPlot.PlotDigitalG($"DigitalIn{i}", line.Getter, null, DigitalInSeries.Count);
+                                            }
                                         }
 
-                                        if (ImPlot.BeginPlot("##digital_in0_series", fillAvailable, plotFlags | ImPlotFlags.NoLegend))
-                                        {
-                                            PlotDigitalSeries(DigitalInSeries, 0, axisFlags);
-                                            ImPlot.EndPlot();
-                                        }
-
-                                        ImPlot.EndSubplots();
+                                        ImPlot.EndPlot();
                                     }
-
-                                    ImGui.PopStyleVar();
 
                                     ImGui.EndTabItem();
                                 }
