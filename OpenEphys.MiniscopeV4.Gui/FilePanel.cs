@@ -57,7 +57,6 @@ public class FilePanel
             const nuint bufSize = 1024;
             string fileName = string.Empty;
             Task<string> saveDialogTask = null;
-            bool isModalOpen = false;
 
             bool recordRequested = false;
             bool lastRecordButtonInput = false;
@@ -147,7 +146,13 @@ public class FilePanel
                         }
                     }
 
-                    string noFolderFoundPopupName = "No folder found##no_folder_found";
+                    if (saveDialogTask != null && saveDialogTask.IsCompleted)
+                    {
+                        var result = saveDialogTask.Result;
+                        if (!string.IsNullOrEmpty(result))
+                            fileName = result;
+                        saveDialogTask = null;
+                    }
 
                     ImGui.SameLine();
                     if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
@@ -155,33 +160,6 @@ public class FilePanel
                         var dir = GetDirectory(fileName);
                         if (Directory.Exists(dir))
                             System.Diagnostics.Process.Start("explorer.exe", dir);
-
-                        else
-                        {
-                            ImGui.OpenPopup(noFolderFoundPopupName);
-                            isModalOpen = true;
-                        }
-                    }
-
-                    if (ImGui.BeginPopupModal(noFolderFoundPopupName, ref isModalOpen, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
-                    {
-                        ImGui.Text($"Could not find the folder '{GetDirectory(fileName)}'.");
-
-                        if (ImGui.Button("Okay##close_modal_window"))
-                        {
-                            ImGui.CloseCurrentPopup();
-                            isModalOpen = false;
-                        }
-
-                        ImGui.EndPopup();
-                    }
-
-                    if (saveDialogTask != null && saveDialogTask.IsCompleted)
-                    {
-                        var result = saveDialogTask.Result;
-                        if (!string.IsNullOrEmpty(result))
-                            fileName = result;
-                        saveDialogTask = null;
                     }
 
                     if (ImGui.BeginTable("##writer_parameters", 2, ImGuiTableFlags.SizingStretchSame))
