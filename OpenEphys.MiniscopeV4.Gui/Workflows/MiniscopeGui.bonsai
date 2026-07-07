@@ -2913,6 +2913,11 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:DistinctUntilChanged" />
                   </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Skip">
+                      <rx:Count>1</rx:Count>
+                    </Combinator>
+                  </Expression>
                   <Expression xsi:type="rx:Condition">
                     <Workflow>
                       <Nodes>
@@ -2942,6 +2947,7 @@
                   <Edge From="1" To="2" Label="Source1" />
                   <Edge From="2" To="3" Label="Source1" />
                   <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
