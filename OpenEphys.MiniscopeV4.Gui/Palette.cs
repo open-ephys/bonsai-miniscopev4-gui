@@ -25,6 +25,11 @@ internal static class Palette
     public static readonly Vector4 PurpleActive = new(0.459f, 0.150f, 0.680f, 1f);
     public static readonly Vector4 PurpleDimmed = new(0.384f, 0.293f, 0.450f, 1f);
 
+    public static readonly Vector4 Blue = new(0.220f, 0.244f, 0.580f, 1f);
+    public static readonly Vector4 BlueHovered = new(0.256f, 0.292f, 0.800f, 1f);
+    public static readonly Vector4 BlueActive = new(0.150f, 0.185f, 0.680f, 1f);
+    public static readonly Vector4 BlueDimmed = new(0.293f, 0.303f, 0.450f, 1f);
+
     public readonly ref struct StyleColorScope
     {
         readonly int count;
