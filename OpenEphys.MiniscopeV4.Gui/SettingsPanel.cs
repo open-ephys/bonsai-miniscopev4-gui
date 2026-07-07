@@ -28,8 +28,8 @@ public class SettingsPanel
     /// </summary>
     public bool AcquisitionStatus { get; set; }
 
-    const float ExpandedWidth = 375f;
-    const float CollapsedWidth = 36f;
+    static float ExpandedWidth => 375f * UiScale.Current;
+    static float CollapsedWidth => 36f * UiScale.Current;
 
     bool settingsOpen = true;
 

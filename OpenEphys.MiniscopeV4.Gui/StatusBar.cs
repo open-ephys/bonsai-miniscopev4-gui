@@ -71,14 +71,14 @@ public class StatusBar
                     if (isConnected)
                         ImGui.BeginDisabled();
 
-                    ImGui.SetNextItemWidth(60f);
+                    ImGui.SetNextItemWidth(60f * UiScale.Current);
                     ImGui.InputInt("##statusbar_index", ref cameraIndex, 0, 0);
 
                     if (isConnected)
                         ImGui.EndDisabled();
 
                     ImGui.SameLine();
-                    var acqButtonSize = new Vector2(140f, 0f);
+                    var acqButtonSize = new Vector2(140f * UiScale.Current, 0f);
                     using (Palette.PushButtonColors(
                         isConnected ? Palette.Red : Palette.Green,
                         isConnected ? Palette.RedHovered : Palette.GreenHovered,
