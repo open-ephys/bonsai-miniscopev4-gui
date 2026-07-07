@@ -31,11 +31,6 @@ public class SettingsPanel
     static float ExpandedWidth => 375f * UiScale.Current;
     static float CollapsedWidth => 36f * UiScale.Current;
 
-    static readonly Vector4 colorRecord = new(0.15f, 0.55f, 0.20f, 1f);
-    static readonly Vector4 colorRecordHovered = new(0.20f, 0.67f, 0.25f, 1f);
-    static readonly Vector4 colorStop = new(0.70f, 0.20f, 0.20f, 1f);
-    static readonly Vector4 colorStopHovered = new(0.82f, 0.25f, 0.25f, 1f);
-
     bool settingsOpen = true;
 
     float GetCurrentWidth(float availableX)
@@ -204,6 +199,81 @@ public class SettingsPanel
                             }
 
                             ImGui.EndTable();
+                        }
+
+                        ImGui.EndChild();
+                    }
+
+                    if (ImGui.CollapsingHeader("Commutator##commutator_header"))
+                    {
+                        ImGui.BeginChild("##commutator_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
+
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.Text("COM Port: ");
+                        ImGui.SameLine();
+
+                        var style = ImGui.GetStyle();
+                        float refreshButtonWidth = ImGui.CalcTextSize("Refresh").X + style.FramePadding.X * 2;
+                        float connectButtonWidth = ImGui.CalcTextSize("Disconnect").X + style.FramePadding.X * 2;
+                        float comboWidth = ImGui.GetContentRegionAvail().X - refreshButtonWidth - connectButtonWidth - style.ItemSpacing.X * 2;
+                        ImGui.SetNextItemWidth(comboWidth);
+
+                        if (commutatorConnected)
+                            ImGui.BeginDisabled();
+
+                        int portIndex = Array.IndexOf(portNames, portName);
+                        if (portIndex < 0 && portNames.Length > 0)
+                        {
+                            portIndex = 0;
+                            portName = portNames[0];
+                        }
+                        if (ImGui.Combo("##comport", ref portIndex, portNames, portNames.Length) && portNames.Length > 0)
+                        {
+                            portName = portNames[portIndex];
+                        }
+
+                        ImGui.SameLine();
+                        if (ImGui.Button("Refresh##comrefresh"))
+                        {
+                            portNames = SerialPort.GetPortNames();
+                        }
+
+                        if (commutatorConnected)
+                            ImGui.EndDisabled();
+
+                        ImGui.SameLine();
+                        if (ImGui.Button(commutatorConnected ? "Disconnect##combutton" : "Connect##combutton"))
+                        {
+                            commutatorConnected = !commutatorConnected;
+                        }
+
+                        if (!commutatorConnected)
+                            ImGui.BeginDisabled();
+
+                        if (ImGui.BeginTable("##commutator_checkboxes", 2, ImGuiTableFlags.SizingStretchSame))
+                        {
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
+
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Enable LED##commutator_led", ref commutatorEnableLed);
+
+                            ImGui.EndTable();
+                        }
+
+                        if (!commutatorConnected)
+                            ImGui.EndDisabled();
+
+                        ImGui.Separator();
+
+                        if (commutatorConnected)
+                        {
+                            using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
+                                ImGui.Text("Status: Connected");
+                        }
+                        else
+                        {
+                            ImGui.TextDisabled("Status: Disconnected");
                         }
 
                         ImGui.EndChild();
@@ -402,97 +472,22 @@ public class SettingsPanel
 
                         ImGui.EndChild();
 
-                        var recColor = recordButton ? colorStop : colorRecord;
-                        var recColorHovered = recordButton ? colorStopHovered : colorRecordHovered;
-                        ImGui.PushStyleColor(ImGuiCol.Button, recColor);
-                        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, recColorHovered);
-                        ImGui.PushStyleColor(ImGuiCol.ButtonActive, recColor);
-
-                        Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
-                        if (!AcquisitionStatus) ImGui.BeginDisabled();
-                        string recordLabel = !triggerMode
-                            ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
-                            : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
-                        if (ImGui.Button(recordLabel, recordButtonSize))
+                        using (Palette.PushButtonColors(
+                            recordButton ? Palette.Red : Palette.Green,
+                            recordButton ? Palette.RedHovered : Palette.GreenHovered,
+                            recordButton ? Palette.RedActive : Palette.GreenActive))
                         {
-                            recordButton = !recordButton;
+                            Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
+                            if (!AcquisitionStatus) ImGui.BeginDisabled();
+                            string recordLabel = !triggerMode
+                                ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
+                                : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
+                            if (ImGui.Button(recordLabel, recordButtonSize))
+                            {
+                                recordButton = !recordButton;
+                            }
+                            if (!AcquisitionStatus) ImGui.EndDisabled();
                         }
-                        if (!AcquisitionStatus) ImGui.EndDisabled();
-
-                        ImGui.PopStyleColor(3);
-
-                        ImGui.EndChild();
-                    }
-
-                    if (ImGui.CollapsingHeader("Commutator##commutator_header"))
-                    {
-                        ImGui.BeginChild("##commutator_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
-
-                        ImGui.AlignTextToFramePadding();
-                        ImGui.Text("COM Port: ");
-                        ImGui.SameLine();
-
-                        var style = ImGui.GetStyle();
-                        float refreshButtonWidth = ImGui.CalcTextSize("Refresh").X + style.FramePadding.X * 2;
-                        float connectButtonWidth = ImGui.CalcTextSize("Disconnect").X + style.FramePadding.X * 2;
-                        float comboWidth = ImGui.GetContentRegionAvail().X - refreshButtonWidth - connectButtonWidth - style.ItemSpacing.X * 2;
-                        ImGui.SetNextItemWidth(comboWidth);
-
-                        if (commutatorConnected)
-                            ImGui.BeginDisabled();
-
-                        int portIndex = Array.IndexOf(portNames, portName);
-                        if (portIndex < 0 && portNames.Length > 0)
-                        {
-                            portIndex = 0;
-                            portName = portNames[0];
-                        }
-                        if (ImGui.Combo("##comport", ref portIndex, portNames, portNames.Length) && portNames.Length > 0)
-                        {
-                            portName = portNames[portIndex];
-                        }
-
-                        ImGui.SameLine();
-                        if (ImGui.Button("Refresh##comrefresh"))
-                        {
-                            portNames = SerialPort.GetPortNames();
-                        }
-
-                        if (commutatorConnected)
-                            ImGui.EndDisabled();
-
-                        ImGui.SameLine();
-                        if (ImGui.Button(commutatorConnected ? "Disconnect##combutton" : "Connect##combutton"))
-                        {
-                            commutatorConnected = !commutatorConnected;
-                        }
-
-                        if (!commutatorConnected)
-                            ImGui.BeginDisabled();
-
-                        if (ImGui.BeginTable("##commutator_checkboxes", 2, ImGuiTableFlags.SizingStretchSame))
-                        {
-                            ImGui.TableNextColumn();
-                            ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
-
-                            ImGui.TableNextColumn();
-                            ImGui.Checkbox("Enable LED##commutator_led", ref commutatorEnableLed);
-
-                            ImGui.EndTable();
-                        }
-
-                        if (!commutatorConnected)
-                            ImGui.EndDisabled();
-
-                        ImGui.Separator();
-
-                        var statusColor = commutatorConnected
-                                ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
-                                : new Vector4(0.6f, 0.6f, 0.6f, 1f);
-                        ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
-                        var displayStatus = commutatorConnected ? "Status: Connected" : "Status: Disconnected";
-                        ImGui.Text(displayStatus);
-                        ImGui.PopStyleColor();
 
                         ImGui.EndChild();
                     }
