@@ -34,11 +34,6 @@ public class StatusBar
     [Browsable(false)]
     public bool AutomaticRestartTriggered { get; set; }
 
-    static readonly Vector4 colorStart = new(0.15f, 0.55f, 0.20f, 1f);
-    static readonly Vector4 colorStartHovered = new(0.20f, 0.67f, 0.25f, 1f);
-    static readonly Vector4 colorStop = new(0.70f, 0.20f, 0.20f, 1f);
-    static readonly Vector4 colorStopHovered = new(0.82f, 0.25f, 0.25f, 1f);
-
     /// <summary>
     /// Renders the status bar controls and returns an updated <see cref="CameraStatus"/> alongside each source value.
     /// </summary>
@@ -83,25 +78,28 @@ public class StatusBar
                         ImGui.EndDisabled();
 
                     ImGui.SameLine();
-                    var acqColor = isConnected ? colorStop : colorStart;
-                    var acqColorHovered = isConnected ? colorStopHovered : colorStartHovered;
-                    ImGui.PushStyleColor(ImGuiCol.Button, acqColor);
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, acqColorHovered);
-                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, acqColor);
                     var acqButtonSize = new Vector2(140f, 0f);
-                    if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn", acqButtonSize))
+                    using (Palette.PushButtonColors(
+                        isConnected ? Palette.Red : Palette.Green,
+                        isConnected ? Palette.RedHovered : Palette.GreenHovered,
+                        isConnected ? Palette.RedActive : Palette.GreenActive))
                     {
-                        isConnected = !isConnected;
+                        if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn", acqButtonSize))
+                        {
+                            isConnected = !isConnected;
+                        }
                     }
-                    ImGui.PopStyleColor(3);
 
-                    var statusColor = isConnected
-                            ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
-                            : new Vector4(0.6f, 0.6f, 0.6f, 1f);
-                    ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
                     ImGui.SameLine();
-                    ImGui.Text(isConnected ? "Acquiring" : "Disconnected");
-                    ImGui.PopStyleColor();
+                    if (isConnected)
+                    {
+                        using var _ = Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered);
+                        ImGui.Text("Acquiring");
+                    }
+                    else
+                    {
+                        ImGui.TextDisabled("Disconnected");
+                    }
 
                     ImGui.TableNextColumn();
 

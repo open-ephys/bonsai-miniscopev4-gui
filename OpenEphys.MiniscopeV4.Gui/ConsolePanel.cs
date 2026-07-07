@@ -17,25 +17,29 @@ namespace OpenEphys.MiniscopeV4.Gui;
 [Description("Renders the full-width console log docked at the bottom of the GUI.")]
 public class ConsolePanel
 {
-    static readonly Vector4 colorError = new(0.9f, 0.3f, 0.3f, 1f);
-    static readonly Vector4 colorWarning = new(0.9f, 0.8f, 0.3f, 1f);
-    static readonly Vector4 colorInfo = new(0.8f, 0.8f, 0.8f, 1f);
-    static readonly Vector4 colorHint = new(0.6f, 0.6f, 0.6f, 1f);
-
     static void RenderLogLines(LogEntry[] entries)
     {
         for (int i = 0; i < entries.Length; i++)
         {
             var entry = entries[i];
-            var color = entry.Level switch
+            var text = $"[{entry.Timestamp:HHHH:mm:ss}] {entry.Message}";
+
+            switch (entry.Level)
             {
-                LogLevel.Error => colorError,
-                LogLevel.Warning => colorWarning,
-                _ => colorInfo,
-            };
-            ImGui.PushStyleColor(ImGuiCol.Text, color);
-            ImGui.TextUnformatted($"[{entry.Timestamp:HH:mm:ss}] {entry.Message}");
-            ImGui.PopStyleColor();
+                case LogLevel.Error:
+                    using (Palette.PushColor(ImGuiCol.Text, Palette.RedHovered))
+                        ImGui.TextUnformatted(text);
+                    break;
+
+                case LogLevel.Warning:
+                    using (Palette.PushColor(ImGuiCol.Text, Palette.YellowHovered))
+                        ImGui.TextUnformatted(text);
+                    break;
+     
+                default:
+                    ImGui.TextUnformatted(text);
+                    break;
+            }
         }
     }
 
@@ -106,9 +110,7 @@ public class ConsolePanel
                     {
                         if (logCache.Length == 0)
                         {
-                            ImGui.PushStyleColor(ImGuiCol.Text, colorHint);
-                            ImGui.TextUnformatted("No messages yet.");
-                            ImGui.PopStyleColor();
+                            ImGui.TextDisabled("No messages yet.");
                         }
                         else
                         {
