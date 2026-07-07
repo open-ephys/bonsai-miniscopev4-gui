@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Windows.Forms;
 using Bonsai.Design;
@@ -19,9 +20,17 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// </summary>
 public abstract class ImGuiMiniscopeMashupVisualizer : MashupVisualizer
 {
+    static readonly Subject<Unit> closed = new();
+
     ImGuiControl imGuiControl;
 
     internal ImGuiControl Control => imGuiControl;
+
+    /// <summary>
+    /// Gets an observable sequence that emits a notification whenever the
+    /// top-level Miniscope GUI visualizer window is closed.
+    /// </summary>
+    public static IObservable<Unit> Closed => closed.AsObservable();
 
     /// <summary>
     /// Gets or sets the target interval, in milliseconds, between visualizer updates.
@@ -74,6 +83,7 @@ public abstract class ImGuiMiniscopeMashupVisualizer : MashupVisualizer
                 {
                     form.Icon = LoadIcon();
                     form.ShowIcon = true;
+                    form.FormClosed += (s, args) => closed.OnNext(Unit.Default);
                 }
             };
             base.Load(provider);
