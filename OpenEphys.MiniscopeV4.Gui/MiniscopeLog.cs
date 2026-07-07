@@ -20,6 +20,9 @@ public enum LogLevel
 
     /// <summary>An error that interrupted acquisition, recording, or another action.</summary>
     Error,
+
+    /// <summary> A message indicating that a property has changed. </summary>
+    PropertyChanged,
 }
 
 /// <summary>
@@ -88,6 +91,10 @@ public static class MiniscopeLog
     /// <summary>Appends an error message.</summary>
     /// <param name="message">The message text.</param>
     public static void Error(string message) => Log(LogLevel.Error, message);
+
+    /// <summary> Appends a message indicating that a property has changed.</summary>
+    /// <param name="message">The message text.</param>
+    public static void PropertyChanged(string message) => Log(LogLevel.PropertyChanged, message);
 
     /// <summary>
     /// Sets the frame number recorded with subsequent messages. Typically driven by the acquired frame stream.
