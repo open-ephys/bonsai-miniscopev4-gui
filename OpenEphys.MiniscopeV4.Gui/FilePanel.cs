@@ -102,8 +102,8 @@ public class FilePanel
                     {
                         ImGui.BeginTooltip();
                         ImGui.Text("Choose the location and format to save all files.");
-                        ImGui.Text("Video files will have '.avi' added the file format, and CSV files will have '.csv' added.");
                         ImGui.Text("If Suffix is set, the selected suffix will be added after the format and before the extension.");
+                        ImGui.Text("Video files will have '.avi' appended, CSV files will have '.csv' appended, and log files will have '.log' appended.");
                         ImGui.EndTooltip();
                     }
 
@@ -120,29 +120,7 @@ public class FilePanel
                     {
                         if (saveDialogTask == null || saveDialogTask.IsCompleted)
                         {
-                            saveDialogTask = Task.Run(() =>
-                            {
-                                string result = string.Empty;
-                                Thread t = new(() =>
-                                {
-                                    SaveFileDialog dlg = new()
-                                    {
-                                        InitialDirectory = GetDirectory(fileName),
-                                        Filter = "All Files|*.*",
-                                        Title = "Choose where to save Miniscope data.",
-                                        AddExtension = false,
-                                        CheckFileExists = false,
-                                        CheckPathExists = false,
-                                        FileName = Path.GetFileName(fileName)
-                                    };
-                                    if (dlg.ShowDialog() == DialogResult.OK)
-                                        result = dlg.FileName;
-                                });
-                                t.SetApartmentState(ApartmentState.STA);
-                                t.Start();
-                                t.Join();
-                                return result;
-                            });
+                            saveDialogTask = CreateSaveFileDialogTask(fileName);
                         }
                     }
 
@@ -276,7 +254,17 @@ public class FilePanel
                             : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
                         if (ImGui.Button(recordLabel, recordButtonSize))
                         {
-                            recordButton = !recordButton;
+                            if (string.IsNullOrEmpty(fileName))
+                            {
+                                if (saveDialogTask == null || saveDialogTask.IsCompleted)
+                                {
+                                    saveDialogTask = CreateSaveFileDialogTask(fileName);
+                                }
+                            }
+                            else
+                            {
+                                recordButton = !recordButton;
+                            }
                         }
                         if (!AcquisitionStatus) ImGui.EndDisabled();
                     }
@@ -305,4 +293,31 @@ public class FilePanel
     }
 
     static string GetDirectory(string path) => Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path) ? "./" : path));
+
+    static Task<string> CreateSaveFileDialogTask(string fileName)
+    {
+        return Task.Run(() =>
+        {
+            string result = string.Empty;
+            Thread t = new(() =>
+            {
+                SaveFileDialog dlg = new()
+                {
+                    InitialDirectory = GetDirectory(fileName),
+                    Filter = "All Files|*.*",
+                    Title = "Choose where to save Miniscope data.",
+                    AddExtension = false,
+                    CheckFileExists = false,
+                    CheckPathExists = false,
+                    FileName = Path.GetFileName(fileName)
+                };
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    result = dlg.FileName;
+            });
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+            t.Join();
+            return result;
+        });
+    }
 }
