@@ -53,7 +53,6 @@ public abstract class ImGuiMiniscopeMashupVisualizer : MashupVisualizer
 
             imGuiControl.Render += (sender, e) =>
             {
-                UiScale.SyncFrame();
                 ImGui.StyleColorsDark();
 
                 var viewport = ImGui.GetMainViewport();

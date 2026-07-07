@@ -36,9 +36,9 @@ public class ImGuiMiniscopeExtension : IExtensionContext
             io.Fonts.AddFontFromMemoryTTF((byte*)fontPtr, fontBytes.Length, UiScale.BaseFontSize * UiScale.Current);
         }
 
-        // NB: Bake the DPI-scaled sizes into the style. Only sizes are configured here;
+        // NB: Apply the DPI-scaled sizes to the style. Only sizes are configured here;
         // any colors would be overridden by ImGuiMashupVisualizer.Load --> imGuiControl.Render --> ImGui.StyleColors*().
-        UiScale.ApplyBaselineStyle();
+        UiScale.ApplyScaledStyle();
     }
 
     /// <summary>
