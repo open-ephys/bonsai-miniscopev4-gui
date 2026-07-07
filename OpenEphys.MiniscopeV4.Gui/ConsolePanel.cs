@@ -22,7 +22,7 @@ public class ConsolePanel
         for (int i = 0; i < entries.Length; i++)
         {
             var entry = entries[i];
-            var text = $"[{entry.Timestamp:HHHH:mm:ss}] {entry.Message}";
+            var text = $"[{entry.Timestamp:HH:mm:ss}] {entry.Message}";
 
             switch (entry.Level)
             {
@@ -35,7 +35,7 @@ public class ConsolePanel
                     using (Palette.PushColor(ImGuiCol.Text, Palette.YellowHovered))
                         ImGui.TextUnformatted(text);
                     break;
-     
+
                 default:
                     ImGui.TextUnformatted(text);
                     break;

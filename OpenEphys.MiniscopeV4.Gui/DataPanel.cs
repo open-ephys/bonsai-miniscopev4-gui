@@ -197,7 +197,7 @@ public class DataPanel
                                         ImGui.AlignTextToFramePadding();
                                         if (DroppedFrames > 0)
                                         {
-                                            using (Palette.PushColor(ImGuiCol.Text, Palette.RedHovered));
+                                            using (Palette.PushColor(ImGuiCol.Text, Palette.RedHovered))
                                                 ImGui.Text($"Dropped Frames: {DroppedFrames}");
                                         }
                                         else

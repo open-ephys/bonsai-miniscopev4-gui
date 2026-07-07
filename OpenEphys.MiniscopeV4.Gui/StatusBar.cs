@@ -93,8 +93,8 @@ public class StatusBar
                     ImGui.SameLine();
                     if (isConnected)
                     {
-                        using var _ = Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered);
-                        ImGui.Text("Acquiring");
+                        using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
+                            ImGui.Text("Acquiring");
                     }
                     else
                     {
