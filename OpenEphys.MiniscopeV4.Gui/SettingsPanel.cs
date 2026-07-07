@@ -28,8 +28,8 @@ public class SettingsPanel
     /// </summary>
     public bool AcquisitionStatus { get; set; }
 
-    const float ExpandedWidth = 375f;
-    const float CollapsedWidth = 36f;
+    static float ExpandedWidth => 375f * UiScale.Current;
+    static float CollapsedWidth => 36f * UiScale.Current;
 
     static readonly Vector4 colorRecord = new(0.15f, 0.55f, 0.20f, 1f);
     static readonly Vector4 colorRecordHovered = new(0.20f, 0.67f, 0.25f, 1f);

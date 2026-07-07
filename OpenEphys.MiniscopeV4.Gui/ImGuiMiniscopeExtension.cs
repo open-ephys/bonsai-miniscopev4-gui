@@ -33,15 +33,12 @@ public class ImGuiMiniscopeExtension : IExtensionContext
         unsafe
         {
             // NB: The ImGui API handles the lifetime of the font data, so we do not need to free the allocated memory after adding the font.
-            io.Fonts.AddFontFromMemoryTTF((byte*)fontPtr, fontBytes.Length, 16f);
+            io.Fonts.AddFontFromMemoryTTF((byte*)fontPtr, fontBytes.Length, UiScale.BaseFontSize * UiScale.Current);
         }
 
-        // NB: All colors set here will be overridden by ImGuiMashupVisualizer.Load --> imGuiControl.Render --> ImGui.StyleColors*()
-
-        ImGui.GetStyle().TabBarBorderSize = 0f;
-
-        ImGui.GetStyle().ChildRounding = 4f;
-        ImGui.GetStyle().ChildBorderSize = 1.5f;
+        // NB: Apply the DPI-scaled sizes to the style. Only sizes are configured here;
+        // any colors would be overridden by ImGuiMashupVisualizer.Load --> imGuiControl.Render --> ImGui.StyleColors*().
+        UiScale.ApplyScaledStyle();
     }
 
     /// <summary>

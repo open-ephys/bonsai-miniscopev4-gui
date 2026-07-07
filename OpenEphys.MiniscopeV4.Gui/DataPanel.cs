@@ -291,7 +291,7 @@ public class DataPanel
                                         ImGui.BeginDisabled();
                                     }
 
-                                    var bufferInputWidth = 60f;
+                                    var bufferInputWidth = 60f * UiScale.Current;
                                     ImGui.AlignTextToFramePadding();
                                     ImGui.Text("Buffer Size: ");
                                     ImGui.SameLine();
