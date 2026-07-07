@@ -50,9 +50,9 @@ public class StatusBar
 
             var sourceObserver = Observer.Create<Tuple<TSource, CameraStatus>>(value =>
             {
-                var dto = value.Item2;
-                var cameraIndex = dto.CameraIndex;
-                var isConnected = dto.IsConnected;
+                var cameraStatus = value.Item2;
+                var cameraIndex = cameraStatus.CameraIndex;
+                var isConnected = cameraStatus.IsConnected;
 
                 if (AutomaticRestartTriggered)
                 {
@@ -90,16 +90,7 @@ public class StatusBar
                         }
                     }
 
-                    ImGui.SameLine();
-                    if (isConnected)
-                    {
-                        using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
-                            ImGui.Text("Acquiring");
-                    }
-                    else
-                    {
-                        ImGui.TextDisabled("Disconnected");
-                    }
+
 
                     ImGui.TableNextColumn();
 
@@ -111,12 +102,17 @@ public class StatusBar
                         {
                             acquisitionStart ??= DateTime.Now;
                             elapsedAcquisitionTime = (DateTime.Now - acquisitionStart.Value).TotalSeconds;
+                            ImGui.Text($"Acquiring: {elapsedAcquisitionTime:F0} s");
                         }
                         else if (acquisitionStart != null)
                         {
                             acquisitionStart = null;
-                        }
-                        ImGui.Text($"Acquiring: {elapsedAcquisitionTime:F0} s");
+                            ImGui.Text($"Stopped: {elapsedAcquisitionTime:F0} s");
+                        } 
+                        else
+                        {
+                            ImGui.Text($"Stopped: {elapsedAcquisitionTime:F0} s");
+                        }    
 
                         ImGui.TableNextColumn();
 

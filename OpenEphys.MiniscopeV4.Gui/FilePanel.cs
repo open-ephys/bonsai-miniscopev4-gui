@@ -94,8 +94,9 @@ public class FilePanel
                 {
                     ImGui.BeginChild("##file_pane", new Vector2(-1f, 0f), ImGuiChildFlags.AutoResizeY);
 
-                    ImGui.Text("Recording");
                     ImGui.Separator();
+                    ImGui.Text("Recording");
+                    ImGui.Dummy(new Vector2(0f, ImGui.GetStyle().ItemSpacing.Y));
 
                     ImGui.Text("Base File Name");
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))

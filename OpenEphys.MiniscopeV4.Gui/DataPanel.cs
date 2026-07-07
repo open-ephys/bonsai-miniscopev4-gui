@@ -437,8 +437,6 @@ public class DataPanel
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offsetX);
             ImGui.Image(image, displaySize);
         }
-        else
-            ImGui.Text("No image data found.");
     }
 
     static Vector2 CalculateDisplaySize(Vector2 availableRegion, Vector2 imageSize)
