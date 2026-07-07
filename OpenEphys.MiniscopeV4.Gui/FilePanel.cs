@@ -40,11 +40,6 @@ public class FilePanel
     /// </summary>
     internal static float LastHeight { get; private set; }
 
-    static readonly Vector4 colorRecord = new(0.15f, 0.55f, 0.20f, 1f);
-    static readonly Vector4 colorRecordHovered = new(0.20f, 0.67f, 0.25f, 1f);
-    static readonly Vector4 colorStop = new(0.70f, 0.20f, 0.20f, 1f);
-    static readonly Vector4 colorStopHovered = new(0.82f, 0.25f, 0.25f, 1f);
-
     static readonly string[] DigitalInNames = Enum.GetNames(typeof(MiniscopeDaqDigitalIn));
     static readonly MiniscopeDaqDigitalIn[] DigitalInValues = (MiniscopeDaqDigitalIn[])Enum.GetValues(typeof(MiniscopeDaqDigitalIn));
     static readonly string[] PathSuffixValues = Enum.GetNames(typeof(PathSuffix));
@@ -290,22 +285,22 @@ public class FilePanel
 
                     ImGui.EndChild();
 
-                    ImGui.PushStyleColor(ImGuiCol.Button, recordButton ? colorStop : colorRecord);
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, recordButton ? colorStopHovered : colorRecordHovered);
-                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, recordButton ? colorStop : colorRecord);
-
-                    Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
-                    if (!AcquisitionStatus) ImGui.BeginDisabled();
-                    string recordLabel = !triggerMode
-                        ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
-                        : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
-                    if (ImGui.Button(recordLabel, recordButtonSize))
+                    using (Palette.PushButtonColors(
+                            recordButton ? Palette.Red : Palette.Green,
+                            recordButton ? Palette.RedHovered : Palette.GreenHovered,
+                            recordButton ? Palette.RedActive : Palette.GreenActive))
                     {
-                        recordButton = !recordButton;
+                        Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
+                        if (!AcquisitionStatus) ImGui.BeginDisabled();
+                        string recordLabel = !triggerMode
+                            ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
+                            : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
+                        if (ImGui.Button(recordLabel, recordButtonSize))
+                        {
+                            recordButton = !recordButton;
+                        }
+                        if (!AcquisitionStatus) ImGui.EndDisabled();
                     }
-                    if (!AcquisitionStatus) ImGui.EndDisabled();
-
-                    ImGui.PopStyleColor(3);
 
                     ImGui.EndChild();
                     LastHeight = ImGui.GetItemRectSize().Y;

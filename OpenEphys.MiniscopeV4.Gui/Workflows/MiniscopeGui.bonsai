@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder Version="2.9.0"
+<WorkflowBuilder Version="2.9.1"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
                  xmlns:cv="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
@@ -26,6 +26,7 @@
         <Property Name="CameraIndex" />
         <Property Name="CompressVideo" />
         <Property Name="RecordingDuration" />
+        <Property Name="StopWorkflowOnClose" />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Initialize Subjects</Name>
@@ -302,6 +303,17 @@
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>AutomaticRestart</Name>
             </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="Value" DisplayName="StopWorkflowOnClose" Category="Workflow" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="BooleanProperty">
+                <Value>false</Value>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject">
+              <Name>StopWorkflowOnClose</Name>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
@@ -346,6 +358,8 @@
             <Edge From="67" To="68" Label="Source1" />
             <Edge From="69" To="70" Label="Source1" />
             <Edge From="71" To="72" Label="Source1" />
+            <Edge From="73" To="74" Label="Source1" />
+            <Edge From="74" To="75" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -716,6 +730,26 @@
             <Edge From="19" To="20" Label="Source1" />
           </Edges>
         </Workflow>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p3:MiniscopeVisualizerClosed" />
+      </Expression>
+      <Expression xsi:type="rx:Condition">
+        <Name>StopOnWorkflowClose</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>StopWorkflowOnClose</Name>
+            </Expression>
+            <Expression xsi:type="WorkflowOutput" />
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="1" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:TakeUntil" />
       </Expression>
       <Expression xsi:type="WorkflowOutput" />
       <Expression xsi:type="GroupWorkflow">
@@ -3204,7 +3238,10 @@
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
-      <Edge From="2" To="3" Label="Source1" />
+      <Edge From="2" To="5" Label="Source1" />
+      <Edge From="3" To="4" Label="Source1" />
+      <Edge From="4" To="5" Label="Source2" />
+      <Edge From="5" To="6" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>

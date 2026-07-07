@@ -113,8 +113,6 @@ public class DataPanel
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
     static readonly string[] histogramAxisTickLabels = new string[] { "0%", "20%", "40%", "60%", "80%", "100%" };
 
-    static readonly Vector4 colorError = new(0.9f, 0.3f, 0.3f, 1f);
-
     /// <summary>
     /// Renders the data panel for each source value and forwards the value unchanged.
     /// </summary>
@@ -196,10 +194,16 @@ public class DataPanel
                                         ImGui.Text($"Frame Number: {FrameNumber}");
 
                                         ImGui.TableNextColumn();
-                                        if (DroppedFrames > 0) ImGui.PushStyleColor(ImGuiCol.Text, colorError);
                                         ImGui.AlignTextToFramePadding();
-                                        ImGui.Text($"Dropped Frames: {DroppedFrames}");
-                                        if (DroppedFrames > 0) ImGui.PopStyleColor();
+                                        if (DroppedFrames > 0)
+                                        {
+                                            using (Palette.PushColor(ImGuiCol.Text, Palette.RedHovered))
+                                                ImGui.Text($"Dropped Frames: {DroppedFrames}");
+                                        }
+                                        else
+                                        {
+                                            ImGui.Text($"Dropped Frames: {DroppedFrames}");
+                                        }
 
                                         ImGui.EndTable();
                                     }

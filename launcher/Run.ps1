@@ -58,8 +58,10 @@ if (-not $WorkflowFile) {
 
 $WorkflowFile = [System.IO.Path]::GetFullPath($WorkflowFile)
 
-# TODO: Add "--no-editor" once the VisualizerWindow headless bug is published in Bonsai v2.9.1 (PR #2594)
-$bonsaiArgs = @($WorkflowFile)
+$bonsaiArgs = @(
+    $WorkflowFile
+    "--no-editor"
+)
 
 if (Test-Path $ConfigFile) {
     $config = Get-Content $ConfigFile -Raw | ConvertFrom-Json
@@ -81,6 +83,8 @@ if (Test-Path $ConfigFile) {
 } else {
     Write-Warning "config.json not found at '$ConfigFile'; default values will be used."
 }
+
+$bonsaiArgs += "-p:StopWorkflowOnClose=true"
 
 Write-Host "Starting Miniscope GUI..."
 & $BonsaiExe @bonsaiArgs

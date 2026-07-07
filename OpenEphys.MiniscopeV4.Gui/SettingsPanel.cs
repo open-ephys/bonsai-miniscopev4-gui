@@ -243,13 +243,15 @@ public class SettingsPanel
 
                         ImGui.Separator();
 
-                        var statusColor = commutatorConnected
-                                ? new Vector4(0.2f, 0.8f, 0.2f, 1f)
-                                : new Vector4(0.6f, 0.6f, 0.6f, 1f);
-                        ImGui.PushStyleColor(ImGuiCol.Text, statusColor);
-                        var displayStatus = commutatorConnected ? "Status: Connected" : "Status: Disconnected";
-                        ImGui.Text(displayStatus);
-                        ImGui.PopStyleColor();
+                        if (commutatorConnected)
+                        {
+                            using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
+                                ImGui.Text("Status: Connected");
+                        }
+                        else
+                        {
+                            ImGui.TextDisabled("Status: Disconnected");
+                        }
 
                         ImGui.EndChild();
                     }
