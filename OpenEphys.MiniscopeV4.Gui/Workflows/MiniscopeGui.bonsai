@@ -19,7 +19,7 @@
         <Property Name="Focus" />
         <Property Name="SensorGain" />
         <Property Name="LedRespectsDigitalIn" />
-        <Property Name="FramesPerSecond" />
+        <Property Name="FrameRate" />
         <Property Name="FileName" />
         <Property Name="BufferSize" />
         <Property Name="Suffix" />
@@ -210,7 +210,7 @@
               <Name>LedRespectsDigitalIn</Name>
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
-              <Property Name="Value" DisplayName="FramesPerSecond" Category="Acquisition" />
+              <Property Name="Value" DisplayName="FrameRate" Category="Acquisition" />
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="p2:UclaMiniscopeV4,p2:FrameRateV4">
               <MemberName>FramesPerSecond</MemberName>
