@@ -69,6 +69,9 @@ Source: "..\launcher\config.json"; DestDir: "{app}"; \
 Source: "..\OpenEphys.MiniscopeV4.Gui\Workflows\MiniscopeGui.bonsai"; \
   DestDir: "{app}"; Flags: ignoreversion
 
+Source: "..\OpenEphys.MiniscopeV4.Gui\Workflows\LogProperty.bonsai"; \
+  DestDir: "{app}"; Flags: ignoreversion
+
 Source: "..\launcher\.bonsai\Bonsai.config"; DestDir: "{app}\.bonsai"; Flags: ignoreversion
 Source: "..\launcher\.bonsai\NuGet.config";  DestDir: "{app}\.bonsai"; Flags: ignoreversion
 
