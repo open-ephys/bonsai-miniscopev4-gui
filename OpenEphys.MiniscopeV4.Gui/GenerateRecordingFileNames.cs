@@ -15,7 +15,8 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// <param name="CsvFileName">The file name used to save the per-frame metadata CSV file.</param>
 /// <param name="ImageFileName">The file name used to save the recorded video file.</param>
 /// <param name="LogFileName">The file name used to save the recording log file.</param>
-public readonly record struct RecordingFileNames(string CsvFileName, string ImageFileName, string LogFileName);
+/// <param name="ConfigFileName">The file name used to save the configuration file.</param>
+public readonly record struct RecordingFileNames(string CsvFileName, string ImageFileName, string LogFileName, string ConfigFileName);
 
 /// <summary>
 /// Generates a synchronized set of file names for a recording from a single file name template and
@@ -51,6 +52,7 @@ public class GenerateRecordingFileNames
     const string CsvExtension = ".csv";
     const string ImageExtension = ".avi";
     const string LogExtension = ".log";
+    const string ConfigExtension = ".json";
 
     /// <summary>
     /// Generates a synchronized <see cref="RecordingFileNames"/> set each time the <paramref name="source"/>
@@ -81,12 +83,13 @@ public class GenerateRecordingFileNames
 
         return Suffix switch
         {
-            PathSuffix.Timestamp => GenerateTimestampedFileNames(basePath, CsvExtension, ImageExtension, LogExtension),
-            PathSuffix.FileCount => GenerateCountedFileNames(basePath, CsvExtension, ImageExtension, LogExtension),
+            PathSuffix.Timestamp => GenerateTimestampedFileNames(basePath, CsvExtension, ImageExtension, LogExtension, ConfigExtension),
+            PathSuffix.FileCount => GenerateCountedFileNames(basePath, CsvExtension, ImageExtension, LogExtension, ConfigExtension),
             _ => new RecordingFileNames(
                 Compose(basePath, CsvExtension),
                 Compose(basePath, ImageExtension),
-                Compose(basePath, LogExtension)),
+                Compose(basePath, LogExtension),
+                Compose(basePath, ConfigExtension))
         };
     }
 
@@ -107,22 +110,24 @@ public class GenerateRecordingFileNames
         return PathHelper.AppendSuffix(path, countSuffix.ToString(CultureInfo.InvariantCulture));
     }
 
-    RecordingFileNames GenerateTimestampedFileNames(string basePath, string csvExtension, string imageExtension, string logExtension)
+    RecordingFileNames GenerateTimestampedFileNames(string basePath, string csvExtension, string imageExtension, string logExtension, string configExtension)
     {
         var timestamp = DateTimeOffset.Now;
         return new RecordingFileNames(
             Compose(basePath, timestamp, csvExtension),
             Compose(basePath, timestamp, imageExtension),
-            Compose(basePath, timestamp, logExtension));
+            Compose(basePath, timestamp, logExtension),
+            Compose(basePath, timestamp, configExtension));
     }
 
-    RecordingFileNames GenerateCountedFileNames(string basePath, string csvExtension, string imageExtension, string logExtension)
+    RecordingFileNames GenerateCountedFileNames(string basePath, string csvExtension, string imageExtension, string logExtension, string configExtension)
     {
-        var countSuffix = ResolveFileCount(basePath, new[] { csvExtension, imageExtension, logExtension });
+        var countSuffix = ResolveFileCount(basePath, new[] { csvExtension, imageExtension, logExtension, configExtension });
         return new RecordingFileNames(
             Compose(basePath, countSuffix, csvExtension),
             Compose(basePath, countSuffix, imageExtension),
-            Compose(basePath, countSuffix, logExtension));
+            Compose(basePath, countSuffix, logExtension),
+            Compose(basePath, countSuffix, configExtension));
     }
 
     // Computes a single file count shared by every extension, so the generated names cannot collide with
@@ -141,7 +146,7 @@ public class GenerateRecordingFileNames
             var fileName = Path.GetFileNameWithoutExtension(path);
             var matches = Directory.GetFiles(directory, fileName + "*" + extension).Length;
 
-            while (File.Exists(Compose(fileName, matches, extension)))
+            while (File.Exists(Compose(basePath, matches, extension)))
             {
                 matches++;
             }
