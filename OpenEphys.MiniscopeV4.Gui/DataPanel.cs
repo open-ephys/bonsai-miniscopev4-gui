@@ -259,7 +259,7 @@ public class DataPanel
                                             backgroundFrames = Math.Max(backgroundFramesMin, Math.Min(backgroundFramesMax, backgroundFrames));
                                         ImGui.Spacing();
 
-                                        ImGui.TextUnformatted("Background thresh.:");
+                                        ImGui.TextUnformatted("Background threshold:");
                                         ImGui.SetNextItemWidth(-1f);
                                         double bgThreshMin = 0, bgThreshMax = 255;
                                         ImGui.SliderScalar("##background_threshold", ImGuiDataType.Double, &backgroundThreshold, &bgThreshMin, &bgThreshMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);

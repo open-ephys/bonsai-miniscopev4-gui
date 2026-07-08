@@ -99,7 +99,7 @@ public class ConsolePanel
                         bool active = ImGui.IsItemActive();
 
                         if (active)
-                            ConsoleLayout.ConsoleHeight -= ImGui.GetIO().MouseDelta.Y;
+                            ConsoleLayout.Drag(-ImGui.GetIO().MouseDelta.Y, ImGui.GetWindowHeight());
                         if (hovered || active)
                             ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNs);
                         var drawList = ImGui.GetWindowDrawList();
@@ -192,8 +192,6 @@ public class ConsolePanel
                             ImGui.Checkbox("Errors##console_filter_error", ref showErrors);
                             ImGui.SameLine();
                             ImGui.Checkbox("Property Changes##console_filter_property", ref showPropertyChanges);
-
-                            ImGui.Separator();
 
                             float clearWidth = ImGui.CalcTextSize("Clear").X + ImGui.GetStyle().FramePadding.X * 2f;
                             ImGui.SameLine(rowWidth - clearWidth);

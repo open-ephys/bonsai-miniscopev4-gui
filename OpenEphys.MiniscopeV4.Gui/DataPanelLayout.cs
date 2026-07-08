@@ -4,8 +4,8 @@ namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Shared layout state for the runtime-only split between the image pane and the signal pane inside
-/// <see cref="DataPanel"/>. Unlike <see cref="ConsoleLayout.ConsoleHeight"/> this has no Bonsai-configurable
-/// backing property: the height is seeded once from <see cref="DataPanel.ImageHeightFraction"/> times the
+/// <see cref="DataPanel"/>. Unlike the console height in <see cref="ConsoleLayout"/>, which starts from a
+/// fixed default, this height is seeded once from <see cref="DataPanel.ImageHeightFraction"/> times the
 /// available height on first use, then purely dragged for the rest of the process's lifetime.
 /// </summary>
 static class DataPanelLayout
@@ -18,11 +18,14 @@ static class DataPanelLayout
     /// </summary>
     public static bool ImageExpanded { get; set; }
 
-    /// <summary>Thickness, in pixels, of the draggable splitter between the image and signal panes.</summary>
-    public const float SplitterThickness = 6f;
+    /// <summary>Thickness, in pixels, of the draggable splitter between the image and signal panes. Scales with <see cref="UiScale"/>.</summary>
+    public static float SplitterThickness => 6f * UiScale.Current;
 
-    const float MinImagePaneHeight = 100f;
-    const float MinSignalPaneHeight = 80f;
+    const float BaseMinImagePaneHeight = 100f;
+    const float BaseMinSignalPaneHeight = 80f;
+
+    static float MinImagePaneHeight => BaseMinImagePaneHeight * UiScale.Current;
+    static float MinSignalPaneHeight => BaseMinSignalPaneHeight * UiScale.Current;
 
     static float imagePaneHeight = -1f; // Negative = not yet seeded.
 
