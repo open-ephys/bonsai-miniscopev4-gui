@@ -20,11 +20,12 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// <remarks>
 /// Renders into the shared sidebar child window opened (but not closed) by <see cref="SettingsPanel"/>,
 /// and closes it once its own content is done, so the two panels form a single visual region. Content
-/// is skipped (but the child is still closed) while <see cref="SettingsPanel.SidebarOpen"/> is false, so
+/// is skipped (but the child is still closed) while <see cref="SettingsLayout.SidebarOpen"/> is false, so
 /// collapsing the sidebar hides this section along with the rest of the settings. Its own content renders
-/// into an auto-sized child so <see cref="LastHeight"/> can be measured; <see cref="SettingsPanel"/> uses
-/// that (one frame stale, since the height is otherwise unknown until it renders) to bound its own
-/// collapsible content and keep this section anchored to a fixed distance from the bottom.
+/// into an auto-sized child so <see cref="SettingsLayout.RecordingSectionHeight"/> can be measured;
+/// <see cref="SettingsPanel"/> uses that (one frame stale, since the height is otherwise unknown until it
+/// renders) to bound its own collapsible content and keep this section anchored to a fixed distance from
+/// the bottom. See <see cref="SettingsLayout"/> for the full picture of how these two panels coordinate.
 /// </remarks>
 [Combinator]
 [Description("Renders the recording and file saving controls.")]
@@ -34,11 +35,6 @@ public class FilePanel
     /// Gets or sets the acquisition status of the GUI.
     /// </summary>
     public bool AcquisitionStatus { get; set; }
-
-    /// <summary>
-    /// Gets the height, in pixels, that the File section's content occupied last frame.
-    /// </summary>
-    internal static float LastHeight { get; private set; }
 
     static readonly string[] DigitalInNames = Enum.GetNames(typeof(MiniscopeDaqDigitalIn));
     static readonly MiniscopeDaqDigitalIn[] DigitalInValues = (MiniscopeDaqDigitalIn[])Enum.GetValues(typeof(MiniscopeDaqDigitalIn));
@@ -90,7 +86,13 @@ public class FilePanel
                 var triggerInput = fileSettings.TriggerInput;
                 int triggerIndex = Array.IndexOf(DigitalInValues, triggerInput);
 
-                if (SettingsPanel.SidebarOpen)
+                if (DataPanelLayout.ImageExpanded)
+                {
+                    // SettingsPanel didn't open a shared child this frame (fully hidden), so there's
+                    // nothing here to render into or close.
+                    SettingsLayout.RecordingSectionHeight = 0f;
+                }
+                else if (SettingsLayout.SidebarOpen)
                 {
                     ImGui.BeginChild("##file_pane", new Vector2(-1f, 0f), ImGuiChildFlags.AutoResizeY);
 
@@ -303,14 +305,15 @@ public class FilePanel
                     }
 
                     ImGui.EndChild();
-                    LastHeight = ImGui.GetItemRectSize().Y;
+                    SettingsLayout.RecordingSectionHeight = ImGui.GetItemRectSize().Y;
                 }
                 else
                 {
-                    LastHeight = 0f;
+                    SettingsLayout.RecordingSectionHeight = 0f;
                 }
 
-                ImGui.EndChild(); // closes the shared sidebar child opened by SettingsPanel
+                if (!DataPanelLayout.ImageExpanded)
+                    ImGui.EndChild(); // closes the shared sidebar child opened by SettingsPanel
 
                 recordRequested = recordButton;
 

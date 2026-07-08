@@ -27,10 +27,25 @@ static class ConsoleLayout
     }
 
     /// <summary>
+    /// Gets or sets whether the console is expanded (showing its log content and splitter) or
+    /// collapsed down to just its header row, toggled by the arrow button in <see cref="ConsolePanel"/>.
+    /// </summary>
+    public static bool ConsoleOpen { get; set; } = true;
+
+    /// <summary>
     /// Gets the total vertical space, in pixels, that panels above the console must leave free
-    /// so the splitter and console fit beneath them.
+    /// so the splitter and console fit beneath them. Zero while <see cref="DataPanelLayout.ImageExpanded"/>
+    /// is set, since the console is fully hidden in that view; just enough for the header row while
+    /// <see cref="ConsoleOpen"/> is false.
     /// </summary>
     /// <param name="itemSpacingY">The current ImGui vertical item spacing.</param>
     /// <returns>The height to reserve at the bottom of the content region.</returns>
-    public static float ReservedHeight(float itemSpacingY) => consoleHeight + SplitterThickness + itemSpacingY * 2f;
+    public static float ReservedHeight(float itemSpacingY)
+    {
+        if (DataPanelLayout.ImageExpanded)
+            return 0f;
+        if (!ConsoleOpen)
+            return ImGui.GetFrameHeight() + ImGui.GetStyle().WindowPadding.Y * 2f + itemSpacingY;
+        return consoleHeight + SplitterThickness + itemSpacingY * 2f;
+    }
 }
