@@ -1,4 +1,4 @@
-﻿using Bonsai;
+using Bonsai;
 using Hexa.NET.ImGui;
 using OpenEphys.Miniscope;
 using System;
@@ -16,7 +16,9 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// </summary>
 /// <remarks>
 /// Opens the shared sidebar child window but does not close it, so that <see cref="FilePanel"/> can render
-/// into the same region immediately afterward and close it.
+/// into the same region immediately afterward and close it. See <see cref="SettingsLayout"/> for how the
+/// two coordinate, and <see cref="DataPanelLayout.ImageExpanded"/> for why this panel sometimes renders
+/// nothing at all.
 /// </remarks>
 [Combinator]
 [Description("Renders all settings panels in a collapsible right-hand sidebar.")]
@@ -27,20 +29,16 @@ public class SettingsPanel
     /// </summary>
     public bool AcquisitionStatus { get; set; }
 
-    /// <summary>
-    /// Gets whether the sidebar is currently expanded, so <see cref="FilePanel"/> knows whether to
-    /// render its content into the shared child window or leave it collapsed to icon width.
-    /// </summary>
-    internal static bool SidebarOpen { get; private set; }
-
     static float ExpandedWidth => 375f * UiScale.Current;
     static float CollapsedWidth => 36f * UiScale.Current;
 
     bool settingsOpen = true;
 
+    bool EffectiveOpen => settingsOpen && !DataPanelLayout.ImageExpanded;
+
     float GetCurrentWidth(float availableX)
     {
-        if (settingsOpen)
+        if (EffectiveOpen)
         {
             if (ExpandedWidth <= availableX)
                 return ExpandedWidth;
@@ -87,192 +85,225 @@ public class SettingsPanel
                 bool commutatorEnable = hardwareSettings.Commutator.Enable;
                 bool commutatorEnableLed = hardwareSettings.Commutator.EnableLed;
 
-                float availableX = ImGui.GetContentRegionAvail().X;
-                float panelWidth = GetCurrentWidth(availableX);
-
-                float consoleReserve = ConsoleLayout.ReservedHeight(ImGui.GetStyle().ItemSpacing.Y);
-                ImGui.BeginChild("##settings_pane", new Vector2(panelWidth - ImGui.GetStyle().ChildBorderSize, -consoleReserve), ImGuiChildFlags.Borders);
-
-                SidebarOpen = settingsOpen;
-
-                if (!settingsOpen)
+                if (DataPanelLayout.ImageExpanded)
                 {
-                    if (ImGui.ArrowButton("##settings_open", ImGuiDir.Right))
-                    {
-                        settingsOpen = true;
-                    }
+                    // Fully hidden while the image section is expanded (matching the console's own
+                    // fully-hidden behavior) — the only way out is the Collapse button in DataPanel.
+                    // No child is opened at all here (SameLine and FilePanel both skip their half of
+                    // this row/child in this state too), so there's nothing to close and DataPanel
+                    // isn't pinned next to a degenerate zero-width remnant.
+                    SettingsLayout.SidebarOpen = false;
                 }
                 else
                 {
-                    if (ImGui.ArrowButton("##settings_close", ImGuiDir.Left))
-                        settingsOpen = false;
+                    float availableX = ImGui.GetContentRegionAvail().X;
+                    float panelWidth = GetCurrentWidth(availableX);
 
-                    ImGui.SameLine();
-                    ImGui.Text("Control Panel");
-                    ImGui.Separator();
+                    float consoleReserve = ConsoleLayout.ReservedHeight(ImGui.GetStyle().ItemSpacing.Y);
+                    ImGui.BeginChild("##settings_pane", new Vector2(panelWidth - ImGui.GetStyle().ChildBorderSize, -consoleReserve), ImGuiChildFlags.Borders);
 
-                    float fileReserve = FilePanel.LastHeight > 0f ? FilePanel.LastHeight + ImGui.GetStyle().ItemSpacing.Y : 0f;
-                    ImGui.BeginChild("##settings_content", new Vector2(-1f, -fileReserve), ImGuiChildFlags.None);
+                    SettingsLayout.SidebarOpen = EffectiveOpen;
 
-                    ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-                    if (ImGui.CollapsingHeader("Miniscope##miniscope_header"))
+                    if (!EffectiveOpen)
                     {
-                        ImGui.BeginChild("##miniscope_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
+                        // The arrow icon only occupies a small square, but the whole collapsed column should
+                        // act as one big reopen button: an invisible button behind it catches clicks/hover
+                        // anywhere in the column, and the real ArrowButton drawn on top is tinted to look
+                        // hovered whenever that larger area is, even if the mouse isn't precisely on the icon.
+                        Vector2 collapsedAreaSize = ImGui.GetContentRegionAvail();
+                        Vector2 arrowPos = ImGui.GetCursorScreenPos();
 
-                        ImGui.AlignTextToFramePadding();
-                        ImGui.Text("Focus: ");
-                        ImGui.SameLine();
-                        ImGui.SetNextItemWidth(-1f);
-                        double focusMin = -100, focusMax = 100;
-                        ImGui.SliderScalar("##focus", ImGuiDataType.Double, &focus, &focusMin, &focusMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
+                        bool areaClicked = ImGui.InvisibleButton("##settings_open_area", collapsedAreaSize);
+                        bool areaHovered = ImGui.IsItemHovered();
+                        if (areaHovered)
+                            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
 
-                        ImGui.AlignTextToFramePadding();
-                        ImGui.Text("LED Brightness: ");
-                        if (ImGui.BeginItemTooltip())
+                        ImGui.SetCursorScreenPos(arrowPos);
+
+                        if (areaHovered)
+                            ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonHovered));
+
+                        ImGui.ArrowButton("##settings_open", ImGuiDir.Right);
+
+                        if (areaHovered)
+                            ImGui.PopStyleColor();
+
+                        if (areaClicked)
                         {
-                            ImGui.Text("Change the brightness of the LED.\n\nTo type in a specific value, press `Ctrl` and click on the slider before typing. Press enter to set the brightness value.");
-                            ImGui.EndTooltip();
+                            settingsOpen = true;
                         }
+                    }
+                    else
+                    {
+                        if (ImGui.ArrowButton("##settings_close", ImGuiDir.Left))
+                            settingsOpen = false;
+
                         ImGui.SameLine();
-                        ImGui.SetNextItemWidth(-1f);
-                        double brightnessMin = 0, brightnessMax = 100;
-                        ImGui.SliderScalar("##ledbrightness", ImGuiDataType.Double, &ledBrightness, &brightnessMin, &brightnessMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
-
-                        if (ImGui.BeginTable("##row2", 2, ImGuiTableFlags.SizingStretchSame))
-                        {
-                            ImGui.TableNextColumn();
-                            ImGui.AlignTextToFramePadding();
-                            ImGui.Text("Frame Rate: ");
-                            ImGui.SameLine();
-                            ImGui.SetNextItemWidth(-1f);
-                            int frameRateIndex = Array.IndexOf(FrameRateValues, frameRate.ToString());
-                            if (ImGui.Combo("##framerate", ref frameRateIndex, FrameRateValues, FrameRateValues.Length))
-                            {
-                                if (Enum.TryParse<FrameRateV4>(FrameRateValues[frameRateIndex], out var result))
-                                    frameRate = result;
-                            }
-
-                            ImGui.TableNextColumn();
-                            ImGui.AlignTextToFramePadding();
-                            ImGui.Text("Sensor Gain: ");
-                            ImGui.SameLine();
-                            ImGui.SetNextItemWidth(-1f);
-                            int sensorGainIndex = Array.IndexOf(SensorGainValues, sensorGain.ToString());
-                            if (ImGui.Combo("##sensorgain", ref sensorGainIndex, SensorGainValues, SensorGainValues.Length))
-                            {
-                                if (Enum.TryParse<GainV4>(SensorGainValues[sensorGainIndex], out var result))
-                                    sensorGain = result;
-                            }
-
-                            ImGui.TableNextColumn();
-                            ImGui.AlignTextToFramePadding();
-                            ImGui.Text("LED Trigger: ");
-                            ImGui.SameLine();
-                            ImGui.SetNextItemWidth(-1f);
-                            int digitalInIndex = Array.IndexOf(DigitalInValues, ledRespectsDigitalIn);
-                            if (ImGui.Combo("##ledrespectdigitalin", ref digitalInIndex, DigitalInNames, DigitalInNames.Length))
-                            {
-                                ledRespectsDigitalIn = DigitalInValues[digitalInIndex];
-                            }
-
-                            ImGui.EndTable();
-                        }
-
-
+                        ImGui.Text("Control Panel");
                         ImGui.Separator();
-                        ImGui.TextDisabled("Status: ");
-                        ImGui.SameLine();
-                        if (AcquisitionStatus)
+
+                        float fileReserve = SettingsLayout.RecordingSectionHeight > 0f ? SettingsLayout.RecordingSectionHeight + ImGui.GetStyle().ItemSpacing.Y : 0f;
+                        ImGui.BeginChild("##settings_content", new Vector2(-1f, -fileReserve), ImGuiChildFlags.None);
+
+                        ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+                        if (ImGui.CollapsingHeader("Miniscope##miniscope_header"))
                         {
-                            using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
-                                ImGui.Text("Acquiring");
+                            ImGui.BeginChild("##miniscope_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
+
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.Text("Focus: ");
+                            ImGui.SameLine();
+                            ImGui.SetNextItemWidth(-1f);
+                            double focusMin = -100, focusMax = 100;
+                            ImGui.SliderScalar("##focus", ImGuiDataType.Double, &focus, &focusMin, &focusMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
+
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.Text("LED Brightness: ");
+                            if (ImGui.BeginItemTooltip())
+                            {
+                                ImGui.Text("Change the brightness of the LED.\n\nTo type in a specific value, press `Ctrl` and click on the slider before typing. Press enter to set the brightness value.");
+                                ImGui.EndTooltip();
+                            }
+                            ImGui.SameLine();
+                            ImGui.SetNextItemWidth(-1f);
+                            double brightnessMin = 0, brightnessMax = 100;
+                            ImGui.SliderScalar("##ledbrightness", ImGuiDataType.Double, &ledBrightness, &brightnessMin, &brightnessMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
+
+                            if (ImGui.BeginTable("##row2", 2, ImGuiTableFlags.SizingStretchSame))
+                            {
+                                ImGui.TableNextColumn();
+                                ImGui.AlignTextToFramePadding();
+                                ImGui.Text("Frame Rate: ");
+                                ImGui.SameLine();
+                                ImGui.SetNextItemWidth(-1f);
+                                int frameRateIndex = Array.IndexOf(FrameRateValues, frameRate.ToString());
+                                if (ImGui.Combo("##framerate", ref frameRateIndex, FrameRateValues, FrameRateValues.Length))
+                                {
+                                    if (Enum.TryParse<FrameRateV4>(FrameRateValues[frameRateIndex], out var result))
+                                        frameRate = result;
+                                }
+
+                                ImGui.TableNextColumn();
+                                ImGui.AlignTextToFramePadding();
+                                ImGui.Text("Sensor Gain: ");
+                                ImGui.SameLine();
+                                ImGui.SetNextItemWidth(-1f);
+                                int sensorGainIndex = Array.IndexOf(SensorGainValues, sensorGain.ToString());
+                                if (ImGui.Combo("##sensorgain", ref sensorGainIndex, SensorGainValues, SensorGainValues.Length))
+                                {
+                                    if (Enum.TryParse<GainV4>(SensorGainValues[sensorGainIndex], out var result))
+                                        sensorGain = result;
+                                }
+
+                                ImGui.TableNextColumn();
+                                ImGui.AlignTextToFramePadding();
+                                ImGui.Text("LED Trigger: ");
+                                ImGui.SameLine();
+                                ImGui.SetNextItemWidth(-1f);
+                                int digitalInIndex = Array.IndexOf(DigitalInValues, ledRespectsDigitalIn);
+                                if (ImGui.Combo("##ledrespectdigitalin", ref digitalInIndex, DigitalInNames, DigitalInNames.Length))
+                                {
+                                    ledRespectsDigitalIn = DigitalInValues[digitalInIndex];
+                                }
+
+                                ImGui.EndTable();
+                            }
+
+                            ImGui.Separator();
+                            ImGui.TextDisabled("Status: ");
+                            ImGui.SameLine();
+                            if (AcquisitionStatus)
+                            {
+                                using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
+                                    ImGui.Text("Acquiring");
+                            }
+                            else
+                            {
+                                ImGui.TextDisabled("Disconnected");
+                            }
+
+                            ImGui.EndChild();
                         }
-                        else
+
+                        if (ImGui.CollapsingHeader("Commutator##commutator_header"))
                         {
-                            ImGui.TextDisabled("Disconnected");
+                            ImGui.BeginChild("##commutator_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
+
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.Text("COM Port: ");
+                            ImGui.SameLine();
+
+                            var style = ImGui.GetStyle();
+                            float refreshButtonWidth = ImGui.CalcTextSize("Refresh").X + style.FramePadding.X * 2;
+                            float connectButtonWidth = ImGui.CalcTextSize("Disconnect").X + style.FramePadding.X * 2;
+                            float comboWidth = ImGui.GetContentRegionAvail().X - refreshButtonWidth - connectButtonWidth - style.ItemSpacing.X * 2;
+                            ImGui.SetNextItemWidth(comboWidth);
+
+                            if (commutatorConnected)
+                                ImGui.BeginDisabled();
+
+                            int portIndex = Array.IndexOf(portNames, portName);
+                            if (portIndex < 0 && portNames.Length > 0)
+                            {
+                                portIndex = 0;
+                                portName = portNames[0];
+                            }
+                            if (ImGui.Combo("##comport", ref portIndex, portNames, portNames.Length) && portNames.Length > 0)
+                            {
+                                portName = portNames[portIndex];
+                            }
+
+                            ImGui.SameLine();
+                            if (ImGui.Button("Refresh##comrefresh"))
+                            {
+                                portNames = SerialPort.GetPortNames();
+                            }
+
+                            if (commutatorConnected)
+                                ImGui.EndDisabled();
+
+                            ImGui.SameLine();
+                            if (ImGui.Button(commutatorConnected ? "Disconnect##combutton" : "Connect##combutton"))
+                            {
+                                commutatorConnected = !commutatorConnected;
+                            }
+
+                            if (!commutatorConnected)
+                                ImGui.BeginDisabled();
+
+                            if (ImGui.BeginTable("##commutator_checkboxes", 2, ImGuiTableFlags.SizingStretchSame))
+                            {
+                                ImGui.TableNextColumn();
+                                ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
+
+                                ImGui.TableNextColumn();
+                                ImGui.Checkbox("Enable LED##commutator_led", ref commutatorEnableLed);
+
+                                ImGui.EndTable();
+                            }
+
+                            if (!commutatorConnected)
+                                ImGui.EndDisabled();
+
+                            ImGui.Separator();
+
+                            ImGui.TextDisabled("Status: ");
+                            ImGui.SameLine();
+                            if (commutatorConnected)
+                            {
+                                using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
+                                    ImGui.Text("Connected");
+                            }
+                            else
+                            {
+                                ImGui.TextDisabled("Disconnected");
+                            }
+
+                            ImGui.EndChild();
                         }
 
                         ImGui.EndChild();
                     }
-
-                    if (ImGui.CollapsingHeader("Commutator##commutator_header"))
-                    {
-                        ImGui.BeginChild("##commutator_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
-
-                        ImGui.AlignTextToFramePadding();
-                        ImGui.Text("COM Port: ");
-                        ImGui.SameLine();
-
-                        var style = ImGui.GetStyle();
-                        float refreshButtonWidth = ImGui.CalcTextSize("Refresh").X + style.FramePadding.X * 2;
-                        float connectButtonWidth = ImGui.CalcTextSize("Disconnect").X + style.FramePadding.X * 2;
-                        float comboWidth = ImGui.GetContentRegionAvail().X - refreshButtonWidth - connectButtonWidth - style.ItemSpacing.X * 2;
-                        ImGui.SetNextItemWidth(comboWidth);
-
-                        if (commutatorConnected)
-                            ImGui.BeginDisabled();
-
-                        int portIndex = Array.IndexOf(portNames, portName);
-                        if (portIndex < 0 && portNames.Length > 0)
-                        {
-                            portIndex = 0;
-                            portName = portNames[0];
-                        }
-                        if (ImGui.Combo("##comport", ref portIndex, portNames, portNames.Length) && portNames.Length > 0)
-                        {
-                            portName = portNames[portIndex];
-                        }
-
-                        ImGui.SameLine();
-                        if (ImGui.Button("Refresh##comrefresh"))
-                        {
-                            portNames = SerialPort.GetPortNames();
-                        }
-
-                        if (commutatorConnected)
-                            ImGui.EndDisabled();
-
-                        ImGui.SameLine();
-                        if (ImGui.Button(commutatorConnected ? "Disconnect##combutton" : "Connect##combutton"))
-                        {
-                            commutatorConnected = !commutatorConnected;
-                        }
-
-                        if (!commutatorConnected)
-                            ImGui.BeginDisabled();
-
-                        if (ImGui.BeginTable("##commutator_checkboxes", 2, ImGuiTableFlags.SizingStretchSame))
-                        {
-                            ImGui.TableNextColumn();
-                            ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
-
-                            ImGui.TableNextColumn();
-                            ImGui.Checkbox("Enable LED##commutator_led", ref commutatorEnableLed);
-
-                            ImGui.EndTable();
-                        }
-
-                        if (!commutatorConnected)
-                            ImGui.EndDisabled();
-
-                        ImGui.Separator();
-
-                        ImGui.TextDisabled("Status: ");
-                        ImGui.SameLine();
-                        if (commutatorConnected)
-                        {
-                            using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
-                                ImGui.Text("Connected");
-                        }
-                        else
-                        {
-                            ImGui.TextDisabled("Disconnected");
-                        }
-
-                        ImGui.EndChild();
-                    }
-
-                    ImGui.EndChild();
                 }
 
                 var updatedHardwareSettings = new HardwareSettings(
