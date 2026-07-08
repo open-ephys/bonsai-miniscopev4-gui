@@ -307,30 +307,14 @@ public class FilePanel
         ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
         : path));
 
-    static Task<string> CreateSaveFileDialogTask(string fileName)
+    static Task<string> CreateSaveFileDialogTask(string fileName) => FileDialogHelpers.RunFileDialogTask(() => new SaveFileDialog
     {
-        return Task.Run(() =>
-        {
-            string result = string.Empty;
-            Thread t = new(() =>
-            {
-                SaveFileDialog dlg = new()
-                {
-                    InitialDirectory = GetDirectory(fileName),
-                    Filter = "All Files|*.*",
-                    Title = "Choose where to save Miniscope data.",
-                    AddExtension = false,
-                    CheckFileExists = false,
-                    CheckPathExists = false,
-                    FileName = Path.GetFileName(fileName)
-                };
-                if (dlg.ShowDialog() == DialogResult.OK)
-                    result = dlg.FileName;
-            });
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start();
-            t.Join();
-            return result;
-        });
-    }
+        InitialDirectory = GetDirectory(fileName),
+        Filter = "All Files|*.*",
+        Title = "Choose where to save Miniscope data.",
+        AddExtension = false,
+        CheckFileExists = false,
+        CheckPathExists = false,
+        FileName = Path.GetFileName(fileName)
+    });
 }

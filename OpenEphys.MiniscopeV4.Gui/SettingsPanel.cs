@@ -8,6 +8,8 @@ using System.Linq;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace OpenEphys.MiniscopeV4.Gui;
 
@@ -58,6 +60,14 @@ public class SettingsPanel
     static readonly string[] DigitalInNames = Enum.GetNames(typeof(MiniscopeDaqDigitalIn));
     static readonly MiniscopeDaqDigitalIn[] DigitalInValues = (MiniscopeDaqDigitalIn[])Enum.GetValues(typeof(MiniscopeDaqDigitalIn));
 
+    string configFilePath = string.Empty;
+
+    string ConfigFilePath
+    {
+        get => string.IsNullOrEmpty(configFilePath) ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) : configFilePath;
+        set => configFilePath = value;
+    }
+
     /// <summary>
     /// Renders the settings sidebar and returns an updated <see cref="HardwareSettings"/> alongside each source value.
     /// </summary>
@@ -69,6 +79,8 @@ public class SettingsPanel
         return Observable.Create<Tuple<TSource, HardwareSettings>>(observer =>
         {
             var portNames = SerialPort.GetPortNames();
+            Task<string> saveConfigTask = null;
+            Task<string> loadConfigTask = null;
 
             var sourceObserver = Observer.Create<Tuple<TSource, HardwareSettings>>(value =>
             {
@@ -150,6 +162,61 @@ public class SettingsPanel
                         {
                             ImGui.BeginChild("##miniscope_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
 
+                            float configButtonWidth = (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / 2f;
+                            if (ImGui.Button("Save Config##miniscope_save", new Vector2(configButtonWidth, 0)))
+                            {
+                                if (saveConfigTask == null || saveConfigTask.IsCompleted)
+                                    saveConfigTask = CreateSaveConfigDialogTask();
+                            }
+                            if (ImGui.BeginItemTooltip())
+                            {
+                                ImGui.Text("Save the current Miniscope settings to a JSON file.");
+                                ImGui.EndTooltip();
+                            }
+
+                            ImGui.SameLine();
+                            if (ImGui.Button("Load Config##miniscope_load", new Vector2(configButtonWidth, 0)))
+                            {
+                                if (loadConfigTask == null || loadConfigTask.IsCompleted)
+                                    loadConfigTask = CreateOpenConfigDialogTask();
+                            }
+                            if (ImGui.BeginItemTooltip())
+                            {
+                                ImGui.Text("Load Miniscope settings from a JSON file.");
+                                ImGui.EndTooltip();
+                            }
+
+                            if (saveConfigTask != null && saveConfigTask.IsCompleted)
+                            {
+                                var savePath = saveConfigTask.Result;
+                                saveConfigTask = null;
+                                if (!string.IsNullOrEmpty(savePath))
+                                {
+                                    SettingsFile.Save(savePath, hardwareSettings.Miniscope);
+                                    ConfigFilePath = savePath;
+                                }
+                            }
+
+                            if (loadConfigTask != null && loadConfigTask.IsCompleted)
+                            {
+                                var loadPath = loadConfigTask.Result;
+                                loadConfigTask = null;
+                                if (!string.IsNullOrEmpty(loadPath) && SettingsFile.TryLoad(loadPath, hardwareSettings.Miniscope, out var loaded))
+                                {
+                                    ledBrightness = loaded.LedBrightness;
+                                    focus = loaded.Focus;
+                                    sensorGain = loaded.SensorGain;
+                                    frameRate = loaded.FrameRate;
+                                    ledRespectsDigitalIn = loaded.LedRespectsDigitalIn;
+
+                                    ConfigFilePath = loadPath;
+                                }
+                            }
+
+                            ImGui.Spacing();
+                            ImGui.Separator();
+                            ImGui.Spacing();
+
                             ImGui.AlignTextToFramePadding();
                             ImGui.Text("Focus: ");
                             ImGui.SameLine();
@@ -209,7 +276,9 @@ public class SettingsPanel
                                 ImGui.EndTable();
                             }
 
+                            ImGui.Spacing();
                             ImGui.Separator();
+                            ImGui.Spacing();
                             ImGui.TextDisabled("Status: ");
                             ImGui.SameLine();
                             if (AcquisitionStatus)
@@ -318,4 +387,24 @@ public class SettingsPanel
             return source.SubscribeSafe(sourceObserver);
         });
     }
+
+    Task<string> CreateSaveConfigDialogTask() => FileDialogHelpers.RunFileDialogTask(() => new SaveFileDialog
+    {
+        InitialDirectory = ConfigFilePath,
+        Filter = "JSON files (*.json)|*.json|All Files|*.*",
+        Title = "Choose where to save the Miniscope configuration.",
+        AddExtension = true,
+        DefaultExt = "json",
+        FileName = "config.json",
+        OverwritePrompt = true,
+    });
+
+    Task<string> CreateOpenConfigDialogTask() => FileDialogHelpers.RunFileDialogTask(() => new OpenFileDialog
+    {
+        InitialDirectory = ConfigFilePath,
+        Filter = "JSON files (*.json)|*.json|All Files|*.*",
+        Title = "Choose a Miniscope configuration to load.",
+        CheckFileExists = true,
+        Multiselect = false
+    });
 }

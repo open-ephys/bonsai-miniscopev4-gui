@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Windows.Forms;
 using Bonsai.Design;
 using Bonsai.Expressions;
@@ -81,20 +79,13 @@ public abstract class ImGuiMiniscopeMashupVisualizer : MashupVisualizer
                 var form = imGuiControl.FindForm();
                 if (form != null)
                 {
-                    form.Icon = LoadIcon();
+                    form.Icon = AppResources.LoadIcon();
                     form.ShowIcon = true;
                     form.FormClosed += (s, args) => closed.OnNext(Unit.Default);
                 }
             };
             base.Load(provider);
         }
-    }
-
-    static Icon LoadIcon()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream("OpenEphys.MiniscopeV4.Gui.Resources.icon.ico");
-        return new Icon(stream);
     }
 
     void RenderMashup(ImGuiMiniscopeMashupVisualizerBuilder builder)

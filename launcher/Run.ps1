@@ -77,6 +77,10 @@ if (Test-Path $ConfigFile) {
         if ($prop.Name -eq "FileName" -and "$value".StartsWith("~")) {
             $value = ($env:USERPROFILE + ("$value".Substring(1))).Replace("\", "/")
         }
+        
+        if ($prop.Name -eq "FrameRate" -and "$value".StartsWith("Fps")) {
+            $value = $value.Substring(3) + " Hz"
+        }
 
         $bonsaiArgs += "-p:$($prop.Name)=$value"
     }
