@@ -57,7 +57,7 @@ public class FilePanel
             const nuint bufSize = 1024;
             string fileName = string.Empty;
             Task<string> saveDialogTask = null;
-            bool isModalOpen = false;
+            bool shouldStartRecordingWhenCompleted = false;
 
             bool recordRequested = false;
             bool lastRecordButtonInput = false;
@@ -103,8 +103,8 @@ public class FilePanel
                     {
                         ImGui.BeginTooltip();
                         ImGui.Text("Choose the location and format to save all files.");
-                        ImGui.Text("Video files will have '.avi' added the file format, and CSV files will have '.csv' added.");
                         ImGui.Text("If Suffix is set, the selected suffix will be added after the format and before the extension.");
+                        ImGui.Text("Video files will have '.avi' appended, CSV files will have '.csv' appended, and log files will have '.log' appended.");
                         ImGui.EndTooltip();
                     }
 
@@ -121,59 +121,8 @@ public class FilePanel
                     {
                         if (saveDialogTask == null || saveDialogTask.IsCompleted)
                         {
-                            saveDialogTask = Task.Run(() =>
-                            {
-                                string result = string.Empty;
-                                Thread t = new(() =>
-                                {
-                                    SaveFileDialog dlg = new()
-                                    {
-                                        InitialDirectory = GetDirectory(fileName),
-                                        Filter = "All Files|*.*",
-                                        Title = "Choose where to save Miniscope data.",
-                                        AddExtension = false,
-                                        CheckFileExists = false,
-                                        CheckPathExists = false,
-                                        FileName = Path.GetFileName(fileName)
-                                    };
-                                    if (dlg.ShowDialog() == DialogResult.OK)
-                                        result = dlg.FileName;
-                                });
-                                t.SetApartmentState(ApartmentState.STA);
-                                t.Start();
-                                t.Join();
-                                return result;
-                            });
+                            saveDialogTask = CreateSaveFileDialogTask(fileName);
                         }
-                    }
-
-                    string noFolderFoundPopupName = "No folder found##no_folder_found";
-
-                    ImGui.SameLine();
-                    if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
-                    {
-                        var dir = GetDirectory(fileName);
-                        if (Directory.Exists(dir))
-                            System.Diagnostics.Process.Start("explorer.exe", dir);
-
-                        else
-                        {
-                            ImGui.OpenPopup(noFolderFoundPopupName);
-                            isModalOpen = true;
-                        }
-                    }
-
-                    if (ImGui.BeginPopupModal(noFolderFoundPopupName, ref isModalOpen, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
-                    {
-                        ImGui.Text($"Could not find the folder '{GetDirectory(fileName)}'.");
-
-                        if (ImGui.Button("Okay##close_modal_window"))
-                        {
-                            ImGui.CloseCurrentPopup();
-                            isModalOpen = false;
-                        }
-
-                        ImGui.EndPopup();
                     }
 
                     if (saveDialogTask != null && saveDialogTask.IsCompleted)
@@ -182,6 +131,20 @@ public class FilePanel
                         if (!string.IsNullOrEmpty(result))
                             fileName = result;
                         saveDialogTask = null;
+
+                        if (shouldStartRecordingWhenCompleted && !string.IsNullOrEmpty(fileName))
+                        {
+                            recordButton = true;
+                            shouldStartRecordingWhenCompleted = false;
+                        }
+                    }
+
+                    ImGui.SameLine();
+                    if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
+                    {
+                        var dir = GetDirectory(fileName);
+                        if (Directory.Exists(dir))
+                            System.Diagnostics.Process.Start("explorer.exe", dir);
                     }
 
                     if (ImGui.BeginTable("##writer_parameters", 2, ImGuiTableFlags.SizingStretchSame))
@@ -298,7 +261,18 @@ public class FilePanel
                             : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
                         if (ImGui.Button(recordLabel, recordButtonSize))
                         {
-                            recordButton = !recordButton;
+                            if (string.IsNullOrEmpty(fileName))
+                            {
+                                if (saveDialogTask == null || saveDialogTask.IsCompleted)
+                                {
+                                    shouldStartRecordingWhenCompleted = true;
+                                    saveDialogTask = CreateSaveFileDialogTask(fileName);
+                                }
+                            }
+                            else
+                            {
+                                recordButton = !recordButton;
+                            }
                         }
                         if (!AcquisitionStatus) ImGui.EndDisabled();
                     }
@@ -326,5 +300,34 @@ public class FilePanel
         });
     }
 
-    static string GetDirectory(string path) => Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path) ? "./" : path));
+    static string GetDirectory(string path) => Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path)
+        ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        : path));
+
+    static Task<string> CreateSaveFileDialogTask(string fileName)
+    {
+        return Task.Run(() =>
+        {
+            string result = string.Empty;
+            Thread t = new(() =>
+            {
+                SaveFileDialog dlg = new()
+                {
+                    InitialDirectory = GetDirectory(fileName),
+                    Filter = "All Files|*.*",
+                    Title = "Choose where to save Miniscope data.",
+                    AddExtension = false,
+                    CheckFileExists = false,
+                    CheckPathExists = false,
+                    FileName = Path.GetFileName(fileName)
+                };
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    result = dlg.FileName;
+            });
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+            t.Join();
+            return result;
+        });
+    }
 }
