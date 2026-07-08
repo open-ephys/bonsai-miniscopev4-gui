@@ -57,6 +57,7 @@ public class FilePanel
             const nuint bufSize = 1024;
             string fileName = string.Empty;
             Task<string> saveDialogTask = null;
+            bool shouldStartRecordingWhenCompleted = false;
 
             bool recordRequested = false;
             bool lastRecordButtonInput = false;
@@ -130,6 +131,12 @@ public class FilePanel
                         if (!string.IsNullOrEmpty(result))
                             fileName = result;
                         saveDialogTask = null;
+
+                        if (shouldStartRecordingWhenCompleted && !string.IsNullOrEmpty(fileName))
+                        {
+                            recordButton = true;
+                            shouldStartRecordingWhenCompleted = false;
+                        }
                     }
 
                     ImGui.SameLine();
@@ -258,6 +265,7 @@ public class FilePanel
                             {
                                 if (saveDialogTask == null || saveDialogTask.IsCompleted)
                                 {
+                                    shouldStartRecordingWhenCompleted = true;
                                     saveDialogTask = CreateSaveFileDialogTask(fileName);
                                 }
                             }
@@ -292,7 +300,9 @@ public class FilePanel
         });
     }
 
-    static string GetDirectory(string path) => Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path) ? "./" : path));
+    static string GetDirectory(string path) => Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path)
+        ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        : path));
 
     static Task<string> CreateSaveFileDialogTask(string fileName)
     {

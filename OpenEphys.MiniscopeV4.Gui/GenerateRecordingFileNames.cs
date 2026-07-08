@@ -1,10 +1,10 @@
+using Bonsai;
+using Bonsai.IO;
 using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Reactive.Linq;
-using Bonsai;
-using Bonsai.IO;
 
 namespace OpenEphys.MiniscopeV4.Gui;
 
@@ -74,34 +74,61 @@ public class GenerateRecordingFileNames
     /// <returns>The generated <see cref="RecordingFileNames"/>.</returns>
     RecordingFileNames Generate()
     {
-        var basePath = Path.GetFullPath(string.IsNullOrEmpty(FileName) ? "." : FileName);
-        var extensions = new[] { CsvExtension, ImageExtension, LogExtension };
-        var timestamp = DateTimeOffset.Now;
-        var countSuffix = Suffix == PathSuffix.FileCount
-            ? ResolveFileCount(basePath, extensions)
-            : null;
+        string fileName = string.IsNullOrEmpty(FileName) ? "." : FileName;
+        var folderPath = Path.GetDirectoryName(fileName);
+        var baseFileName = Path.GetFileNameWithoutExtension(fileName);
+        var basePath = Path.Combine(folderPath, baseFileName);
 
-        return new RecordingFileNames(
-            Compose(basePath, CsvExtension, timestamp, countSuffix),
-            Compose(basePath, ImageExtension, timestamp, countSuffix),
-            Compose(basePath, LogExtension, timestamp, countSuffix));
-    }
-
-    string Compose(string basePath, string extension, DateTimeOffset timestamp, string countSuffix)
-    {
-        var path = basePath + extension;
         return Suffix switch
         {
-          PathSuffix.Timestamp => PathHelper.AppendTimestamp(path, timestamp),
-          PathSuffix.FileCount => PathHelper.AppendSuffix(path, countSuffix),
-          _ => path,
+            PathSuffix.Timestamp => GenerateTimestampedFileNames(basePath, CsvExtension, ImageExtension, LogExtension),
+            PathSuffix.FileCount => GenerateCountedFileNames(basePath, CsvExtension, ImageExtension, LogExtension),
+            _ => new RecordingFileNames(
+                Compose(basePath, CsvExtension),
+                Compose(basePath, ImageExtension),
+                Compose(basePath, LogExtension)),
         };
-  }
+    }
+
+    static string Compose(string basePath, string extension)
+    {
+        return basePath + extension;
+    }
+
+    static string Compose(string basePath, DateTimeOffset timestamp, string extension)
+    {
+        var path = basePath + extension;
+        return PathHelper.AppendTimestamp(path, timestamp);
+    }
+
+    static string Compose(string basePath, int countSuffix, string extension)
+    {
+        var path = basePath + extension;
+        return PathHelper.AppendSuffix(path, countSuffix.ToString(CultureInfo.InvariantCulture));
+    }
+
+    RecordingFileNames GenerateTimestampedFileNames(string basePath, string csvExtension, string imageExtension, string logExtension)
+    {
+        var timestamp = DateTimeOffset.Now;
+        return new RecordingFileNames(
+            Compose(basePath, timestamp, csvExtension),
+            Compose(basePath, timestamp, imageExtension),
+            Compose(basePath, timestamp, logExtension));
+    }
+
+    RecordingFileNames GenerateCountedFileNames(string basePath, string csvExtension, string imageExtension, string logExtension)
+    {
+        var countSuffix = ResolveFileCount(basePath, new[] { csvExtension, imageExtension, logExtension });
+        return new RecordingFileNames(
+            Compose(basePath, countSuffix, csvExtension),
+            Compose(basePath, countSuffix, imageExtension),
+            Compose(basePath, countSuffix, logExtension));
+    }
 
     // Computes a single file count shared by every extension, so the generated names cannot collide with
     // any existing file and always share the same index. Mirrors PathHelper.AppendFileCount, but takes the
     // maximum count across extensions rather than counting a single one in isolation.
-    static string ResolveFileCount(string basePath, string[] extensions)
+    static int ResolveFileCount(string basePath, string[] extensions)
     {
         var count = 0;
         foreach (var extension in extensions)
@@ -113,9 +140,15 @@ public class GenerateRecordingFileNames
 
             var fileName = Path.GetFileNameWithoutExtension(path);
             var matches = Directory.GetFiles(directory, fileName + "*" + extension).Length;
+
+            while (File.Exists(Compose(fileName, matches, extension)))
+            {
+                matches++;
+            }
+
             if (matches > count) count = matches;
         }
 
-        return count.ToString(CultureInfo.InvariantCulture);
+        return count;
     }
 }
