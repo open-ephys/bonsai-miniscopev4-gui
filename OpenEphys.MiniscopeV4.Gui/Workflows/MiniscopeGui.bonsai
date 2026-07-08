@@ -1122,6 +1122,38 @@
                       </Edges>
                     </Workflow>
                   </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Log Commutator Status</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>CommutatorConnected</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:DistinctUntilChanged" />
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Skip">
+                            <rx:Count>1</rx:Count>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="scr:ExpressionTransform">
+                          <scr:Expression>it ? "Commutator connected" : "Commutator disconnected"</scr:Expression>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p3:LogInfo" />
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="4" Label="Source1" />
@@ -2051,6 +2083,140 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p3:ConsolePanel" />
             </Expression>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>Log Property Changes</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Focus</Name>
+                  </Expression>
+                  <Expression xsi:type="ExternalizedMapping">
+                    <Property Name="DueTime" />
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0.05S</DueTime>
+                    <Format>Focus: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>LedBrightness</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0.05S</DueTime>
+                    <Format>LED Brightness: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>SaturationThreshold</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0.05S</DueTime>
+                    <Format>Saturation Threshold: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>SaturationColor</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0.05S</DueTime>
+                    <Format>Saturation Color: R {0:0}, G {1:0}, B {2:0}, A {3:0}</Format>
+                    <Selector>Val0,Val1,Val2,Val3</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>BackgroundThreshold</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0.05S</DueTime>
+                    <Format>Background Threshold: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Sigma</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0S</DueTime>
+                    <Format>Sigma: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>BackgroundFrames</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0S</DueTime>
+                    <Format>Background Frames: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>FrameRate</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0S</DueTime>
+                    <Format>Frame Rate: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>LedRespectsDigitalIn</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0S</DueTime>
+                    <Format>LED Respects Digital In: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>SensorGain</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0S</DueTime>
+                    <Format>Sensor Gain: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>CommutatorEnableLed</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0S</DueTime>
+                    <Format>Commutator LED Enabled: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>CommutatorEnable</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0S</DueTime>
+                    <Format>Commutator Enabled: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>PortName</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                    <DueTime>PT0S</DueTime>
+                    <Format>COM Port: {0}</Format>
+                    <Selector>it</Selector>
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="2" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source2" />
+                  <Edge From="1" To="4" Label="Source2" />
+                  <Edge From="1" To="6" Label="Source2" />
+                  <Edge From="1" To="8" Label="Source2" />
+                  <Edge From="1" To="10" Label="Source2" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
+                  <Edge From="11" To="12" Label="Source1" />
+                  <Edge From="13" To="14" Label="Source1" />
+                  <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="17" To="18" Label="Source1" />
+                  <Edge From="19" To="20" Label="Source1" />
+                  <Edge From="21" To="22" Label="Source1" />
+                  <Edge From="23" To="24" Label="Source1" />
+                  <Edge From="25" To="26" Label="Source1" />
+                </Edges>
+              </Workflow>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
@@ -2506,7 +2672,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:Delay">
-                            <rx:DueTime>PT3S</rx:DueTime>
+                            <rx:DueTime>PT10M</rx:DueTime>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />

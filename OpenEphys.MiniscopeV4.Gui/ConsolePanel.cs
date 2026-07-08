@@ -17,11 +17,28 @@ namespace OpenEphys.MiniscopeV4.Gui;
 [Description("Renders the full-width console log docked at the bottom of the GUI.")]
 public class ConsolePanel
 {
-    static void RenderLogLines(LogEntry[] entries)
+    static int RenderLogLines(LogEntry[] entries, bool showInfo, bool showWarnings, bool showErrors, bool showPropertyChanges)
     {
+        int rendered = 0;
+
         for (int i = 0; i < entries.Length; i++)
         {
             var entry = entries[i];
+
+            bool visible = entry.Level switch
+            {
+                LogLevel.Warning => showWarnings,
+                LogLevel.Error => showErrors,
+                LogLevel.PropertyChanged => showPropertyChanges,
+                LogLevel.Info => showInfo,
+                _ => true,
+            };
+
+            if (!visible)
+                continue;
+
+            rendered++;
+
             var text = $"[{entry.Timestamp:HH:mm:ss}] {entry.Message}";
 
             switch (entry.Level)
@@ -36,11 +53,18 @@ public class ConsolePanel
                         ImGui.TextUnformatted(text);
                     break;
 
+                case LogLevel.PropertyChanged:
+                    using (Palette.PushColor(ImGuiCol.Text, Palette.BlueHovered))
+                        ImGui.TextUnformatted(text);
+                    break;
+
                 default:
                     ImGui.TextUnformatted(text);
                     break;
             }
         }
+
+        return rendered;
     }
 
     /// <summary>
@@ -55,6 +79,11 @@ public class ConsolePanel
             int lastLogVersion = -1;
             int scrollVersion = -1;
             LogEntry[] logCache = Array.Empty<LogEntry>();
+
+            bool showInfo = true;
+            bool showWarnings = true;
+            bool showErrors = true;
+            bool showPropertyChanges = true;
 
             var sourceObserver = Observer.Create<TSource>(value =>
             {
@@ -145,6 +174,26 @@ public class ConsolePanel
 
                             ImGui.SameLine();
                             ImGui.TextUnformatted($"Console — {logCache.Length} message(s)");
+                            
+                            ImGui.SameLine();
+                            Vector2 sepPos = ImGui.GetCursorScreenPos();
+                            float sepHeight = ImGui.GetFrameHeight();
+                            ImGui.GetWindowDrawList().AddLine(
+                                new Vector2(sepPos.X, sepPos.Y),
+                                new Vector2(sepPos.X, sepPos.Y + sepHeight),
+                                ImGui.GetColorU32(ImGuiCol.Separator));
+                            ImGui.Dummy(new Vector2(1f, sepHeight));
+
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Info##console_filter_info", ref showInfo);
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Warnings##console_filter_warning", ref showWarnings);
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Errors##console_filter_error", ref showErrors);
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Property Changes##console_filter_property", ref showPropertyChanges);
+
+                            ImGui.Separator();
 
                             float clearWidth = ImGui.CalcTextSize("Clear").X + ImGui.GetStyle().FramePadding.X * 2f;
                             ImGui.SameLine(rowWidth - clearWidth);
@@ -161,8 +210,12 @@ public class ConsolePanel
                                 }
                                 else
                                 {
-                                    RenderLogLines(logCache);
-                                    if (logVersion != scrollVersion)
+                                    int visibleCount = RenderLogLines(logCache, showInfo, showWarnings, showErrors, showPropertyChanges);
+                                    if (visibleCount == 0)
+                                    {
+                                        ImGui.TextDisabled("No messages match the current filter.");
+                                    }
+                                    else if (logVersion != scrollVersion)
                                     {
                                         ImGui.SetScrollHereY(1f);
                                         scrollVersion = logVersion;

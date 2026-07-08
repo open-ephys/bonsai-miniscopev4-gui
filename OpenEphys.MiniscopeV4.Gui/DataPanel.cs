@@ -470,8 +470,6 @@ public class DataPanel
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offsetX);
             ImGui.Image(image, displaySize);
         }
-        else
-            ImGui.Text("No image data found.");
     }
 
     static bool BeginControlColumn(string id, float width, float height) =>

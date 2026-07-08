@@ -72,18 +72,18 @@ public class SettingsPanel
 
             var sourceObserver = Observer.Create<Tuple<TSource, HardwareSettings>>(value =>
             {
-                var dto = value.Item2;
+                var hardwareSettings = value.Item2;
 
-                double ledBrightness = dto.Miniscope.LedBrightness;
-                double focus = dto.Miniscope.Focus;
-                GainV4 sensorGain = dto.Miniscope.SensorGain;
-                FrameRateV4 frameRate = dto.Miniscope.FrameRate;
-                MiniscopeDaqDigitalIn ledRespectsDigitalIn = dto.Miniscope.LedRespectsDigitalIn;
+                double ledBrightness = hardwareSettings.Miniscope.LedBrightness;
+                double focus = hardwareSettings.Miniscope.Focus;
+                GainV4 sensorGain = hardwareSettings.Miniscope.SensorGain;
+                FrameRateV4 frameRate = hardwareSettings.Miniscope.FrameRate;
+                MiniscopeDaqDigitalIn ledRespectsDigitalIn = hardwareSettings.Miniscope.LedRespectsDigitalIn;
 
-                string portName = dto.Commutator.PortName;
-                bool commutatorConnected = dto.Commutator.IsConnected;
-                bool commutatorEnable = dto.Commutator.Enable;
-                bool commutatorEnableLed = dto.Commutator.EnableLed;
+                string portName = hardwareSettings.Commutator.PortName;
+                bool commutatorConnected = hardwareSettings.Commutator.IsConnected;
+                bool commutatorEnable = hardwareSettings.Commutator.Enable;
+                bool commutatorEnableLed = hardwareSettings.Commutator.EnableLed;
 
                 if (DataPanelLayout.ImageExpanded)
                 {
@@ -209,6 +209,19 @@ public class SettingsPanel
                                 ImGui.EndTable();
                             }
 
+                            ImGui.Separator();
+                            ImGui.TextDisabled("Status: ");
+                            ImGui.SameLine();
+                            if (AcquisitionStatus)
+                            {
+                                using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
+                                    ImGui.Text("Acquiring");
+                            }
+                            else
+                            {
+                                ImGui.TextDisabled("Disconnected");
+                            }
+
                             ImGui.EndChild();
                         }
 
@@ -274,14 +287,16 @@ public class SettingsPanel
 
                             ImGui.Separator();
 
+                            ImGui.TextDisabled("Status: ");
+                            ImGui.SameLine();
                             if (commutatorConnected)
                             {
                                 using (Palette.PushColor(ImGuiCol.Text, Palette.GreenHovered))
-                                    ImGui.Text("Status: Connected");
+                                    ImGui.Text("Connected");
                             }
                             else
                             {
-                                ImGui.TextDisabled("Status: Disconnected");
+                                ImGui.TextDisabled("Disconnected");
                             }
 
                             ImGui.EndChild();
