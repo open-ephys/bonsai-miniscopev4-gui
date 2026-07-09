@@ -142,7 +142,7 @@ public class FilePanel
                     ImGui.SameLine();
                     if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
                     {
-                        var dir = GetDirectory(fileName);
+                        var dir = FileDialogHelpers.GetDirectory(fileName);
                         if (Directory.Exists(dir))
                             System.Diagnostics.Process.Start("explorer.exe", dir);
                     }
@@ -301,18 +301,15 @@ public class FilePanel
         });
     }
 
-    static string GetDirectory(string path) => Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path)
-        ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-        : path));
-
-    static Task<string> CreateSaveFileDialogTask(string fileName) => FileDialogHelpers.RunFileDialogTask(() => new SaveFileDialog
+    static Task<string> CreateSaveFileDialogTask(string fileName) => FileDialogHelpers.RunDialogTask(() => new SaveFileDialog
     {
-        InitialDirectory = GetDirectory(fileName),
+        InitialDirectory = FileDialogHelpers.GetDirectory(fileName),
         Filter = "All Files|*.*",
         Title = "Choose where to save Miniscope data.",
         AddExtension = false,
         CheckFileExists = false,
         CheckPathExists = false,
         FileName = Path.GetFileName(fileName)
-    });
+    },
+    (dlg) => (dlg as SaveFileDialog).FileName);
 }
