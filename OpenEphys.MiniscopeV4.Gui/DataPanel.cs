@@ -16,6 +16,27 @@ using System.Xml.Serialization;
 namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
+/// Identifies the image tab currently selected in the <see cref="DataPanel"/>.
+/// </summary>
+public enum ImageTab
+{
+    /// <summary> No image tab is selected.</summary>
+    None,
+
+    /// <summary>The raw image tab.</summary>
+    Raw,
+
+    /// <summary>The saturation overlay tab.</summary>
+    Saturation,
+
+    /// <summary>The dF/F (delta-F over F) tab.</summary>
+    Dff,
+
+    /// <summary>The max pixel-value projection tab.</summary>
+    MaxProjection,
+}
+
+/// <summary>
 /// Renders the image tabs and signal tabs inside a single child region that fills the available content area.
 /// </summary>
 [Combinator]
@@ -23,25 +44,12 @@ namespace OpenEphys.MiniscopeV4.Gui;
 public class DataPanel
 {
     /// <summary>
-    /// Gets or sets the texture displayed in the raw image tab.
+    /// Gets or sets the texture displayed in the active image tab. The workflow gates the image
+    /// pipelines by the emitted <see cref="ImageTab"/> and feeds back only the active tab's texture.
     /// </summary>
     [XmlIgnore]
     [Browsable(false)]
-    public ImTextureRef MiniscopeImage { get; set; }
-
-    /// <summary>
-    /// Gets or sets the texture displayed in the saturation tab.
-    /// </summary>
-    [XmlIgnore]
-    [Browsable(false)]
-    public ImTextureRef SaturationImage { get; set; }
-
-    /// <summary>
-    /// Gets or sets the texture displayed in the dF/F tab.
-    /// </summary>
-    [XmlIgnore]
-    [Browsable(false)]
-    public ImTextureRef DFFImage { get; set; }
+    public ImTextureRef ActiveImage { get; set; }
 
     /// <summary>
     /// Gets or sets the height, in pixels, of the source images used to calculate the display size.
@@ -120,10 +128,13 @@ public class DataPanel
     /// Renders the data panel for each source value and forwards the value unchanged.
     /// </summary>
     /// <param name="source">The sequence of values tied to the render tick of DearImGui.</param>
-    /// <returns>The unmodified <paramref name="source"/> sequence.</returns>
-    public unsafe IObservable<Tuple<TSource, DataDisplaySettings>> Process<TSource>(IObservable<Tuple<TSource, DataDisplaySettings>> source)
+    /// <returns>
+    /// The source value and updated <see cref="DataDisplaySettings"/> paired with the currently active
+    /// <see cref="ImageTab"/>.
+    /// </returns>
+    public unsafe IObservable<Tuple<TSource, DataDisplaySettings, ImageTab>> Process<TSource>(IObservable<Tuple<TSource, DataDisplaySettings>> source)
     {
-        return Observable.Create<Tuple<TSource, DataDisplaySettings>>(observer =>
+        return Observable.Create<Tuple<TSource, DataDisplaySettings, ImageTab>>(observer =>
         {
             var sourceObserver = Observer.Create<Tuple<TSource, DataDisplaySettings>>(
                 value =>
@@ -142,22 +153,12 @@ public class DataPanel
                     double backgroundThreshold = dataDisplaySettings.Dff.BackgroundThreshold;
                     int sigma = dataDisplaySettings.Dff.Sigma;
 
-                    if (!AcquisitionStatus)
+                    var activeTab = ImageTab.None;
+                    bool resetMaxProjection = false;
+
+                    if (!AcquisitionStatus && !ActiveImage.TexID.IsNull)
                     {
-                        if (!MiniscopeImage.TexID.IsNull)
-                        {
-                            MiniscopeImage = default;
-                        }
-
-                        if (!SaturationImage.TexID.IsNull)
-                        {
-                            SaturationImage = default;
-                        }
-
-                        if (!DFFImage.TexID.IsNull)
-                        {
-                            DFFImage = default;
-                        }
+                        ActiveImage = default;
                     }
 
                     float consoleReserve = ConsoleLayout.ReservedHeight(ImGui.GetStyle().ItemSpacing.Y);
@@ -190,7 +191,8 @@ public class DataPanel
                             {
                                 if (ImGui.BeginTabItem("Image##Image"))
                                 {
-                                    RenderImageArea("##image_area_raw", imageAreaSize, displaySize, MiniscopeImage);
+                                    activeTab = ImageTab.Raw;
+                                    RenderImageArea("##image_area_raw", imageAreaSize, displaySize, ActiveImage);
                                     ImGui.SameLine();
                                     if (BeginControlColumn("##image_controls_raw", controlColumnWidth, imageAreaHeight))
                                     {
@@ -222,7 +224,8 @@ public class DataPanel
 
                                 if (ImGui.BeginTabItem("Saturation##Saturation"))
                                 {
-                                    RenderImageArea("##image_area_saturation", imageAreaSize, displaySize, SaturationImage);
+                                    activeTab = ImageTab.Saturation;
+                                    RenderImageArea("##image_area_saturation", imageAreaSize, displaySize, ActiveImage);
                                     ImGui.SameLine();
                                     if (BeginControlColumn("##image_controls_saturation", controlColumnWidth, imageAreaHeight))
                                     {
@@ -248,7 +251,8 @@ public class DataPanel
 
                                 if (ImGui.BeginTabItem("dF/F##dFF"))
                                 {
-                                    RenderImageArea("##image_area_dff", imageAreaSize, displaySize, DFFImage);
+                                    activeTab = ImageTab.Dff;
+                                    RenderImageArea("##image_area_dff", imageAreaSize, displaySize, ActiveImage);
                                     ImGui.SameLine();
                                     if (BeginControlColumn("##image_controls_dff", controlColumnWidth, imageAreaHeight))
                                     {
@@ -269,6 +273,26 @@ public class DataPanel
                                         ImGui.SetNextItemWidth(-1f);
                                         if (ImGui.InputInt("##sigma", ref sigma))
                                             sigma = Math.Max(0, sigma);
+
+                                        RenderExpandCollapseButton(imageAreaHeight);
+                                    }
+                                    EndControlColumn();
+
+                                    ImGui.EndTabItem();
+                                }
+
+                                if (ImGui.BeginTabItem("Max Projection##MaxProjection"))
+                                {
+                                    activeTab = ImageTab.MaxProjection;
+                                    RenderImageArea("##image_area_maxprojection", imageAreaSize, displaySize, ActiveImage);
+                                    ImGui.SameLine();
+                                    if (BeginControlColumn("##image_controls_maxprojection", controlColumnWidth, imageAreaHeight))
+                                    {
+                                        ImGui.TextUnformatted("Max pixel-value projection");
+                                        ImGui.Spacing();
+
+                                        if (ImGui.Button("Reset##maxprojection_reset", new Vector2(-1f, 0f)))
+                                            resetMaxProjection = true;
 
                                         RenderExpandCollapseButton(imageAreaHeight);
                                     }
@@ -442,9 +466,10 @@ public class DataPanel
                     var updatedDisplaySettings = new DataDisplaySettings(
                         bufferSize,
                         new SaturationSettings(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
-                        new DffSettings(backgroundFrames, backgroundThreshold, sigma));
+                        new DffSettings(backgroundFrames, backgroundThreshold, sigma),
+                        new MaxProjectionSettings(resetMaxProjection));
 
-                    observer.OnNext(Tuple.Create(value.Item1, updatedDisplaySettings));
+                    observer.OnNext(Tuple.Create(value.Item1, updatedDisplaySettings, activeTab));
                 },
                 observer.OnError,
                 observer.OnCompleted);
