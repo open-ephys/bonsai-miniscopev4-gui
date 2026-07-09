@@ -31,6 +31,9 @@ public enum ImageTab
 
     /// <summary>The dF/F (delta-F over F) tab.</summary>
     Dff,
+
+    /// <summary>The max pixel-value projection tab.</summary>
+    MaxProjection,
 }
 
 /// <summary>
@@ -151,6 +154,7 @@ public class DataPanel
                     int sigma = dataDisplaySettings.Dff.Sigma;
 
                     var activeTab = ImageTab.None;
+                    bool resetMaxProjection = false;
 
                     if (!AcquisitionStatus && !ActiveImage.TexID.IsNull)
                     {
@@ -269,6 +273,26 @@ public class DataPanel
                                         ImGui.SetNextItemWidth(-1f);
                                         if (ImGui.InputInt("##sigma", ref sigma))
                                             sigma = Math.Max(0, sigma);
+
+                                        RenderExpandCollapseButton(imageAreaHeight);
+                                    }
+                                    EndControlColumn();
+
+                                    ImGui.EndTabItem();
+                                }
+
+                                if (ImGui.BeginTabItem("Max Projection##MaxProjection"))
+                                {
+                                    activeTab = ImageTab.MaxProjection;
+                                    RenderImageArea("##image_area_maxprojection", imageAreaSize, displaySize, ActiveImage);
+                                    ImGui.SameLine();
+                                    if (BeginControlColumn("##image_controls_maxprojection", controlColumnWidth, imageAreaHeight))
+                                    {
+                                        ImGui.TextUnformatted("Max pixel-value projection");
+                                        ImGui.Spacing();
+
+                                        if (ImGui.Button("Reset##maxprojection_reset", new Vector2(-1f, 0f)))
+                                            resetMaxProjection = true;
 
                                         RenderExpandCollapseButton(imageAreaHeight);
                                     }
@@ -442,7 +466,8 @@ public class DataPanel
                     var updatedDisplaySettings = new DataDisplaySettings(
                         bufferSize,
                         new SaturationSettings(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
-                        new DffSettings(backgroundFrames, backgroundThreshold, sigma));
+                        new DffSettings(backgroundFrames, backgroundThreshold, sigma),
+                        new MaxProjectionSettings(resetMaxProjection));
 
                     observer.OnNext(Tuple.Create(value.Item1, updatedDisplaySettings, activeTab));
                 },
