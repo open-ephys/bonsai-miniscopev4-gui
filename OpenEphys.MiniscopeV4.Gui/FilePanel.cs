@@ -108,16 +108,16 @@ public class FilePanel
                         ImGui.EndTooltip();
                     }
 
-                    const string browseLabel = "...";
-                    const string openLabel = "Browse";
+                    const string selectLabel = "...";
+                    const string browseLabel = "Browse";
+                    float selectWidth = ImGui.CalcTextSize(selectLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
                     float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
-                    float openWidth = ImGui.CalcTextSize(openLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
-                    float inputWidth = ImGui.GetContentRegionAvail().X - browseWidth - openWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
+                    float inputWidth = ImGui.GetContentRegionAvail().X - selectWidth - browseWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
 
                     ImGui.SetNextItemWidth(inputWidth);
                     ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
                     ImGui.SameLine();
-                    if (ImGui.Button($"{browseLabel}##choose_filename_button", new Vector2(browseWidth, 0)))
+                    if (ImGui.Button($"{selectLabel}##choose_filename_button", new Vector2(selectWidth, 0)))
                     {
                         if (saveDialogTask == null || saveDialogTask.IsCompleted)
                         {
@@ -140,7 +140,7 @@ public class FilePanel
                     }
 
                     ImGui.SameLine();
-                    if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
+                    if (ImGui.Button($"{browseLabel}##open_folder_button", new Vector2(browseWidth, 0)))
                     {
                         var dir = FileDialogHelpers.GetDirectory(fileName);
                         if (Directory.Exists(dir))
