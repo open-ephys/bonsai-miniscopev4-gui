@@ -99,7 +99,7 @@ public class FilePanel
                     ImGui.Text("Recording");
                     ImGui.Dummy(new Vector2(0f, ImGui.GetStyle().ItemSpacing.Y));
 
-                    ImGui.Text("Base File Name");
+                    ImGui.Text("Data Path");
                     if (ImGui.BeginItemTooltip())
                     {
                         ImGui.Text("Choose the location and format to save all files.");
@@ -110,9 +110,7 @@ public class FilePanel
 
                     const string selectLabel = "...";
                     const string browseLabel = "Browse";
-                    float selectWidth = ImGui.CalcTextSize(selectLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
-                    float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
-                    float inputWidth = ImGui.GetContentRegionAvail().X - selectWidth - browseWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
+                    var (selectWidth, browseWidth, inputWidth) = CalculateFileNameInputWidth(selectLabel, browseLabel);
 
                     ImGui.SetNextItemWidth(inputWidth);
                     ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
@@ -305,11 +303,20 @@ public class FilePanel
     {
         InitialDirectory = FileDialogHelpers.GetDirectory(fileName),
         Filter = "All Files|*.*",
-        Title = "Choose where to save Miniscope data.",
+        Title = "Choose a filename template and a folder to save Miniscope data.",
         AddExtension = false,
         CheckFileExists = false,
         CheckPathExists = false,
         FileName = Path.GetFileName(fileName)
     },
     (dlg) => (dlg as SaveFileDialog).FileName);
+
+    internal static (float selectWidth, float browseWidth, float inputWidth) CalculateFileNameInputWidth(string selectLabel, string browseLabel)
+    {
+        float selectWidth = ImGui.CalcTextSize(selectLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
+        float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
+        return (selectWidth,
+            browseWidth,
+            ImGui.GetContentRegionAvail().X - selectWidth - browseWidth - ImGui.GetStyle().ItemSpacing.X * 2f);
+    }
 }

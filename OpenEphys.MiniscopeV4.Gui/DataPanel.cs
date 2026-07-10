@@ -7,10 +7,13 @@ using OpenCV.Net;
 using OpenEphys.Miniscope;
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml.Serialization;
 
 namespace OpenEphys.MiniscopeV4.Gui;
@@ -34,6 +37,9 @@ public enum ImageTab
 
     /// <summary>The max pixel-value projection tab.</summary>
     MaxProjection,
+
+    /// <summary>The reference-image overlay tab.</summary>
+    Overlay,
 }
 
 /// <summary>
@@ -117,6 +123,13 @@ public class DataPanel
     [Browsable(false)]
     public int DroppedFrames { get; set; }
 
+    /// <summary>
+    /// Gets or sets the data path set by <see cref="FilePanel"/>.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public string DataPath { get; set; }
+
     static float ControlColumnWidth => 220f * UiScale.Current;
 
     const float BaseMinImagePaneHeight = 100f;
@@ -176,12 +189,19 @@ public class DataPanel
     {
         return Observable.Create<Tuple<GuiLayout, DataDisplaySettings, ImageTab>>(observer =>
         {
+            Task<string> overlayDialogTask = null;
+            const nuint pathBufSize = 1024;
+
             var sourceObserver = Observer.Create<Tuple<GuiLayout, DataDisplaySettings>>(
                 value =>
                 {
                     var layout = value.Item1;
                     var dataDisplaySettings = value.Item2;
                     var bufferSize = dataDisplaySettings.BufferSize;
+
+                    string overlayReferencePath = dataDisplaySettings.Overlay.ReferencePath ?? string.Empty;
+                    bool applyOverlay = dataDisplaySettings.Overlay.ApplyOverlay;
+                    bool captureScreenshot = false;
 
                     int satThreshold = dataDisplaySettings.Saturation.Threshold;
                     var satColor = new Vector4(
@@ -267,6 +287,27 @@ public class DataPanel
                                             ImGui.Text($"{DroppedFrames}");
                                         }
 
+                                        ImGui.Spacing();
+
+                                        if (!AcquisitionStatus || string.IsNullOrEmpty(DataPath)) ImGui.BeginDisabled();
+
+                                        if (ImGui.Button("Take Screenshot##overlay_screenshot", new Vector2(-1f, ButtonHeight)))
+                                            captureScreenshot = true;
+
+                                        if (!AcquisitionStatus || string.IsNullOrEmpty(DataPath)) ImGui.EndDisabled();
+
+                                        if (ImGui.BeginItemTooltip())
+                                        {
+                                            ImGui.Text("Take a screenshot of the current image.");
+
+                                            if (!AcquisitionStatus)
+                                                ImGui.Text("Cannot take a screenshot while acquisition is stopped.");
+                                            else if (string.IsNullOrEmpty(DataPath))
+                                                ImGui.Text("Cannot take a screenshot because the data path is not set.");
+
+                                            ImGui.EndTooltip();
+                                        }
+
                                         layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
                                     }
                                     EndControlColumn();
@@ -348,6 +389,73 @@ public class DataPanel
 
                                         layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
                                     }
+                                    EndControlColumn();
+
+                                    ImGui.EndTabItem();
+                                }
+
+                                if (ImGui.BeginTabItem("Reference Image##reference_image"))
+                                {
+                                    activeTab = ImageTab.Overlay;
+                                    bool showImage = !string.IsNullOrEmpty(overlayReferencePath) || applyOverlay;
+                                    var image = showImage ? ActiveImage : default;
+
+                                    RenderImageArea("##image_area_overlay", imageAreaSize, displaySize, image);
+
+                                    ImGui.SameLine();
+                                    if (BeginControlColumn("##image_controls_overlay", controlColumnWidth, imageAreaHeight))
+                                    {
+                                        ImGui.TextUnformatted("Reference Image");
+
+                                        const string selectLabel = "...";
+                                        const string browseLabel = "Browse";
+                                        var (selectWidth, browseWidth, inputWidth) = FilePanel.CalculateFileNameInputWidth(selectLabel, browseLabel);
+
+                                        ImGui.SetNextItemWidth(inputWidth);
+                                        ImGui.InputText("##overlay_path", ref overlayReferencePath, pathBufSize, ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.ElideLeft);
+
+                                        ImGui.SameLine();
+                                        if (ImGui.Button($"{selectLabel}##choose_screenshot", new Vector2(selectWidth, 0)))
+                                        {
+                                            if (overlayDialogTask == null || overlayDialogTask.IsCompleted)
+                                            {
+                                                overlayDialogTask = FileDialogHelpers.RunDialogTask(() => new OpenFileDialog
+                                                {
+                                                    Filter = "Images|*.png;*.tif;*.tiff;*.jpg;*.bmp|All Files|*.*",
+                                                    CheckFileExists = true,
+                                                    Multiselect = false,
+                                                    InitialDirectory = FileDialogHelpers.GetDirectory(DataPath),
+                                                    Title = "Choose a screenshot to load.",
+                                                },
+                                                (dlg) => (dlg as OpenFileDialog).FileName);
+                                            }
+                                        }
+
+                                        if (overlayDialogTask != null && overlayDialogTask.IsCompleted)
+                                        {
+                                            var chosen = overlayDialogTask.Result;
+                                            if (!string.IsNullOrEmpty(chosen))
+                                                overlayReferencePath = chosen;
+                                            overlayDialogTask = null;
+                                        }
+
+                                        ImGui.SameLine();
+                                        if (ImGui.Button($"{browseLabel}##browse_screenshots", new Vector2(browseWidth, 0)))
+                                        {
+                                            var dir = FileDialogHelpers.GetDirectory(DataPath);
+                                            if (Directory.Exists(dir))
+                                                System.Diagnostics.Process.Start("explorer.exe", dir);
+                                        }
+
+                                        if (string.IsNullOrEmpty(overlayReferencePath)) ImGui.BeginDisabled();
+
+                                        ImGui.Checkbox("Apply Live Overlay", ref applyOverlay);
+
+                                        if (string.IsNullOrEmpty(overlayReferencePath)) ImGui.EndDisabled();
+
+                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                    }
+
                                     EndControlColumn();
 
                                     ImGui.EndTabItem();
@@ -549,7 +657,8 @@ public class DataPanel
                         bufferSize,
                         new SaturationSettings(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
                         new DffSettings(backgroundFrames, backgroundThreshold, sigma),
-                        new MaxProjectionSettings(resetMaxProjection));
+                        new MaxProjectionSettings(resetMaxProjection),
+                        new OverlaySettings(captureScreenshot, applyOverlay, overlayReferencePath));
 
                     observer.OnNext(Tuple.Create(layout, updatedDisplaySettings, activeTab));
                 },
@@ -584,9 +693,11 @@ public class DataPanel
 
     static void EndControlColumn() => ImGui.EndChild();
 
+    static float ButtonHeight => ImGui.GetFrameHeight() * 2f;
+
     static bool RenderExpandCollapseButton(float columnHeight, bool imageExpanded)
     {
-        float buttonHeight = ImGui.GetFrameHeight() * 2f;
+        var buttonHeight = ButtonHeight;
         float targetY = columnHeight - buttonHeight;
         if (targetY > ImGui.GetCursorPosY())
             ImGui.SetCursorPosY(targetY);
