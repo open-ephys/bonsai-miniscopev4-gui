@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Numerics;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace OpenEphys.MiniscopeV4.Gui;
@@ -67,11 +68,12 @@ public class ConsolePanel
     }
 
     /// <summary>
-    /// Renders the console for each layout value and returns the updated shared layout.
+    /// Renders the console for each layout value and returns the updated layout.
     /// </summary>
     /// <param name="source">A sequence of shared <see cref="GuiLayout"/> values threaded through the render tick of DearImGui.</param>
+    /// <param name="logSource">The shared <see cref="MiniscopeLog"/> instance (typically a <c>BehaviorSubject</c>), captured once and read (via <see cref="MiniscopeLog.Snapshot"/>) to render the scrollback.</param>
     /// <returns>A sequence of the updated <see cref="GuiLayout"/> values.</returns>
-    public IObservable<GuiLayout> Process(IObservable<GuiLayout> source)
+    public IObservable<GuiLayout> Process(IObservable<GuiLayout> source, IObservable<MiniscopeLog> logSource)
     {
         return Observable.Create<GuiLayout>(observer =>
         {
@@ -83,6 +85,15 @@ public class ConsolePanel
             bool showWarnings = true;
             bool showErrors = true;
             bool showPropertyChanges = true;
+
+            // NB: Expect this to be a BehaviorSubject, so we can take the first value immediately.
+            MiniscopeLog log = null;
+            var logSubscription = logSource.Take(1).Subscribe(value => log = value);
+
+            if (log == null)
+            {
+                throw new InvalidOperationException("No MiniscopeLog instance was provided.");
+            }
 
             var sourceObserver = Observer.Create<GuiLayout>(layout =>
             {
@@ -127,10 +138,10 @@ public class ConsolePanel
                             thickness);
                     }
 
-                    int logVersion = MiniscopeLog.Version;
+                    int logVersion = log.Version;
                     if (logVersion != lastLogVersion)
                     {
-                        logCache = MiniscopeLog.Snapshot();
+                        logCache = log.Snapshot();
                         lastLogVersion = logVersion;
                     }
 
@@ -197,7 +208,7 @@ public class ConsolePanel
                             float clearWidth = ImGui.CalcTextSize("Clear").X + ImGui.GetStyle().FramePadding.X * 2f;
                             ImGui.SameLine(rowWidth - clearWidth);
                             if (ImGui.Button("Clear##console_clear"))
-                                MiniscopeLog.Clear();
+                                log.Clear();
 
                             ImGui.Separator();
 
@@ -234,7 +245,7 @@ public class ConsolePanel
             observer.OnError,
             observer.OnCompleted);
 
-            return source.SubscribeSafe(sourceObserver);
+            return new CompositeDisposable(logSubscription, source.SubscribeSafe(sourceObserver));
         });
     }
 }

@@ -15,10 +15,10 @@ public class LogError
     /// <summary>
     /// Records each error in the console log and forwards the sequence unchanged.
     /// </summary>
-    /// <param name="source">A sequence of messages.</param>
+    /// <param name="source">A sequence of (message, log) pairs; each message is recorded in the paired log.</param>
     /// <returns>The unmodified <paramref name="source"/> sequence.</returns>
-    public IObservable<string> Process(IObservable<string> source)
+    public IObservable<Tuple<string, MiniscopeLog>> Process(IObservable<Tuple<string, MiniscopeLog>> source)
     {
-        return source.Do(message => MiniscopeLog.Error(message));
+        return source.Do(value => value.Item2.Error(value.Item1));
     }
 }

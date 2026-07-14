@@ -7,6 +7,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Numerics;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -71,9 +72,9 @@ public class SettingsPanel
     /// Renders the settings sidebar and returns an updated <see cref="HardwareSettings"/> alongside the shared layout.
     /// </summary>
     /// <param name="source">A sequence pairing the shared <see cref="GuiLayout"/> with the current <see cref="HardwareSettings"/>, tied to the render tick of DearImGui.</param>
+    /// <param name="logSource">The shared <see cref="MiniscopeLog"/> instance (typically a <c>BehaviorSubject</c>), captured once and passed to <see cref="SettingsFile"/> when saving or loading configs.</param>
     /// <returns>A sequence pairing the updated <see cref="GuiLayout"/> with the settings updated from the rendered controls.</returns>
-    public unsafe IObservable<Tuple<GuiLayout, HardwareSettings>> Process(
-        IObservable<Tuple<GuiLayout, HardwareSettings>> source)
+    public unsafe IObservable<Tuple<GuiLayout, HardwareSettings>> Process(IObservable<Tuple<GuiLayout, HardwareSettings>> source, IObservable<MiniscopeLog> logSource)
     {
         return Observable.Create<Tuple<GuiLayout, HardwareSettings>>(observer =>
         {
@@ -81,10 +82,18 @@ public class SettingsPanel
             Task<string> saveConfigTask = null;
             Task<string> loadConfigTask = null;
 
+            // NB: Expect this to be a BehaviorSubject, so we can take the first value immediately.
+            MiniscopeLog log = null;
+            var logSubscription = logSource.Take(1).Subscribe(value => log = value);
+
+            if (log == null)
+            {
+                throw new InvalidOperationException("No MiniscopeLog instance was provided.");
+            }
+
             var sourceObserver = Observer.Create<Tuple<GuiLayout, HardwareSettings>>(value =>
             {
-                var layout = value.Item1;
-                var hardwareSettings = value.Item2;
+                var (layout, hardwareSettings) = value;
                 bool imageExpanded = layout.ImageExpanded;
 
                 double ledBrightness = hardwareSettings.Miniscope.LedBrightness;
@@ -193,7 +202,7 @@ public class SettingsPanel
                                 saveConfigTask = null;
                                 if (!string.IsNullOrEmpty(savePath))
                                 {
-                                    SettingsFile.Save(savePath, hardwareSettings.Miniscope);
+                                    SettingsFile.Save(savePath, hardwareSettings.Miniscope, log);
                                     ConfigFilePath = savePath;
                                 }
                             }
@@ -202,7 +211,7 @@ public class SettingsPanel
                             {
                                 var loadPath = loadConfigTask.Result;
                                 loadConfigTask = null;
-                                if (!string.IsNullOrEmpty(loadPath) && SettingsFile.TryLoad(loadPath, hardwareSettings.Miniscope, out var loaded))
+                                if (!string.IsNullOrEmpty(loadPath) && SettingsFile.TryLoad(loadPath, hardwareSettings.Miniscope, log, out var loaded))
                                 {
                                     ledBrightness = loaded.LedBrightness;
                                     focus = loaded.Focus;
@@ -385,7 +394,7 @@ public class SettingsPanel
             observer.OnError,
             observer.OnCompleted);
 
-            return source.SubscribeSafe(sourceObserver);
+            return new CompositeDisposable(logSubscription, source.SubscribeSafe(sourceObserver));
         });
     }
 
