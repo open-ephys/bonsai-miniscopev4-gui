@@ -120,9 +120,20 @@ public class DataPanel
     static float ControlColumnWidth => 220f * UiScale.Current;
 
     static readonly Vector2 fillAvailable = new(-1, -1);
-    static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle;
+    static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle | ImPlotFlags.NoLegend;
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
     static readonly string[] histogramAxisTickLabels = new string[] { "0%", "20%", "40%", "60%", "80%", "100%" };
+
+    static readonly PlotLegend quaternionLegend = new(
+        "quaternion",
+        new PlotLegend.Entry("X", Palette.RedHovered),
+        new PlotLegend.Entry("Y", Palette.GreenHovered),
+        new PlotLegend.Entry("Z", Palette.BlueHovered),
+        new PlotLegend.Entry("W", Palette.PurpleHovered));
+    static readonly PlotLegend digitalInLegend = new(
+        "digitalin",
+        new PlotLegend.Entry(digitalInLabels[0], Palette.YellowHovered),
+        new PlotLegend.Entry(digitalInLabels[1], new Vector4(0.256f, 0.700f, 0.800f, 1f)));
 
     /// <summary>
     /// Renders the data panel for each source value and forwards the value unchanged.
@@ -346,24 +357,33 @@ public class DataPanel
                                 {
                                     if (ImGui.BeginTabItem("Quaternion"))
                                     {
-                                        if (AcquisitionStatus)
+                                        var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
+                                        if (ImGui.BeginChild("##quat_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
                                         {
-                                            ImGui.BeginDisabled();
-                                        }
+                                            if (AcquisitionStatus)
+                                            {
+                                                ImGui.BeginDisabled();
+                                            }
 
-                                        var bufferInputWidth = 60f * UiScale.Current;
-                                        ImGui.AlignTextToFramePadding();
-                                        ImGui.Text("Buffer Size: ");
-                                        ImGui.SameLine();
-                                        ImGui.SetNextItemWidth(bufferInputWidth);
-                                        if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
-                                        {
-                                            bufferSize = Math.Max(2, bufferSize);
-                                        }
+                                            var bufferInputWidth = 60f * UiScale.Current;
+                                            ImGui.AlignTextToFramePadding();
+                                            ImGui.Text("Buffer Size: ");
+                                            ImGui.SameLine();
+                                            ImGui.SetNextItemWidth(bufferInputWidth);
+                                            if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
+                                            {
+                                                bufferSize = Math.Max(2, bufferSize);
+                                            }
 
-                                        if (AcquisitionStatus)
-                                        {
-                                            ImGui.EndDisabled();
+                                            if (AcquisitionStatus)
+                                            {
+                                                ImGui.EndDisabled();
+                                            }
+
+                                            quaternionLegend.DrawSameLine();
+                                            digitalInLegend.DrawSameLine();
+
+                                            ImGui.EndChild();
                                         }
 
                                         if (QuaternionSeries == null && DigitalInSeries == null)
@@ -380,7 +400,11 @@ public class DataPanel
                                             {
                                                 for (int i = 0; i < QuaternionSeries.Series.Length; i++)
                                                 {
+                                                    if (!quaternionLegend.IsVisible(i))
+                                                        continue;
+
                                                     var line = QuaternionSeries.Series[i];
+                                                    ImPlot.SetNextLineStyle(quaternionLegend.ColorOf(i));
                                                     ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
                                                 }
                                             }
@@ -396,8 +420,12 @@ public class DataPanel
 
                                                 for (int i = 0; i < DigitalInSeries.Series.Length; i++)
                                                 {
+                                                    if (!digitalInLegend.IsVisible(i))
+                                                        continue;
+
                                                     var line = DigitalInSeries.Series[i];
-                                                    ImPlot.PlotDigitalG($"DigitalIn{i}", line.Getter, null, DigitalInSeries.Count);
+                                                    ImPlot.SetNextFillStyle(digitalInLegend.ColorOf(i));
+                                                    ImPlot.PlotDigitalG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
                                                 }
                                             }
 
