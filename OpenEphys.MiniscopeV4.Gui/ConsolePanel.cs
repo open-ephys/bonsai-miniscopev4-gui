@@ -10,8 +10,7 @@ namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Renders the console log docked at the bottom of the GUI. The panel spans the full width of
-/// the window and is preceded by a draggable splitter that resizes its height. Each source value
-/// is forwarded unchanged.
+/// the window and is preceded by a draggable splitter that resizes its height.
 /// </summary>
 [Combinator]
 [Description("Renders the full-width console log docked at the bottom of the GUI.")]
@@ -68,13 +67,13 @@ public class ConsolePanel
     }
 
     /// <summary>
-    /// Renders the console for each source value and forwards the value unchanged.
+    /// Renders the console for each layout value and returns the updated shared layout.
     /// </summary>
-    /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
-    /// <returns>The unmodified <paramref name="source"/> sequence.</returns>
-    public IObservable<TSource> Process<TSource>(IObservable<TSource> source)
+    /// <param name="source">A sequence of shared <see cref="GuiLayout"/> values threaded through the render tick of DearImGui.</param>
+    /// <returns>A sequence of the updated <see cref="GuiLayout"/> values.</returns>
+    public IObservable<GuiLayout> Process(IObservable<GuiLayout> source)
     {
-        return Observable.Create<TSource>(observer =>
+        return Observable.Create<GuiLayout>(observer =>
         {
             int lastLogVersion = -1;
             int scrollVersion = -1;
@@ -85,21 +84,23 @@ public class ConsolePanel
             bool showErrors = true;
             bool showPropertyChanges = true;
 
-            var sourceObserver = Observer.Create<TSource>(value =>
+            var sourceObserver = Observer.Create<GuiLayout>(layout =>
             {
-                if (!DataPanelLayout.ImageExpanded)
+                if (!layout.ImageExpanded)
                 {
-                    bool consoleOpen = ConsoleLayout.ConsoleOpen;
+                    layout = layout with { ConsoleHeight = layout.ClampConsoleHeight(layout.ConsoleHeight, ImGui.GetWindowHeight()) };
+
+                    bool consoleOpen = layout.ConsoleOpen;
 
                     if (consoleOpen)
                     {
-                        ImGui.InvisibleButton("##console_splitter", new Vector2(-1f, ConsoleLayout.SplitterThickness));
+                        ImGui.InvisibleButton("##console_splitter", new Vector2(-1f, layout.ConsoleSplitterThickness));
 
                         bool hovered = ImGui.IsItemHovered();
                         bool active = ImGui.IsItemActive();
 
                         if (active)
-                            ConsoleLayout.Drag(-ImGui.GetIO().MouseDelta.Y, ImGui.GetWindowHeight());
+                            layout = layout with { ConsoleHeight = layout.ClampConsoleHeight(layout.ConsoleHeight - ImGui.GetIO().MouseDelta.Y, ImGui.GetWindowHeight()) };
                         if (hovered || active)
                             ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNs);
                         var drawList = ImGui.GetWindowDrawList();
@@ -165,12 +166,12 @@ public class ConsolePanel
                             ImGui.TextUnformatted($"Console — {logCache.Length} message(s)");
 
                             if (areaClicked)
-                                ConsoleLayout.ConsoleOpen = true;
+                                layout = layout with { ConsoleOpen = true };
                         }
                         else
                         {
                             if (ImGui.ArrowButton("##console_toggle", ImGuiDir.Down))
-                                ConsoleLayout.ConsoleOpen = false;
+                                layout = layout with { ConsoleOpen = false };
 
                             ImGui.SameLine();
                             ImGui.TextUnformatted($"Console — {logCache.Length} message(s)");
@@ -228,7 +229,7 @@ public class ConsolePanel
                     ImGui.EndChild();
                 }
 
-                observer.OnNext(value);
+                observer.OnNext(layout);
             },
             observer.OnError,
             observer.OnCompleted);
