@@ -144,9 +144,25 @@ public class DataPanel
     }
 
     static readonly Vector2 fillAvailable = new(-1, -1);
-    static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle;
+    static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle | ImPlotFlags.NoLegend;
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
     static readonly string[] histogramAxisTickLabels = new string[] { "0%", "20%", "40%", "60%", "80%", "100%" };
+
+    static readonly PlotLegend quaternionLegend = new(
+        "quaternion",
+        new PlotLegend.Entry("X", Palette.RedHovered),
+        new PlotLegend.Entry("Y", Palette.GreenHovered),
+        new PlotLegend.Entry("Z", Palette.BlueHovered),
+        new PlotLegend.Entry("W", Palette.PurpleHovered));
+    static readonly PlotLegend digitalInLegend = new(
+        "digitalin",
+        new PlotLegend.Entry(digitalInLabels[0], Palette.YellowHovered),
+        new PlotLegend.Entry(digitalInLabels[1], new Vector4(0.256f, 0.700f, 0.800f, 1f)));
+    static readonly PlotLegend eulerAngleLegend = new(
+        "euler_angles",
+        new PlotLegend.Entry("Yaw", Palette.RedHovered),
+        new PlotLegend.Entry("Pitch", Palette.GreenHovered),
+        new PlotLegend.Entry("Roll", Palette.BlueHovered));
 
     /// <summary>
     /// Renders the data panel and returns the updated shared layout, display settings, and active tab.
@@ -381,7 +397,16 @@ public class DataPanel
 
                                     if (ImGui.BeginTabItem("Quaternion"))
                                     {
-                                        PlotBufferSizeControl(ref bufferSize);
+                                        var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
+                                        if (ImGui.BeginChild("##quat_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
+                                        {
+                                            PlotBufferSizeControl(ref bufferSize);
+
+                                            quaternionLegend.DrawSameLine();
+                                            digitalInLegend.DrawSameLine();
+
+                                            ImGui.EndChild();
+                                        }
 
                                         if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
                                         {
@@ -392,7 +417,11 @@ public class DataPanel
                                             {
                                                 for (int i = 0; i < QuaternionSeries.Series.Length; i++)
                                                 {
+                                                    if (!quaternionLegend.IsVisible(i))
+                                                        continue;
+
                                                     var line = QuaternionSeries.Series[i];
+                                                    ImPlot.SetNextLineStyle(quaternionLegend.ColorOf(i));
                                                     ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
                                                 }
                                             }
@@ -408,8 +437,12 @@ public class DataPanel
 
                                                 for (int i = 0; i < DigitalInSeries.Series.Length; i++)
                                                 {
+                                                    if (!digitalInLegend.IsVisible(i))
+                                                        continue;
+
                                                     var line = DigitalInSeries.Series[i];
-                                                    ImPlot.PlotDigitalG($"DigitalIn{i}", line.Getter, null, DigitalInSeries.Count);
+                                                    ImPlot.SetNextFillStyle(digitalInLegend.ColorOf(i));
+                                                    ImPlot.PlotDigitalG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
                                                 }
                                             }
 
@@ -421,7 +454,13 @@ public class DataPanel
 
                                     if (ImGui.BeginTabItem("Euler Angles"))
                                     {
-                                        PlotBufferSizeControl(ref bufferSize);
+                                        var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
+                                        if (ImGui.BeginChild("##quat_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
+                                        {
+                                            PlotBufferSizeControl(ref bufferSize);
+                                            eulerAngleLegend.DrawSameLine();
+                                            ImGui.EndChild();
+                                        }
 
                                         if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
                                         {
@@ -432,7 +471,11 @@ public class DataPanel
                                             {
                                                 for (int i = 0; i < EulerAnglesSeries.Series.Length; i++)
                                                 {
+                                                    if (!eulerAngleLegend.IsVisible(i))
+                                                        continue;
+
                                                     var line = EulerAnglesSeries.Series[i];
+                                                    ImPlot.SetNextLineStyle(eulerAngleLegend.ColorOf(i));
                                                     ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
                                                 }
                                             }
