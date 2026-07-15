@@ -7,6 +7,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Numerics;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,12 +19,11 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// </summary>
 /// <remarks>
 /// Opens the shared sidebar child window but does not close it, so that <see cref="FilePanel"/> can render
-/// into the same region immediately afterward and close it. See <see cref="SettingsLayout"/> for how the
-/// two coordinate, and <see cref="DataPanelLayout.ImageExpanded"/> for why this panel sometimes renders
-/// nothing at all.
+/// into the same region immediately afterward and close it. The two coordinate through the threaded
+/// <see cref="GuiLayout"/>.
 /// </remarks>
 [Combinator]
-[Description("Renders all settings panels in a collapsible right-hand sidebar.")]
+[Description("Renders all settings panels in a collapsible left-hand sidebar.")]
 public class SettingsPanel
 {
     /// <summary>
@@ -36,11 +36,11 @@ public class SettingsPanel
 
     bool settingsOpen = true;
 
-    bool EffectiveOpen => settingsOpen && !DataPanelLayout.ImageExpanded;
+    bool EffectiveOpen(bool imageExpanded) => settingsOpen && !imageExpanded;
 
-    float GetCurrentWidth(float availableX)
+    float GetCurrentWidth(float availableX, bool imageExpanded)
     {
-        if (EffectiveOpen)
+        if (EffectiveOpen(imageExpanded))
         {
             if (ExpandedWidth <= availableX)
                 return ExpandedWidth;
@@ -69,22 +69,32 @@ public class SettingsPanel
     }
 
     /// <summary>
-    /// Renders the settings sidebar and returns an updated <see cref="HardwareSettings"/> alongside each source value.
+    /// Renders the settings sidebar and returns an updated <see cref="HardwareSettings"/> alongside the shared layout.
     /// </summary>
-    /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
-    /// <returns>A sequence of values paired with the settings updated from the rendered controls.</returns>
-    public unsafe IObservable<Tuple<TSource, HardwareSettings>> Process<TSource>(
-        IObservable<Tuple<TSource, HardwareSettings>> source)
+    /// <param name="source">A sequence pairing the shared <see cref="GuiLayout"/> with the current <see cref="HardwareSettings"/>, tied to the render tick of DearImGui.</param>
+    /// <param name="logSource">The shared <see cref="MiniscopeLog"/> instance (typically a <c>BehaviorSubject</c>), captured once and passed to <see cref="SettingsFile"/> when saving or loading configs.</param>
+    /// <returns>A sequence pairing the updated <see cref="GuiLayout"/> with the settings updated from the rendered controls.</returns>
+    public unsafe IObservable<Tuple<GuiLayout, HardwareSettings>> Process(IObservable<Tuple<GuiLayout, HardwareSettings>> source, IObservable<MiniscopeLog> logSource)
     {
-        return Observable.Create<Tuple<TSource, HardwareSettings>>(observer =>
+        return Observable.Create<Tuple<GuiLayout, HardwareSettings>>(observer =>
         {
             var portNames = SerialPort.GetPortNames();
             Task<string> saveConfigTask = null;
             Task<string> loadConfigTask = null;
 
-            var sourceObserver = Observer.Create<Tuple<TSource, HardwareSettings>>(value =>
+            // NB: Expect this to be a BehaviorSubject, so we can take the first value immediately.
+            MiniscopeLog log = null;
+            var logSubscription = logSource.Take(1).Subscribe(value => log = value);
+
+            if (log == null)
             {
-                var hardwareSettings = value.Item2;
+                throw new InvalidOperationException("No MiniscopeLog instance was provided.");
+            }
+
+            var sourceObserver = Observer.Create<Tuple<GuiLayout, HardwareSettings>>(value =>
+            {
+                var (layout, hardwareSettings) = value;
+                bool imageExpanded = layout.ImageExpanded;
 
                 double ledBrightness = hardwareSettings.Miniscope.LedBrightness;
                 double focus = hardwareSettings.Miniscope.Focus;
@@ -97,26 +107,26 @@ public class SettingsPanel
                 bool commutatorEnable = hardwareSettings.Commutator.Enable;
                 bool commutatorEnableLed = hardwareSettings.Commutator.EnableLed;
 
-                if (DataPanelLayout.ImageExpanded)
+                if (imageExpanded)
                 {
                     // Fully hidden while the image section is expanded (matching the console's own
                     // fully-hidden behavior) — the only way out is the Collapse button in DataPanel.
                     // No child is opened at all here (SameLine and FilePanel both skip their half of
                     // this row/child in this state too), so there's nothing to close and DataPanel
                     // isn't pinned next to a degenerate zero-width remnant.
-                    SettingsLayout.SidebarOpen = false;
+                    layout = layout with { SidebarOpen = false };
                 }
                 else
                 {
                     float availableX = ImGui.GetContentRegionAvail().X;
-                    float panelWidth = GetCurrentWidth(availableX);
+                    float panelWidth = GetCurrentWidth(availableX, imageExpanded);
 
-                    float consoleReserve = ConsoleLayout.ReservedHeight(ImGui.GetStyle().ItemSpacing.Y);
+                    float consoleReserve = layout.ReservedConsoleHeight(ImGui.GetStyle().ItemSpacing.Y);
                     ImGui.BeginChild("##settings_pane", new Vector2(panelWidth - ImGui.GetStyle().ChildBorderSize, -consoleReserve), ImGuiChildFlags.Borders);
 
-                    SettingsLayout.SidebarOpen = EffectiveOpen;
+                    layout = layout with { SidebarOpen = EffectiveOpen(imageExpanded) };
 
-                    if (!EffectiveOpen)
+                    if (!EffectiveOpen(imageExpanded))
                     {
                         // The arrow icon only occupies a small square, but the whole collapsed column should
                         // act as one big reopen button: an invisible button behind it catches clicks/hover
@@ -154,7 +164,7 @@ public class SettingsPanel
                         ImGui.Text("Control Panel");
                         ImGui.Separator();
 
-                        float fileReserve = SettingsLayout.RecordingSectionHeight > 0f ? SettingsLayout.RecordingSectionHeight + ImGui.GetStyle().ItemSpacing.Y : 0f;
+                        float fileReserve = layout.RecordingSectionHeight > 0f ? layout.RecordingSectionHeight + ImGui.GetStyle().ItemSpacing.Y : 0f;
                         ImGui.BeginChild("##settings_content", new Vector2(-1f, -fileReserve), ImGuiChildFlags.None);
 
                         ImGui.SetNextItemOpen(true, ImGuiCond.Once);
@@ -192,7 +202,7 @@ public class SettingsPanel
                                 saveConfigTask = null;
                                 if (!string.IsNullOrEmpty(savePath))
                                 {
-                                    SettingsFile.Save(savePath, hardwareSettings.Miniscope);
+                                    SettingsFile.Save(savePath, hardwareSettings.Miniscope, log);
                                     ConfigFilePath = savePath;
                                 }
                             }
@@ -201,7 +211,7 @@ public class SettingsPanel
                             {
                                 var loadPath = loadConfigTask.Result;
                                 loadConfigTask = null;
-                                if (!string.IsNullOrEmpty(loadPath) && SettingsFile.TryLoad(loadPath, hardwareSettings.Miniscope, out var loaded))
+                                if (!string.IsNullOrEmpty(loadPath) && SettingsFile.TryLoad(loadPath, hardwareSettings.Miniscope, log, out var loaded))
                                 {
                                     ledBrightness = loaded.LedBrightness;
                                     focus = loaded.Focus;
@@ -379,12 +389,12 @@ public class SettingsPanel
                     new MiniscopeSettings(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
                     new CommutatorSettings(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
 
-                observer.OnNext(Tuple.Create(value.Item1, updatedHardwareSettings));
+                observer.OnNext(Tuple.Create(layout, updatedHardwareSettings));
             },
             observer.OnError,
             observer.OnCompleted);
 
-            return source.SubscribeSafe(sourceObserver);
+            return new CompositeDisposable(logSubscription, source.SubscribeSafe(sourceObserver));
         });
     }
 

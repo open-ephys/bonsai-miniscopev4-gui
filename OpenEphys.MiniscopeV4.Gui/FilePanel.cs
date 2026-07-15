@@ -8,7 +8,6 @@ using System.IO;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -20,12 +19,12 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// <remarks>
 /// Renders into the shared sidebar child window opened (but not closed) by <see cref="SettingsPanel"/>,
 /// and closes it once its own content is done, so the two panels form a single visual region. Content
-/// is skipped (but the child is still closed) while <see cref="SettingsLayout.SidebarOpen"/> is false, so
+/// is skipped (but the child is still closed) while <see cref="GuiLayout.SidebarOpen"/> is false, so
 /// collapsing the sidebar hides this section along with the rest of the settings. Its own content renders
-/// into an auto-sized child so <see cref="SettingsLayout.RecordingSectionHeight"/> can be measured;
+/// into an auto-sized child so <see cref="GuiLayout.RecordingSectionHeight"/> can be measured;
 /// <see cref="SettingsPanel"/> uses that (one frame stale, since the height is otherwise unknown until it
 /// renders) to bound its own collapsible content and keep this section anchored to a fixed distance from
-/// the bottom. See <see cref="SettingsLayout"/> for the full picture of how these two panels coordinate.
+/// the bottom. The two panels coordinate through the threaded <see cref="GuiLayout"/>.
 /// </remarks>
 [Combinator]
 [Description("Renders the recording and file saving controls.")]
@@ -41,14 +40,13 @@ public class FilePanel
     static readonly string[] PathSuffixValues = Enum.GetNames(typeof(PathSuffix));
 
     /// <summary>
-    /// Renders the file saving and recording controls and returns an updated <see cref="FileSettings"/> alongside each source value.
+    /// Renders the file saving and recording controls and returns an updated <see cref="FileSettings"/> alongside the shared layout.
     /// </summary>
-    /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
-    /// <returns>A sequence of values paired with the file settings updated from the rendered controls.</returns>
-    public unsafe IObservable<Tuple<TSource, FileSettings>> Process<TSource>(
-        IObservable<Tuple<TSource, FileSettings>> source)
+    /// <param name="source">A sequence pairing the shared <see cref="GuiLayout"/> with the current <see cref="FileSettings"/>, tied to the render tick of DearImGui.</param>
+    /// <returns>A sequence pairing the updated <see cref="GuiLayout"/> with the file settings updated from the rendered controls.</returns>
+    public IObservable<Tuple<GuiLayout, FileSettings>> Process(IObservable<Tuple<GuiLayout, FileSettings>> source)
     {
-        return Observable.Create<Tuple<TSource, FileSettings>>(observer =>
+        return Observable.Create<Tuple<GuiLayout, FileSettings>>(observer =>
         {
             const nuint bufSize = 1024;
             string fileName = string.Empty;
@@ -59,8 +57,9 @@ public class FilePanel
             bool lastRecordButtonInput = false;
             bool recordStateInitialized = false;
 
-            var sourceObserver = Observer.Create<Tuple<TSource, FileSettings>>(value =>
+            var sourceObserver = Observer.Create<Tuple<GuiLayout, FileSettings>>(value =>
             {
+                var layout = value.Item1;
                 var fileSettings = value.Item2;
                 var triggerMode = fileSettings.TriggerMode;
 
@@ -86,13 +85,13 @@ public class FilePanel
                 var triggerInput = fileSettings.TriggerInput;
                 int triggerIndex = Array.IndexOf(DigitalInValues, triggerInput);
 
-                if (DataPanelLayout.ImageExpanded)
+                if (layout.ImageExpanded)
                 {
                     // SettingsPanel didn't open a shared child this frame (fully hidden), so there's
                     // nothing here to render into or close.
-                    SettingsLayout.RecordingSectionHeight = 0f;
+                    layout = layout with { RecordingSectionHeight = 0f };
                 }
-                else if (SettingsLayout.SidebarOpen)
+                else if (layout.SidebarOpen)
                 {
                     ImGui.BeginChild("##file_pane", new Vector2(-1f, 0f), ImGuiChildFlags.AutoResizeY);
 
@@ -280,21 +279,21 @@ public class FilePanel
                     }
 
                     ImGui.EndChild();
-                    SettingsLayout.RecordingSectionHeight = ImGui.GetItemRectSize().Y;
+                    layout = layout with { RecordingSectionHeight = ImGui.GetItemRectSize().Y };
                 }
                 else
                 {
-                    SettingsLayout.RecordingSectionHeight = 0f;
+                    layout = layout with { RecordingSectionHeight = 0f };
                 }
 
-                if (!DataPanelLayout.ImageExpanded)
+                if (!layout.ImageExpanded)
                     ImGui.EndChild(); // closes the shared sidebar child opened by SettingsPanel
 
                 recordRequested = recordButton;
 
                 var updatedFileSettings = new FileSettings(recordButton, triggerMode, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput, automaticRestart);
 
-                observer.OnNext(Tuple.Create(value.Item1, updatedFileSettings));
+                observer.OnNext(Tuple.Create(layout, updatedFileSettings));
             },
             observer.OnError,
             observer.OnCompleted);

@@ -62,13 +62,6 @@ public class DataPanel
     public int ImageWidth { get; set; } = 100;
 
     /// <summary>
-    /// Gets or sets the fraction of the available height allocated to the image pane. The signal pane
-    /// receives the remaining fraction. Must be between 0 and 1. Only used to seed the draggable
-    /// image/signal splitter the first time it renders; the splitter itself is not persisted.
-    /// </summary>
-    public float ImageHeightFraction { get; set; } = 0.5f;
-
-    /// <summary>
     /// Gets or sets the rolling series of quaternion orientation values plotted in the time series tab.
     /// </summary>
     [XmlIgnore]
@@ -81,6 +74,13 @@ public class DataPanel
     [XmlIgnore]
     [Browsable(false)]
     public RollingPlotPointSeries<Tuple<bool, bool>> DigitalInSeries { get; set; }
+
+    /// <summary>
+    /// Gets or sets the rolling series of Euler angle values plotted in the time series tab.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public RollingPlotPointSeries<TaitBryanAngles> EulerAnglesSeries { get; set; }
 
     /// <summary>
     /// Gets or sets the pixel intensity histogram plotted in the histogram tab.
@@ -119,6 +119,30 @@ public class DataPanel
 
     static float ControlColumnWidth => 220f * UiScale.Current;
 
+    const float BaseMinImagePaneHeight = 100f;
+    const float BaseMinSignalPaneHeight = 80f;
+
+    float MinImagePaneHeight => BaseMinImagePaneHeight * UiScale.Current;
+    float MinSignalPaneHeight => BaseMinSignalPaneHeight * UiScale.Current;
+
+    /// <summary>Thickness, in pixels, of the draggable splitter between the image and signal panes.</summary>
+    float ImageSplitterThickness => 6f * UiScale.Current;
+
+    const float DefaultImagePaneHeightFraction = 0.6f;
+
+    /// <summary>
+    /// Clamps the image pane height so it never shrinks below its minimum height given
+    /// <paramref name="availableForPanes"/>.
+    /// </summary>
+    float ClampImagePaneHeight(float height, float availableForPanes)
+    {
+        if (height < 0)
+            height  = availableForPanes * DefaultImagePaneHeightFraction;
+
+        float maxHeight = Math.Max(MinImagePaneHeight, availableForPanes - MinSignalPaneHeight);
+        return Math.Max(MinImagePaneHeight, Math.Min(maxHeight, height));
+    }
+
     static readonly Vector2 fillAvailable = new(-1, -1);
     static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle | ImPlotFlags.NoLegend;
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
@@ -136,20 +160,21 @@ public class DataPanel
         new PlotLegend.Entry(digitalInLabels[1], new Vector4(0.256f, 0.700f, 0.800f, 1f)));
 
     /// <summary>
-    /// Renders the data panel for each source value and forwards the value unchanged.
+    /// Renders the data panel and returns the updated shared layout, display settings, and active tab.
     /// </summary>
-    /// <param name="source">The sequence of values tied to the render tick of DearImGui.</param>
+    /// <param name="source">A sequence pairing the shared <see cref="GuiLayout"/> with the current <see cref="DataDisplaySettings"/>, tied to the render tick of DearImGui.</param>
     /// <returns>
-    /// The source value and updated <see cref="DataDisplaySettings"/> paired with the currently active
-    /// <see cref="ImageTab"/>.
+    /// The updated <see cref="GuiLayout"/> and updated <see cref="DataDisplaySettings"/> paired with the
+    /// currently active <see cref="ImageTab"/>.
     /// </returns>
-    public unsafe IObservable<Tuple<TSource, DataDisplaySettings, ImageTab>> Process<TSource>(IObservable<Tuple<TSource, DataDisplaySettings>> source)
+    public unsafe IObservable<Tuple<GuiLayout, DataDisplaySettings, ImageTab>> Process(IObservable<Tuple<GuiLayout, DataDisplaySettings>> source)
     {
-        return Observable.Create<Tuple<TSource, DataDisplaySettings, ImageTab>>(observer =>
+        return Observable.Create<Tuple<GuiLayout, DataDisplaySettings, ImageTab>>(observer =>
         {
-            var sourceObserver = Observer.Create<Tuple<TSource, DataDisplaySettings>>(
+            var sourceObserver = Observer.Create<Tuple<GuiLayout, DataDisplaySettings>>(
                 value =>
                 {
+                    var layout = value.Item1;
                     var dataDisplaySettings = value.Item2;
                     var bufferSize = dataDisplaySettings.BufferSize;
 
@@ -172,19 +197,27 @@ public class DataPanel
                         ActiveImage = default;
                     }
 
-                    float consoleReserve = ConsoleLayout.ReservedHeight(ImGui.GetStyle().ItemSpacing.Y);
+                    float consoleReserve = layout.ReservedConsoleHeight(ImGui.GetStyle().ItemSpacing.Y);
                     if (ImGui.BeginChild("##Data", new Vector2(-1f, -consoleReserve)))
                     {
-                        bool expanded = DataPanelLayout.ImageExpanded;
+                        bool expanded = layout.ImageExpanded;
                         float totalHeight = ImGui.GetContentRegionAvail().Y;
                         float tabBarHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ItemSpacing.Y;
                         float itemSpacingY = ImGui.GetStyle().ItemSpacing.Y;
-                        float splitterReserve = DataPanelLayout.SplitterThickness + itemSpacingY * 2f;
+                        float splitterReserve = ImageSplitterThickness + itemSpacingY * 2f;
                         float availableForPanes = Math.Max(0f, totalHeight - splitterReserve);
 
-                        float imageChildHeight = expanded
-                            ? totalHeight - tabBarHeight
-                            : DataPanelLayout.GetImagePaneHeight(availableForPanes, Math.Max(0f, Math.Min(1f, ImageHeightFraction))) - tabBarHeight;
+                        float imageChildHeight;
+                        if (expanded)
+                        {
+                            imageChildHeight = totalHeight - tabBarHeight;
+                        }
+                        else
+                        {
+                            float imagePaneHeight = ClampImagePaneHeight(layout.ImagePaneHeight, availableForPanes);
+                            layout = layout with { ImagePaneHeight = imagePaneHeight };
+                            imageChildHeight = imagePaneHeight - tabBarHeight;
+                        }
 
                         if (ImGui.BeginChild("##image_pane", new Vector2(-1, imageChildHeight), ImGuiChildFlags.None))
                         {
@@ -226,7 +259,7 @@ public class DataPanel
                                             ImGui.Text($"{DroppedFrames}");
                                         }
 
-                                        RenderExpandCollapseButton(imageAreaHeight);
+                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
                                     }
                                     EndControlColumn();
 
@@ -253,7 +286,7 @@ public class DataPanel
                                             satColor.Z = Math.Max(0f, Math.Min(1f, satColor.Z));
                                         }
 
-                                        RenderExpandCollapseButton(imageAreaHeight);
+                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
                                     }
                                     EndControlColumn();
 
@@ -285,7 +318,7 @@ public class DataPanel
                                         if (ImGui.InputInt("##sigma", ref sigma))
                                             sigma = Math.Max(0, sigma);
 
-                                        RenderExpandCollapseButton(imageAreaHeight);
+                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
                                     }
                                     EndControlColumn();
 
@@ -305,7 +338,7 @@ public class DataPanel
                                         if (ImGui.Button("Reset##maxprojection_reset", new Vector2(-1f, 0f)))
                                             resetMaxProjection = true;
 
-                                        RenderExpandCollapseButton(imageAreaHeight);
+                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
                                     }
                                     EndControlColumn();
 
@@ -320,13 +353,13 @@ public class DataPanel
 
                         if (!expanded)
                         {
-                            ImGui.InvisibleButton("##data_splitter", new Vector2(-1f, DataPanelLayout.SplitterThickness));
+                            ImGui.InvisibleButton("##data_splitter", new Vector2(-1f, ImageSplitterThickness));
 
                             bool hovered = ImGui.IsItemHovered();
                             bool active = ImGui.IsItemActive();
 
                             if (active)
-                                DataPanelLayout.Drag(ImGui.GetIO().MouseDelta.Y, availableForPanes);
+                                layout = layout with { ImagePaneHeight = ClampImagePaneHeight(layout.ImagePaneHeight + ImGui.GetIO().MouseDelta.Y, availableForPanes) };
                             if (hovered || active)
                                 ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNs);
 
@@ -355,30 +388,14 @@ public class DataPanel
                             {
                                 if (ImGui.BeginTabBar("##SignalTabBar"))
                                 {
+                                    ImPlotAxisFlags axisFlags = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoMenus | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines | ImPlotAxisFlags.NoTickLabels;
+
                                     if (ImGui.BeginTabItem("Quaternion"))
                                     {
                                         var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
                                         if (ImGui.BeginChild("##quat_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
                                         {
-                                            if (AcquisitionStatus)
-                                            {
-                                                ImGui.BeginDisabled();
-                                            }
-
-                                            var bufferInputWidth = 60f * UiScale.Current;
-                                            ImGui.AlignTextToFramePadding();
-                                            ImGui.Text("Buffer Size: ");
-                                            ImGui.SameLine();
-                                            ImGui.SetNextItemWidth(bufferInputWidth);
-                                            if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
-                                            {
-                                                bufferSize = Math.Max(2, bufferSize);
-                                            }
-
-                                            if (AcquisitionStatus)
-                                            {
-                                                ImGui.EndDisabled();
-                                            }
+                                            PlotBufferSizeControl(ref bufferSize);
 
                                             quaternionLegend.DrawSameLine();
                                             digitalInLegend.DrawSameLine();
@@ -386,13 +403,8 @@ public class DataPanel
                                             ImGui.EndChild();
                                         }
 
-                                        if (QuaternionSeries == null && DigitalInSeries == null)
+                                        if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
                                         {
-                                            ImGui.Text("No data to display");
-                                        }
-                                        else if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
-                                        {
-                                            ImPlotAxisFlags axisFlags = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoMenus | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines | ImPlotAxisFlags.NoTickLabels;
                                             ImPlot.SetupAxes("", "", axisFlags, axisFlags);
                                             ImPlot.SetupAxisLimits(ImAxis.Y1, -1.05, 1.05, ImPlotCond.Always);
 
@@ -432,6 +444,29 @@ public class DataPanel
                                             ImPlot.EndPlot();
                                         }
 
+                                        ImGui.EndTabItem();
+                                    }
+
+                                    if (ImGui.BeginTabItem("Euler Angles"))
+                                    {
+                                        PlotBufferSizeControl(ref bufferSize);
+
+                                        if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
+                                        {
+                                            ImPlot.SetupAxes("", "", axisFlags, axisFlags);
+                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -200.0, 200.0, ImPlotCond.Always);
+
+                                            if (EulerAnglesSeries != null)
+                                            {
+                                                for (int i = 0; i < EulerAnglesSeries.Series.Length; i++)
+                                                {
+                                                    var line = EulerAnglesSeries.Series[i];
+                                                    ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
+                                                }
+                                            }
+
+                                            ImPlot.EndPlot();
+                                        }
                                         ImGui.EndTabItem();
                                     }
 
@@ -497,7 +532,7 @@ public class DataPanel
                         new DffSettings(backgroundFrames, backgroundThreshold, sigma),
                         new MaxProjectionSettings(resetMaxProjection));
 
-                    observer.OnNext(Tuple.Create(value.Item1, updatedDisplaySettings, activeTab));
+                    observer.OnNext(Tuple.Create(layout, updatedDisplaySettings, activeTab));
                 },
                 observer.OnError,
                 observer.OnCompleted);
@@ -530,15 +565,16 @@ public class DataPanel
 
     static void EndControlColumn() => ImGui.EndChild();
 
-    static void RenderExpandCollapseButton(float columnHeight)
+    static bool RenderExpandCollapseButton(float columnHeight, bool imageExpanded)
     {
         float buttonHeight = ImGui.GetFrameHeight() * 2f;
         float targetY = columnHeight - buttonHeight;
         if (targetY > ImGui.GetCursorPosY())
             ImGui.SetCursorPosY(targetY);
 
-        if (ImGui.Button(DataPanelLayout.ImageExpanded ? "Collapse##image_expand_toggle" : "Expand##image_expand_toggle", new Vector2(-1f, buttonHeight)))
-            DataPanelLayout.ImageExpanded = !DataPanelLayout.ImageExpanded;
+        if (ImGui.Button(imageExpanded ? "Collapse##image_expand_toggle" : "Expand##image_expand_toggle", new Vector2(-1f, buttonHeight)))
+            return !imageExpanded;
+        return imageExpanded;
     }
 
     static Vector2 CalculateDisplaySize(Vector2 availableRegion, Vector2 imageSize)
@@ -557,15 +593,20 @@ public class DataPanel
         return new Vector2(displayWidth, displayHeight);
     }
 
-    static unsafe void PlotDigitalSeries(RollingPlotPointSeries<Tuple<bool, bool>> series, int index, ImPlotAxisFlags axisFlags)
+    void PlotBufferSizeControl(ref int bufferSize)
     {
-        ImPlot.SetupAxes("", $"DigitalIn{index}", axisFlags, axisFlags);
-        ImPlot.SetupAxisLimits(ImAxis.Y1, -0.05, 1.05, ImPlotCond.Always);
+        if (AcquisitionStatus) ImGui.BeginDisabled();
 
-        if (series != null)
+        var bufferInputWidth = 60f * UiScale.Current;
+        ImGui.AlignTextToFramePadding();
+        ImGui.Text("Buffer Size: ");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(bufferInputWidth);
+        if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
         {
-            var line = series.Series[index];
-            ImPlot.PlotStairsG(digitalInLabels[index], line.Getter, null, series.Count);
+            bufferSize = Math.Max(2, bufferSize);
         }
+
+        if (AcquisitionStatus) ImGui.EndDisabled();
     }
 }

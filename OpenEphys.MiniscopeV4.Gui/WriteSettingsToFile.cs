@@ -32,17 +32,18 @@ public class WriteSettingsToFile
     /// forwarding the elements unchanged.
     /// </summary>
     /// <typeparam name="TSource">The type of the settings object to serialize.</typeparam>
-    /// <param name="source">The sequence of settings objects to write.</param>
+    /// <param name="source">A sequence of (settings, log) pairs; each settings object is written and failures are reported to the paired log.</param>
     /// <returns>An observable sequence identical to <paramref name="source"/>.</returns>
-    public IObservable<TSource> Process<TSource>(IObservable<TSource> source)
+    public IObservable<Tuple<TSource, MiniscopeLog>> Process<TSource>(IObservable<Tuple<TSource, MiniscopeLog>> source)
     {
-        return source.Do(value =>
+        return source.Do(entry =>
         {
+            var (value, log) = entry;
             if (!File.Exists(FileName))
-                SettingsFile.Save(FileName, value);
+                SettingsFile.Save(FileName, value, log);
 
             else
-                MiniscopeLog.Error($"The file '{FileName}' already exists.");
+                log.Error($"The file '{FileName}' already exists.");
         });
     }
 }

@@ -56,7 +56,7 @@ sealed class ImGuiMiniscopeControl : ImGuiControl
             return;
 
         DpiApiUnavailable = true;
-        MiniscopeLog.Warning(
+        Console.WriteLine(
             "Per-monitor DPI scaling is unavailable on this version of Windows (requires Windows 10 1803 or later); " +
             "the UI will scale to the system DPI instead.");
     }
