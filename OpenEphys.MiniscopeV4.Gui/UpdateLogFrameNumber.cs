@@ -16,10 +16,10 @@ public class UpdateLogFrameNumber
     /// <summary>
     /// Records each frame number as the current log frame number and forwards the sequence unchanged.
     /// </summary>
-    /// <param name="source">A sequence of frame numbers, typically selected from the acquired frame stream.</param>
+    /// <param name="source">A sequence of (frameNumber, log) pairs, the frame number typically selected from the acquired frame stream.</param>
     /// <returns>The unmodified <paramref name="source"/> sequence.</returns>
-    public IObservable<int> Process(IObservable<int> source)
+    public IObservable<Tuple<int, MiniscopeLog>> Process(IObservable<Tuple<int, MiniscopeLog>> source)
     {
-        return source.Do(frameNumber => MiniscopeLog.SetFrameNumber(frameNumber));
+        return source.Do(value => value.Item2.SetFrameNumber(value.Item1));
     }
 }

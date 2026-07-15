@@ -1,16 +1,17 @@
+using Bonsai;
+using Bonsai.Dsp;
 using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Bonsai;
 
 namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
-/// Directs the shared <see cref="MiniscopeLog"/> to mirror its messages to a CSV log file for as long
-/// as the sequence is subscribed. Opening and closing the file brackets a recording: the file is created when
-/// the sequence is subscribed and closed when it is unsubscribed, so every message logged in between — including
-/// any error that stops the recording — is captured for the user to look back on.
+/// Directs the <see cref="MiniscopeLog"/> instance supplied on the second input to mirror its messages to a
+/// CSV log file for as long as the sequence is subscribed. Opening and closing the file brackets a recording:
+/// the file is created when the sequence is subscribed and closed when it is unsubscribed, so every message
+/// logged in between — including any error that stops the recording — is captured for the user to look back on.
 /// </summary>
 [Combinator]
 [Description("Mirrors the shared console log to a CSV file while the sequence is subscribed (i.e. while recording).")]
@@ -25,22 +26,41 @@ public class WriteLogsToFile
     public string FileName { get; set; }
 
     /// <summary>
-    /// Opens the log file when <paramref name="source"/> is subscribed and closes it when unsubscribed,
-    /// forwarding the elements unchanged.
+    /// Captures the <see cref="MiniscopeLog"/> instance from <paramref name="logSource"/>, opens its log file
+    /// when <paramref name="source"/> is subscribed, and closes it when unsubscribed, forwarding the elements
+    /// unchanged.
     /// </summary>
     /// <typeparam name="TSource">The type of the elements in the <paramref name="source"/> sequence.</typeparam>
     /// <param name="source">The sequence whose subscription lifetime defines the recording window.</param>
+    /// <param name="logSource">
+    /// The shared log instance (typically a <c>BehaviorSubject</c>) whose file is opened for the duration of the
+    /// recording. The first emitted instance is cached for the lifetime of the subscription.
+    /// </param>
     /// <returns>An observable sequence identical to <paramref name="source"/>.</returns>
-    public IObservable<TSource> Process<TSource>(IObservable<TSource> source)
+    public IObservable<TSource> Process<TSource>(IObservable<TSource> source, IObservable<MiniscopeLog> logSource)
     {
         return Observable.Create<TSource>(observer =>
         {
-            MiniscopeLog.StartFile(FileName);
+            MiniscopeLog log = null;
+
+            // NB: Expect this to be a BehaviorSubject, so we can take the first value immediately.
+            var logSubscription = logSource.Take(1).Subscribe(value =>
+            {
+                log = value;
+                log.StartFile(FileName);
+            });
+
+            if (log == null)
+            {
+                throw new InvalidOperationException("No MiniscopeLog instance was provided.");
+            }
+
             var subscription = source.SubscribeSafe(observer);
             return Disposable.Create(() =>
             {
                 subscription.Dispose();
-                MiniscopeLog.StopFile();
+                log.StopFile();
+                logSubscription.Dispose();
             });
         });
     }

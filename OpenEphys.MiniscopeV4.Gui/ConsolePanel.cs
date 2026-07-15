@@ -4,14 +4,14 @@ using System;
 using System.ComponentModel;
 using System.Numerics;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
 /// Renders the console log docked at the bottom of the GUI. The panel spans the full width of
-/// the window and is preceded by a draggable splitter that resizes its height. Each source value
-/// is forwarded unchanged.
+/// the window and is preceded by a draggable splitter that resizes its height.
 /// </summary>
 [Combinator]
 [Description("Renders the full-width console log docked at the bottom of the GUI.")]
@@ -68,13 +68,14 @@ public class ConsolePanel
     }
 
     /// <summary>
-    /// Renders the console for each source value and forwards the value unchanged.
+    /// Renders the console for each layout value and returns the updated layout.
     /// </summary>
-    /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
-    /// <returns>The unmodified <paramref name="source"/> sequence.</returns>
-    public IObservable<TSource> Process<TSource>(IObservable<TSource> source)
+    /// <param name="source">A sequence of shared <see cref="GuiLayout"/> values threaded through the render tick of DearImGui.</param>
+    /// <param name="logSource">The shared <see cref="MiniscopeLog"/> instance (typically a <c>BehaviorSubject</c>), captured once and read (via <see cref="MiniscopeLog.Snapshot"/>) to render the scrollback.</param>
+    /// <returns>A sequence of the updated <see cref="GuiLayout"/> values.</returns>
+    public IObservable<GuiLayout> Process(IObservable<GuiLayout> source, IObservable<MiniscopeLog> logSource)
     {
-        return Observable.Create<TSource>(observer =>
+        return Observable.Create<GuiLayout>(observer =>
         {
             int lastLogVersion = -1;
             int scrollVersion = -1;
@@ -85,21 +86,32 @@ public class ConsolePanel
             bool showErrors = true;
             bool showPropertyChanges = true;
 
-            var sourceObserver = Observer.Create<TSource>(value =>
+            // NB: Expect this to be a BehaviorSubject, so we can take the first value immediately.
+            MiniscopeLog log = null;
+            var logSubscription = logSource.Take(1).Subscribe(value => log = value);
+
+            if (log == null)
             {
-                if (!DataPanelLayout.ImageExpanded)
+                throw new InvalidOperationException("No MiniscopeLog instance was provided.");
+            }
+
+            var sourceObserver = Observer.Create<GuiLayout>(layout =>
+            {
+                if (!layout.ImageExpanded)
                 {
-                    bool consoleOpen = ConsoleLayout.ConsoleOpen;
+                    layout = layout with { ConsoleHeight = layout.ClampConsoleHeight(layout.ConsoleHeight, ImGui.GetWindowHeight()) };
+
+                    bool consoleOpen = layout.ConsoleOpen;
 
                     if (consoleOpen)
                     {
-                        ImGui.InvisibleButton("##console_splitter", new Vector2(-1f, ConsoleLayout.SplitterThickness));
+                        ImGui.InvisibleButton("##console_splitter", new Vector2(-1f, layout.ConsoleSplitterThickness));
 
                         bool hovered = ImGui.IsItemHovered();
                         bool active = ImGui.IsItemActive();
 
                         if (active)
-                            ConsoleLayout.Drag(-ImGui.GetIO().MouseDelta.Y, ImGui.GetWindowHeight());
+                            layout = layout with { ConsoleHeight = layout.ClampConsoleHeight(layout.ConsoleHeight - ImGui.GetIO().MouseDelta.Y, ImGui.GetWindowHeight()) };
                         if (hovered || active)
                             ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNs);
                         var drawList = ImGui.GetWindowDrawList();
@@ -126,10 +138,10 @@ public class ConsolePanel
                             thickness);
                     }
 
-                    int logVersion = MiniscopeLog.Version;
+                    int logVersion = log.Version;
                     if (logVersion != lastLogVersion)
                     {
-                        logCache = MiniscopeLog.Snapshot();
+                        logCache = log.Snapshot();
                         lastLogVersion = logVersion;
                     }
 
@@ -165,12 +177,12 @@ public class ConsolePanel
                             ImGui.TextUnformatted($"Console — {logCache.Length} message(s)");
 
                             if (areaClicked)
-                                ConsoleLayout.ConsoleOpen = true;
+                                layout = layout with { ConsoleOpen = true };
                         }
                         else
                         {
                             if (ImGui.ArrowButton("##console_toggle", ImGuiDir.Down))
-                                ConsoleLayout.ConsoleOpen = false;
+                                layout = layout with { ConsoleOpen = false };
 
                             ImGui.SameLine();
                             ImGui.TextUnformatted($"Console — {logCache.Length} message(s)");
@@ -196,7 +208,7 @@ public class ConsolePanel
                             float clearWidth = ImGui.CalcTextSize("Clear").X + ImGui.GetStyle().FramePadding.X * 2f;
                             ImGui.SameLine(rowWidth - clearWidth);
                             if (ImGui.Button("Clear##console_clear"))
-                                MiniscopeLog.Clear();
+                                log.Clear();
 
                             ImGui.Separator();
 
@@ -228,12 +240,12 @@ public class ConsolePanel
                     ImGui.EndChild();
                 }
 
-                observer.OnNext(value);
+                observer.OnNext(layout);
             },
             observer.OnError,
             observer.OnCompleted);
 
-            return source.SubscribeSafe(sourceObserver);
+            return new CompositeDisposable(logSubscription, source.SubscribeSafe(sourceObserver));
         });
     }
 }

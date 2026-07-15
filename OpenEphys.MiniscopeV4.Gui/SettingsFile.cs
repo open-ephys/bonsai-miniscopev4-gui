@@ -38,12 +38,13 @@ public static class SettingsFile
     /// <typeparam name="T">The settings type to serialize.</typeparam>
     /// <param name="path">The path of the JSON file to write.</param>
     /// <param name="settings">The settings to save.</param>
+    /// <param name="log">The <see cref="MiniscopeLog"/> to report to.</param>
     /// <returns><see langword="true"/> if the file was written; otherwise <see langword="false"/>.</returns>
-    public static bool Save<T>(string path, T settings)
+    public static bool Save<T>(string path, T settings, MiniscopeLog log)
     {
         if (string.IsNullOrEmpty(path))
         {
-            MiniscopeLog.Error("Could not save configuration: no file path was specified.");
+            log.Error("Could not save configuration: no file path was specified.");
             return false;
         }
 
@@ -56,12 +57,12 @@ public static class SettingsFile
 
             PathHelper.EnsureDirectory(path);
             File.WriteAllText(path, root.ToString(Formatting.Indented));
-            MiniscopeLog.Info($"Saved configuration to '{path}'.");
+            log.Info($"Saved configuration to '{path}'.");
             return true;
         }
         catch (Exception ex)
         {
-            MiniscopeLog.Error($"Could not save configuration to '{path}': {ex.Message}");
+            log.Error($"Could not save configuration to '{path}': {ex.Message}");
             return false;
         }
     }
@@ -73,15 +74,16 @@ public static class SettingsFile
     /// <typeparam name="T">The settings type to deserialize.</typeparam>
     /// <param name="path">The path of the JSON file to read.</param>
     /// <param name="current">The current settings, used as a fallback for missing or invalid values.</param>
+    /// <param name="log">The <see cref="MiniscopeLog"/> to report to.</param>
     /// <param name="loaded">The resulting settings on success, or <paramref name="current"/> on failure.</param>
     /// <returns><see langword="true"/> if the file was read; otherwise <see langword="false"/>.</returns>
-    public static bool TryLoad<T>(string path, T current, out T loaded)
+    public static bool TryLoad<T>(string path, T current, MiniscopeLog log, out T loaded)
     {
         loaded = current;
 
         if (string.IsNullOrEmpty(path))
         {
-            MiniscopeLog.Error("Could not load configuration: no file path was specified.");
+            log.Error("Could not load configuration: no file path was specified.");
             return false;
         }
 
@@ -107,17 +109,17 @@ public static class SettingsFile
                 }
                 catch (Exception ex)
                 {
-                    MiniscopeLog.Warning($"Ignoring configuration value for '{property.Name}': {ex.Message}");
+                    log.Warning($"Ignoring configuration value for '{property.Name}': {ex.Message}");
                 }
             }
 
             loaded = merged.ToObject<T>(Serializer);
-            MiniscopeLog.Info($"Loaded configuration from '{path}'.");
+            log.Info($"Loaded configuration from '{path}'.");
             return true;
         }
         catch (Exception ex)
         {
-            MiniscopeLog.Error($"Could not load configuration from '{path}': {ex.Message}");
+            log.Error($"Could not load configuration from '{path}': {ex.Message}");
             loaded = current;
             return false;
         }

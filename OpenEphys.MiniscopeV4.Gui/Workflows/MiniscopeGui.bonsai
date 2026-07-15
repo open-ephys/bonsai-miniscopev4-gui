@@ -332,6 +332,18 @@
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>MaxProjectionSettings</Name>
             </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p3:CreateGuiLayout" />
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject">
+              <Name>GuiLayout</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p3:CreateMiniscopeLog" />
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject">
+              <Name>MiniscopeLog</Name>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
@@ -381,6 +393,8 @@
             <Edge From="76" To="77" Label="Source1" />
             <Edge From="78" To="79" Label="Source1" />
             <Edge From="79" To="80" Label="Source1" />
+            <Edge From="81" To="82" Label="Source1" />
+            <Edge From="83" To="84" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -427,6 +441,12 @@
                     <Combinator xsi:type="StringProperty">
                       <Value>Starting acquisition.</Value>
                     </Combinator>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:LogInfo" />
@@ -536,6 +556,12 @@
                             <Value>Stopping acquisition.</Value>
                           </Combinator>
                         </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:WithLatestFrom" />
+                        </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p3:LogInfo" />
                         </Expression>
@@ -545,8 +571,10 @@
                         <Edge From="0" To="1" Label="Source1" />
                         <Edge From="1" To="2" Label="Source1" />
                         <Edge From="2" To="3" Label="Source1" />
-                        <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="3" To="5" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source2" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -605,31 +633,33 @@
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
-                  <Edge From="1" To="2" Label="Source1" />
-                  <Edge From="3" To="14" Label="Source1" />
-                  <Edge From="4" To="5" Label="Source1" />
-                  <Edge From="5" To="14" Label="Source2" />
+                  <Edge From="1" To="3" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source2" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="5" To="16" Label="Source1" />
                   <Edge From="6" To="7" Label="Source1" />
-                  <Edge From="7" To="14" Label="Source3" />
+                  <Edge From="7" To="16" Label="Source2" />
                   <Edge From="8" To="9" Label="Source1" />
-                  <Edge From="9" To="14" Label="Source4" />
+                  <Edge From="9" To="16" Label="Source3" />
                   <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="11" To="14" Label="Source5" />
+                  <Edge From="11" To="16" Label="Source4" />
                   <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="13" To="14" Label="Source6" />
-                  <Edge From="14" To="17" Label="Source1" />
-                  <Edge From="15" To="16" Label="Source1" />
-                  <Edge From="16" To="17" Label="Source2" />
+                  <Edge From="13" To="16" Label="Source5" />
+                  <Edge From="14" To="15" Label="Source1" />
+                  <Edge From="15" To="16" Label="Source6" />
+                  <Edge From="16" To="19" Label="Source1" />
                   <Edge From="17" To="18" Label="Source1" />
-                  <Edge From="18" To="19" Label="Source1" />
-                  <Edge From="18" To="25" Label="Source1" />
+                  <Edge From="18" To="19" Label="Source2" />
                   <Edge From="19" To="20" Label="Source1" />
                   <Edge From="20" To="21" Label="Source1" />
+                  <Edge From="20" To="27" Label="Source1" />
                   <Edge From="21" To="22" Label="Source1" />
-                  <Edge From="21" To="23" Label="Source1" />
-                  <Edge From="21" To="24" Label="Source1" />
-                  <Edge From="25" To="26" Label="Source1" />
-                  <Edge From="26" To="27" Label="Source1" />
+                  <Edge From="22" To="23" Label="Source1" />
+                  <Edge From="23" To="24" Label="Source1" />
+                  <Edge From="23" To="25" Label="Source1" />
+                  <Edge From="23" To="26" Label="Source1" />
+                  <Edge From="27" To="28" Label="Source1" />
+                  <Edge From="28" To="29" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -727,6 +757,12 @@
             <Expression xsi:type="MemberSelector">
               <Selector>FrameNumber</Selector>
             </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>MiniscopeLog</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:WithLatestFrom" />
+            </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p3:UpdateLogFrameNumber" />
             </Expression>
@@ -748,7 +784,9 @@
             <Edge From="15" To="16" Label="Source1" />
             <Edge From="16" To="17" Label="Source1" />
             <Edge From="18" To="19" Label="Source1" />
-            <Edge From="19" To="20" Label="Source1" />
+            <Edge From="19" To="21" Label="Source1" />
+            <Edge From="20" To="21" Label="Source2" />
+            <Edge From="21" To="22" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -803,6 +841,15 @@
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
                     <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>GuiLayout</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Item2</Selector>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
                     <Name>CameraIndex</Name>
@@ -878,28 +925,31 @@
                   </Expression>
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="6" Label="Source1" />
-                  <Edge From="1" To="2" Label="Source1" />
-                  <Edge From="2" To="5" Label="Source1" />
-                  <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="4" To="5" Label="Source2" />
-                  <Edge From="5" To="6" Label="Source2" />
-                  <Edge From="6" To="11" Label="Source1" />
-                  <Edge From="7" To="8" Label="Source1" />
-                  <Edge From="8" To="11" Label="Source2" />
-                  <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="10" To="11" Label="Source3" />
-                  <Edge From="11" To="12" Label="Source1" />
-                  <Edge From="11" To="14" Label="Source1" />
+                  <Edge From="0" To="2" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source2" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="3" To="9" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="5" To="8" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source2" />
+                  <Edge From="8" To="9" Label="Source2" />
+                  <Edge From="9" To="14" Label="Source1" />
+                  <Edge From="10" To="11" Label="Source1" />
+                  <Edge From="11" To="14" Label="Source2" />
                   <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="13" To="14" Label="Source3" />
                   <Edge From="14" To="15" Label="Source1" />
-                  <Edge From="14" To="19" Label="Source1" />
+                  <Edge From="14" To="17" Label="Source1" />
                   <Edge From="15" To="16" Label="Source1" />
-                  <Edge From="16" To="17" Label="Source1" />
                   <Edge From="17" To="18" Label="Source1" />
+                  <Edge From="17" To="22" Label="Source1" />
+                  <Edge From="18" To="19" Label="Source1" />
                   <Edge From="19" To="20" Label="Source1" />
                   <Edge From="20" To="21" Label="Source1" />
-                  <Edge From="21" To="22" Label="Source1" />
+                  <Edge From="22" To="23" Label="Source1" />
+                  <Edge From="23" To="24" Label="Source1" />
+                  <Edge From="24" To="25" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -979,6 +1029,9 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
                     <Name>MiniscopeConnected</Name>
@@ -1161,6 +1214,12 @@
                         <Expression xsi:type="scr:ExpressionTransform">
                           <scr:Expression>it ? "Commutator connected" : "Commutator disconnected"</scr:Expression>
                         </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:WithLatestFrom" />
+                        </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p3:LogInfo" />
                         </Expression>
@@ -1170,8 +1229,10 @@
                         <Edge From="0" To="1" Label="Source1" />
                         <Edge From="1" To="2" Label="Source1" />
                         <Edge From="2" To="3" Label="Source1" />
-                        <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="3" To="5" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source2" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -1181,15 +1242,16 @@
                   <Edge From="1" To="3" Label="Source1" />
                   <Edge From="2" To="3" Label="Source2" />
                   <Edge From="3" To="4" Label="Source2" />
-                  <Edge From="4" To="7" Label="Source1" />
-                  <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="7" Label="Source2" />
-                  <Edge From="7" To="8" Label="Source1" />
-                  <Edge From="7" To="10" Label="Source1" />
+                  <Edge From="4" To="8" Label="Source1" />
+                  <Edge From="5" To="8" Label="Source2" />
+                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source3" />
                   <Edge From="8" To="9" Label="Source1" />
-                  <Edge From="10" To="11" Label="Source1" />
+                  <Edge From="8" To="11" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
                   <Edge From="11" To="12" Label="Source1" />
-                  <Edge From="11" To="13" Label="Source1" />
+                  <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="12" To="14" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -2104,7 +2166,6 @@
                           <Combinator xsi:type="p3:DataPanel">
                             <p3:ImageHeight>608</p3:ImageHeight>
                             <p3:ImageWidth>608</p3:ImageWidth>
-                            <p3:ImageHeightFraction>0.6</p3:ImageHeightFraction>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
@@ -2326,140 +2387,242 @@
                 </Edges>
               </Workflow>
             </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="p3:ConsolePanel" />
+            <Expression xsi:type="GroupWorkflow">
+              <Name>Console</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p3:ConsolePanel" />
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="2" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source2" />
+                  <Edge From="2" To="3" Label="Source1" />
+                </Edges>
+              </Workflow>
+            </Expression>
+            <Expression xsi:type="MulticastSubject">
+              <Name>GuiLayout</Name>
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>Log Property Changes</Name>
               <Workflow>
                 <Nodes>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>Focus</Name>
-                  </Expression>
                   <Expression xsi:type="ExternalizedMapping">
                     <Property Name="DueTime" />
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0.05S</DueTime>
-                    <Format>Focus: {0}</Format>
-                    <Selector>it</Selector>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Focus</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Focus</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="ExternalizedMapping">
+                          <Property Name="DueTime" />
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0.05S</DueTime>
+                          <Format>Focus: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="3" Label="Source1" />
+                        <Edge From="1" To="3" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source3" />
+                        <Edge From="3" To="4" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="SubscribeSubject">
+                  <Expression xsi:type="GroupWorkflow">
                     <Name>LedBrightness</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>LedBrightness</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="ExternalizedMapping">
+                          <Property Name="DueTime" />
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0.05S</DueTime>
+                          <Format>LED Brightness: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="3" Label="Source1" />
+                        <Edge From="1" To="3" Label="Source3" />
+                        <Edge From="2" To="3" Label="Source3" />
+                        <Edge From="3" To="4" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0.05S</DueTime>
-                    <Format>LED Brightness: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>SaturationThreshold</Name>
-                  </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0.05S</DueTime>
-                    <Format>Saturation Threshold: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>SaturationColor</Name>
-                  </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0.05S</DueTime>
-                    <Format>Saturation Color: R {0:0}, G {1:0}, B {2:0}, A {3:0}</Format>
-                    <Selector>Val0,Val1,Val2,Val3</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>BackgroundThreshold</Name>
-                  </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0.05S</DueTime>
-                    <Format>Background Threshold: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>Sigma</Name>
-                  </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0S</DueTime>
-                    <Format>Sigma: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>BackgroundFrames</Name>
-                  </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0S</DueTime>
-                    <Format>Background Frames: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
+                  <Expression xsi:type="GroupWorkflow">
                     <Name>FrameRate</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>FrameRate</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0S</DueTime>
+                          <Format>Frame Rate: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0S</DueTime>
-                    <Format>Frame Rate: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
+                  <Expression xsi:type="GroupWorkflow">
                     <Name>LedRespectsDigitalIn</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>LedRespectsDigitalIn</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0S</DueTime>
+                          <Format>LED Respects Digital In: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0S</DueTime>
-                    <Format>LED Respects Digital In: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
+                  <Expression xsi:type="GroupWorkflow">
                     <Name>SensorGain</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>SensorGain</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0S</DueTime>
+                          <Format>Sensor Gain: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0S</DueTime>
-                    <Format>Sensor Gain: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
+                  <Expression xsi:type="GroupWorkflow">
                     <Name>CommutatorEnableLed</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>CommutatorEnableLed</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0S</DueTime>
+                          <Format>Commutator LED Enabled: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0S</DueTime>
-                    <Format>Commutator LED Enabled: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
+                  <Expression xsi:type="GroupWorkflow">
                     <Name>CommutatorEnable</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>CommutatorEnable</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0S</DueTime>
+                          <Format>Commutator Enabled: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0S</DueTime>
-                    <Format>Commutator Enabled: {0}</Format>
-                    <Selector>it</Selector>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
+                  <Expression xsi:type="GroupWorkflow">
                     <Name>PortName</Name>
-                  </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
-                    <DueTime>PT0S</DueTime>
-                    <Format>COM Port: {0}</Format>
-                    <Selector>it</Selector>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>PortName</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0S</DueTime>
+                          <Format>COM Port: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
                 </Nodes>
                 <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
                   <Edge From="0" To="2" Label="Source1" />
-                  <Edge From="1" To="2" Label="Source2" />
-                  <Edge From="1" To="4" Label="Source2" />
-                  <Edge From="1" To="6" Label="Source2" />
-                  <Edge From="1" To="8" Label="Source2" />
-                  <Edge From="1" To="10" Label="Source2" />
-                  <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="7" To="8" Label="Source1" />
-                  <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="11" To="12" Label="Source1" />
-                  <Edge From="13" To="14" Label="Source1" />
-                  <Edge From="15" To="16" Label="Source1" />
-                  <Edge From="17" To="18" Label="Source1" />
-                  <Edge From="19" To="20" Label="Source1" />
-                  <Edge From="21" To="22" Label="Source1" />
-                  <Edge From="23" To="24" Label="Source1" />
-                  <Edge From="25" To="26" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -2473,6 +2636,7 @@
             <Edge From="6" To="7" Label="Source1" />
             <Edge From="7" To="8" Label="Source1" />
             <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="10" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -2697,17 +2861,11 @@
                   <Expression xsi:type="Format">
                     <Format>Saving image file: {0}</Format>
                   </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p3:LogInfo" />
-                  </Expression>
                   <Expression xsi:type="MemberSelector">
                     <Selector>LogFileName</Selector>
                   </Expression>
                   <Expression xsi:type="Format">
                     <Format>Saving log file: {0}</Format>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p3:LogInfo" />
                   </Expression>
                   <Expression xsi:type="MemberSelector">
                     <Selector>CsvFileName</Selector>
@@ -2716,20 +2874,32 @@
                     <Format>Saving CSV file: {0}</Format>
                   </Expression>
                   <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Merge" />
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:LogInfo" />
                   </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
                   <Edge From="0" To="2" Label="Source1" />
-                  <Edge From="0" To="5" Label="Source1" />
-                  <Edge From="0" To="8" Label="Source1" />
+                  <Edge From="0" To="4" Label="Source1" />
+                  <Edge From="0" To="6" Label="Source1" />
                   <Edge From="2" To="3" Label="Source1" />
-                  <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="3" To="8" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="5" To="8" Label="Source2" />
                   <Edge From="6" To="7" Label="Source1" />
-                  <Edge From="8" To="9" Label="Source1" />
-                  <Edge From="9" To="10" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source3" />
+                  <Edge From="8" To="10" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source2" />
+                  <Edge From="10" To="11" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -2994,6 +3164,9 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:TakeUntil" />
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
                   <Expression xsi:type="ExternalizedMapping">
                     <Property Name="FileName" DisplayName="LogFileName" />
                   </Expression>
@@ -3139,6 +3312,12 @@
                   <Expression xsi:type="MemberSelector">
                     <Selector>Item2</Selector>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
                   <Expression xsi:type="ExternalizedMapping">
                     <Property Name="FileName" DisplayName="ConfigFileName" />
                   </Expression>
@@ -3151,7 +3330,7 @@
                 <Edges>
                   <Edge From="0" To="2" Label="Source1" />
                   <Edge From="0" To="10" Label="Source1" />
-                  <Edge From="0" To="37" Label="Source1" />
+                  <Edge From="0" To="38" Label="Source1" />
                   <Edge From="1" To="5" Label="Source1" />
                   <Edge From="2" To="5" Label="Source2" />
                   <Edge From="3" To="5" Label="Source3" />
@@ -3161,38 +3340,41 @@
                   <Edge From="7" To="8" Label="Source1" />
                   <Edge From="8" To="9" Label="Source1" />
                   <Edge From="9" To="10" Label="Source2" />
-                  <Edge From="10" To="12" Label="Source1" />
-                  <Edge From="10" To="14" Label="Source1" />
-                  <Edge From="10" To="23" Label="Source1" />
-                  <Edge From="11" To="12" Label="Source2" />
-                  <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="14" To="15" Label="Source1" />
-                  <Edge From="15" To="17" Label="Source1" />
-                  <Edge From="16" To="17" Label="Source2" />
-                  <Edge From="17" To="18" Label="Source1" />
+                  <Edge From="10" To="13" Label="Source1" />
+                  <Edge From="10" To="15" Label="Source1" />
+                  <Edge From="10" To="24" Label="Source1" />
+                  <Edge From="11" To="13" Label="Source2" />
+                  <Edge From="12" To="13" Label="Source3" />
+                  <Edge From="13" To="14" Label="Source1" />
+                  <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="16" To="18" Label="Source1" />
+                  <Edge From="17" To="18" Label="Source2" />
                   <Edge From="18" To="19" Label="Source1" />
                   <Edge From="19" To="20" Label="Source1" />
                   <Edge From="20" To="21" Label="Source1" />
                   <Edge From="21" To="22" Label="Source1" />
-                  <Edge From="21" To="31" Label="Source1" />
-                  <Edge From="23" To="24" Label="Source1" />
-                  <Edge From="24" To="26" Label="Source1" />
-                  <Edge From="25" To="26" Label="Source2" />
-                  <Edge From="26" To="27" Label="Source1" />
+                  <Edge From="22" To="23" Label="Source1" />
+                  <Edge From="22" To="32" Label="Source1" />
+                  <Edge From="24" To="25" Label="Source1" />
+                  <Edge From="25" To="27" Label="Source1" />
+                  <Edge From="26" To="27" Label="Source2" />
                   <Edge From="27" To="28" Label="Source1" />
                   <Edge From="28" To="29" Label="Source1" />
                   <Edge From="29" To="30" Label="Source1" />
-                  <Edge From="30" To="31" Label="Source2" />
-                  <Edge From="30" To="36" Label="Source1" />
-                  <Edge From="31" To="32" Label="Source1" />
+                  <Edge From="30" To="31" Label="Source1" />
+                  <Edge From="31" To="32" Label="Source2" />
+                  <Edge From="31" To="37" Label="Source1" />
                   <Edge From="32" To="33" Label="Source1" />
                   <Edge From="33" To="34" Label="Source1" />
                   <Edge From="34" To="35" Label="Source1" />
-                  <Edge From="37" To="39" Label="Source1" />
-                  <Edge From="38" To="39" Label="Source2" />
-                  <Edge From="39" To="40" Label="Source1" />
-                  <Edge From="40" To="42" Label="Source1" />
-                  <Edge From="41" To="42" Label="Source2" />
+                  <Edge From="35" To="36" Label="Source1" />
+                  <Edge From="38" To="40" Label="Source1" />
+                  <Edge From="39" To="40" Label="Source2" />
+                  <Edge From="40" To="41" Label="Source1" />
+                  <Edge From="41" To="43" Label="Source1" />
+                  <Edge From="42" To="43" Label="Source2" />
+                  <Edge From="43" To="45" Label="Source1" />
+                  <Edge From="44" To="45" Label="Source2" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -3460,6 +3642,12 @@
                       <Value>Stopping recording.</Value>
                     </Combinator>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p3:LogInfo" />
                   </Expression>
@@ -3469,7 +3657,9 @@
                   <Edge From="1" To="2" Label="Source1" />
                   <Edge From="2" To="3" Label="Source1" />
                   <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="4" To="6" Label="Source1" />
+                  <Edge From="5" To="6" Label="Source2" />
+                  <Edge From="6" To="7" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -3705,6 +3895,12 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Merge" />
             </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>MiniscopeLog</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:WithLatestFrom" />
+            </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p3:LogError" />
             </Expression>
@@ -3713,7 +3909,9 @@
             <Edge From="0" To="3" Label="Source1" />
             <Edge From="1" To="3" Label="Source2" />
             <Edge From="2" To="3" Label="Source3" />
-            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="3" To="5" Label="Source1" />
+            <Edge From="4" To="5" Label="Source2" />
+            <Edge From="5" To="6" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
