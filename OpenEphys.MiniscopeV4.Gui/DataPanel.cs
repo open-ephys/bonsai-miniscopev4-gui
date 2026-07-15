@@ -158,6 +158,11 @@ public class DataPanel
         "digitalin",
         new PlotLegend.Entry(digitalInLabels[0], Palette.YellowHovered),
         new PlotLegend.Entry(digitalInLabels[1], new Vector4(0.256f, 0.700f, 0.800f, 1f)));
+    static readonly PlotLegend eulerAngleLegend = new(
+        "euler_angles",
+        new PlotLegend.Entry("Yaw", Palette.RedHovered),
+        new PlotLegend.Entry("Pitch", Palette.GreenHovered),
+        new PlotLegend.Entry("Roll", Palette.BlueHovered));
 
     /// <summary>
     /// Renders the data panel and returns the updated shared layout, display settings, and active tab.
@@ -449,7 +454,13 @@ public class DataPanel
 
                                     if (ImGui.BeginTabItem("Euler Angles"))
                                     {
-                                        PlotBufferSizeControl(ref bufferSize);
+                                        var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
+                                        if (ImGui.BeginChild("##quat_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
+                                        {
+                                            PlotBufferSizeControl(ref bufferSize);
+                                            eulerAngleLegend.DrawSameLine();
+                                            ImGui.EndChild();
+                                        }
 
                                         if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
                                         {
@@ -460,7 +471,11 @@ public class DataPanel
                                             {
                                                 for (int i = 0; i < EulerAnglesSeries.Series.Length; i++)
                                                 {
+                                                    if (!eulerAngleLegend.IsVisible(i))
+                                                        continue;
+
                                                     var line = EulerAnglesSeries.Series[i];
+                                                    ImPlot.SetNextLineStyle(eulerAngleLegend.ColorOf(i));
                                                     ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
                                                 }
                                             }
