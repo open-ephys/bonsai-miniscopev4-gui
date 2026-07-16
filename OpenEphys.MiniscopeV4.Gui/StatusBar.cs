@@ -53,6 +53,7 @@ public class StatusBar
                 var cameraStatus = value.Item2;
                 var cameraIndex = cameraStatus.CameraIndex;
                 var isConnected = cameraStatus.IsConnected;
+                var paused = cameraStatus.Paused;
 
                 if (AutomaticRestartTriggered)
                 {
@@ -90,7 +91,25 @@ public class StatusBar
                         }
                     }
 
+                    ImGui.SameLine();
+                    if (!isConnected)
+                        ImGui.BeginDisabled();
 
+                    var pauseButtonSize = new Vector2(140f * UiScale.Current, 0f);
+                    bool spacePressed = isConnected && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.Space);
+                    using (Palette.PushButtonColors(
+                        paused ? Palette.Yellow : Palette.Gray,
+                        paused ? Palette.YellowHovered : Palette.GrayHovered,
+                        paused ? Palette.YellowActive : Palette.GrayActive))
+                    {
+                        if (ImGui.Button(paused ? "Resume##statusbar_pause" : "Pause##statusbar_pause", pauseButtonSize) || spacePressed)
+                        {
+                            paused = !paused;
+                        }
+                    }
+
+                    if (!isConnected)
+                        ImGui.EndDisabled();
 
                     ImGui.TableNextColumn();
 
@@ -134,7 +153,10 @@ public class StatusBar
 
                 ImGui.Separator();
 
-                observer.OnNext(Tuple.Create(value.Item1, new CameraStatus(cameraIndex, isConnected)));
+                if (!isConnected)
+                    paused = false;
+
+                observer.OnNext(Tuple.Create(value.Item1, new CameraStatus(cameraIndex, isConnected, paused)));
             },
             observer.OnError,
             observer.OnCompleted);
