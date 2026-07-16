@@ -1,8 +1,10 @@
 using Bonsai;
+using Bonsai.IO;
 using Hexa.NET.ImGui;
 using OpenEphys.Miniscope;
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Numerics;
@@ -11,6 +13,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
 
 namespace OpenEphys.MiniscopeV4.Gui;
 
@@ -68,11 +72,14 @@ public class SettingsPanel
         set => configFilePath = value;
     }
 
+    readonly ISerializer serializer = new SerializerBuilder().Build();
+    readonly IDeserializer deserializer = new DeserializerBuilder().Build();
+
     /// <summary>
     /// Renders the settings sidebar and returns an updated <see cref="HardwareSettings"/> alongside the shared layout.
     /// </summary>
     /// <param name="source">A sequence pairing the shared <see cref="GuiLayout"/> with the current <see cref="HardwareSettings"/>, tied to the render tick of DearImGui.</param>
-    /// <param name="logSource">The shared <see cref="MiniscopeLog"/> instance (typically a <c>BehaviorSubject</c>), captured once and passed to <see cref="SettingsFile"/> when saving or loading configs.</param>
+    /// <param name="logSource">The shared <see cref="MiniscopeLog"/> instance (typically a <c>BehaviorSubject</c>), captured once.</param>
     /// <returns>A sequence pairing the updated <see cref="GuiLayout"/> with the settings updated from the rendered controls.</returns>
     public unsafe IObservable<Tuple<GuiLayout, HardwareSettings>> Process(IObservable<Tuple<GuiLayout, HardwareSettings>> source, IObservable<MiniscopeLog> logSource)
     {
@@ -202,8 +209,18 @@ public class SettingsPanel
                                 saveConfigTask = null;
                                 if (!string.IsNullOrEmpty(savePath))
                                 {
-                                    SettingsFile.Save(savePath, hardwareSettings.Miniscope, log);
-                                    ConfigFilePath = savePath;
+                                    try
+                                    {
+                                        string miniscopeYaml = serializer.Serialize(hardwareSettings.Miniscope);
+                                        PathHelper.EnsureDirectory(savePath);
+                                        File.WriteAllText(savePath, miniscopeYaml);
+                                        log.Info($"Saved configuration to '{savePath}'.");
+                                        ConfigFilePath = savePath;
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        log.Error($"Failed to save configuration to '{savePath}': {ex.Message}");
+                                    }
                                 }
                             }
 
@@ -211,8 +228,22 @@ public class SettingsPanel
                             {
                                 var loadPath = loadConfigTask.Result;
                                 loadConfigTask = null;
-                                if (!string.IsNullOrEmpty(loadPath) && SettingsFile.TryLoad(loadPath, hardwareSettings.Miniscope, log, out var loaded))
+                                if (!string.IsNullOrEmpty(loadPath))
                                 {
+                                    MiniscopeSettings loaded = new();
+
+                                    try
+                                    {
+                                        string configurationString = File.ReadAllText(loadPath);
+                                        var reader = new StringReader(configurationString);
+                                        var parser = new MergingParser(new Parser(reader));
+                                        loaded = deserializer.Deserialize<MiniscopeSettings>(parser);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        log.Error($"Failed to load configuration from '{loadPath}': {ex.Message}");
+                                    }
+
                                     ledBrightness = loaded.LedBrightness;
                                     focus = loaded.Focus;
                                     sensorGain = loaded.SensorGain;
@@ -385,9 +416,24 @@ public class SettingsPanel
                     }
                 }
 
-                var updatedHardwareSettings = new HardwareSettings(
-                    new MiniscopeSettings(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
-                    new CommutatorSettings(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
+                var updatedHardwareSettings = new HardwareSettings
+                {
+                    Miniscope = new MiniscopeSettings
+                    {
+                        LedBrightness = ledBrightness,
+                        Focus = focus,
+                        SensorGain = sensorGain,
+                        FrameRate = frameRate,
+                        LedRespectsDigitalIn = ledRespectsDigitalIn,
+                    },
+                    Commutator = new CommutatorSettings
+                    {
+                        PortName = portName,
+                        IsConnected = commutatorConnected,
+                        Enable = commutatorEnable,
+                        EnableLed = commutatorEnableLed,
+                    },
+                };
 
                 observer.OnNext(Tuple.Create(layout, updatedHardwareSettings));
             },

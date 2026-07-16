@@ -52,7 +52,7 @@ public class GenerateRecordingFileNames
     const string CsvExtension = ".csv";
     const string ImageExtension = ".avi";
     const string LogExtension = ".log";
-    const string ConfigExtension = ".json";
+    const string ConfigExtension = ".yaml";
 
     /// <summary>
     /// Generates a synchronized <see cref="RecordingFileNames"/> set each time the <paramref name="source"/>

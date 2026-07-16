@@ -1,0 +1,10 @@
+Miniscope:
+  LedBrightness: 10
+  Focus: -20
+  SensorGain: Medium
+  FrameRate: Fps15
+  LedRespectsDigitalIn: DigitalIn0
+Commutator:
+  PortName: COM2
+  Enable: true
+  EnableLed: true

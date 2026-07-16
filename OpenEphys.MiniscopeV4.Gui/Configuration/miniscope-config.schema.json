@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HardwareSettings",
+  "description": "Root configuration object persisted to disk and used as the source of truth for the workflow.",
+  "$defs": {
+    "GainV4": {
+      "title": "GainV4",
+      "description": "Image sensor gain.",
+      "type": "string",
+      "x-sgen-typename": "OpenEphys.Miniscope.GainV4",
+      "enum": [ "" ]
+    },
+    "FrameRateV4": {
+      "title": "FrameRateV4",
+      "description": "Image sensor frame rate.",
+      "type": "string",
+      "x-sgen-typename": "OpenEphys.Miniscope.FrameRateV4",
+      "enum": [ "" ]
+    },
+    "MiniscopeDaqDigitalIn": {
+      "title": "MiniscopeDaqDigitalIn",
+      "description": "Digital input line.",
+      "type": "string",
+      "x-sgen-typename": "OpenEphys.Miniscope.MiniscopeDaqDigitalIn",
+      "enum": [ "" ]
+    },
+    "MiniscopeSettings": {
+      "title": "MiniscopeSettings",
+      "description": "Miniscope acquisition settings displayed and edited by the GUI.",
+      "type": "object",
+      "properties": {
+        "LedBrightness": {
+          "description": "The brightness of the excitation LED, as a percentage.",
+          "type": "number",
+          "default": 0
+        },
+        "Focus": {
+          "description": "The electrowetting lens focus value.",
+          "type": "number",
+          "default": 0
+        },
+        "SensorGain": {
+          "description": "The image sensor gain.",
+          "allOf": [ { "$ref": "#/$defs/GainV4" } ],
+          "default": "Low"
+        },
+        "FrameRate": {
+          "description": "The image sensor frame rate.",
+          "allOf": [ { "$ref": "#/$defs/FrameRateV4" } ],
+          "default": "Fps30"
+        },
+        "LedRespectsDigitalIn": {
+          "description": "The digital input line that gates the excitation LED, if any.",
+          "allOf": [ { "$ref": "#/$defs/MiniscopeDaqDigitalIn" } ],
+          "default": "None"
+        }
+      }
+    },
+    "CommutatorSettings": {
+      "title": "CommutatorSettings",
+      "description": "Commutator connection settings displayed and edited by the GUI.",
+      "type": "object",
+      "properties": {
+        "PortName": {
+          "description": "The name of the serial port the commutator is connected to.",
+          "type": "string",
+          "default": ""
+        },
+        "Enable": {
+          "description": "Whether the commutator motor is enabled.",
+          "type": "boolean",
+          "default": false
+        },
+        "EnableLed": {
+          "description": "Whether the commutator indication LED is enabled.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "Miniscope": {
+      "description": "The Miniscope acquisition settings.",
+      "allOf": [ { "$ref": "#/$defs/MiniscopeSettings" } ]
+    },
+    "Commutator": {
+      "description": "The commutator connection and settings.",
+      "allOf": [ { "$ref": "#/$defs/CommutatorSettings" } ]
+    }
+  }
+}
