@@ -185,27 +185,34 @@ public class ConsolePanel
                                 layout = layout with { ConsoleOpen = false };
 
                             ImGui.SameLine();
-                            ImGui.TextUnformatted($"Console — {logCache.Length} message(s)");
-                            
-                            ImGui.SameLine();
-                            Vector2 sepPos = ImGui.GetCursorScreenPos();
-                            float sepHeight = ImGui.GetFrameHeight();
-                            ImGui.GetWindowDrawList().AddLine(
-                                new Vector2(sepPos.X, sepPos.Y),
-                                new Vector2(sepPos.X, sepPos.Y + sepHeight),
-                                ImGui.GetColorU32(ImGuiCol.Separator));
-                            ImGui.Dummy(new Vector2(1f, sepHeight));
 
-                            ImGui.SameLine();
-                            ImGui.Checkbox("Info##console_filter_info", ref showInfo);
-                            ImGui.SameLine();
-                            ImGui.Checkbox("Warnings##console_filter_warning", ref showWarnings);
-                            ImGui.SameLine();
-                            ImGui.Checkbox("Errors##console_filter_error", ref showErrors);
-                            ImGui.SameLine();
-                            ImGui.Checkbox("Property Changes##console_filter_property", ref showPropertyChanges);
-
+                            var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
                             float clearWidth = ImGui.CalcTextSize("Clear").X + ImGui.GetStyle().FramePadding.X * 2f;
+                            if (ImGui.BeginChild("##console_content", new Vector2(-(clearWidth * 1.5f), controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
+                            {
+                                ImGui.TextUnformatted($"Console — {logCache.Length} message(s)");
+
+                                ImGui.SameLine();
+                                Vector2 sepPos = ImGui.GetCursorScreenPos();
+                                float sepHeight = ImGui.GetFrameHeight();
+                                ImGui.GetWindowDrawList().AddLine(
+                                    new Vector2(sepPos.X, sepPos.Y),
+                                    new Vector2(sepPos.X, sepPos.Y + sepHeight),
+                                    ImGui.GetColorU32(ImGuiCol.Separator));
+                                ImGui.Dummy(new Vector2(1f, sepHeight));
+
+                                ImGui.SameLine();
+                                ImGui.Checkbox("Info##console_filter_info", ref showInfo);
+                                ImGui.SameLine();
+                                ImGui.Checkbox("Warnings##console_filter_warning", ref showWarnings);
+                                ImGui.SameLine();
+                                ImGui.Checkbox("Errors##console_filter_error", ref showErrors);
+                                ImGui.SameLine();
+                                ImGui.Checkbox("Property Changes##console_filter_property", ref showPropertyChanges);
+                            }
+
+                            ImGui.EndChild();
+
                             ImGui.SameLine(rowWidth - clearWidth);
                             if (ImGui.Button("Clear##console_clear"))
                                 log.Clear();
