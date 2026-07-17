@@ -352,9 +352,9 @@ public class DataPanel
 
                                 ImGui.EndTabBar();
                             }
-
-                            ImGui.EndChild();
                         }
+
+                        ImGui.EndChild();
 
                         if (!expanded)
                         {
@@ -404,9 +404,9 @@ public class DataPanel
 
                                             quaternionLegend.DrawSameLine();
                                             digitalInLegend.DrawSameLine();
-
-                                            ImGui.EndChild();
                                         }
+
+                                        ImGui.EndChild();
 
                                         if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
                                         {
@@ -459,8 +459,9 @@ public class DataPanel
                                         {
                                             PlotBufferSizeControl(ref bufferSize);
                                             eulerAngleLegend.DrawSameLine();
-                                            ImGui.EndChild();
                                         }
+
+                                        ImGui.EndChild();
 
                                         if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
                                         {
@@ -533,13 +534,13 @@ public class DataPanel
 
                                     ImGui.EndTabBar();
                                 }
-
-                                ImGui.EndChild();
                             }
-                        }
 
-                        ImGui.EndChild();
+                            ImGui.EndChild();
+                        }
                     }
+
+                    ImGui.EndChild();
 
                     var updatedDisplaySettings = new DataDisplaySettings(
                         bufferSize,

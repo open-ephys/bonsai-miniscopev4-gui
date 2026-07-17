@@ -100,9 +100,8 @@ public class FilePanel
                     ImGui.Dummy(new Vector2(0f, ImGui.GetStyle().ItemSpacing.Y));
 
                     ImGui.Text("Base File Name");
-                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
+                    if (ImGui.BeginItemTooltip())
                     {
-                        ImGui.BeginTooltip();
                         ImGui.Text("Choose the location and format to save all files.");
                         ImGui.Text("If Suffix is set, the selected suffix will be added after the format and before the extension.");
                         ImGui.Text("Video files will have '.avi' appended, CSV files will have '.csv' appended, and log files will have '.log' appended.");
