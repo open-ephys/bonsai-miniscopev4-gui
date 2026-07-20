@@ -99,7 +99,7 @@ public class FilePanel
                     ImGui.Text("Recording");
                     ImGui.Dummy(new Vector2(0f, ImGui.GetStyle().ItemSpacing.Y));
 
-                    ImGui.Text("Base File Name");
+                    ImGui.Text("Data Path");
                     if (ImGui.BeginItemTooltip())
                     {
                         ImGui.Text("Choose the location and format to save all files.");
@@ -108,16 +108,14 @@ public class FilePanel
                         ImGui.EndTooltip();
                     }
 
-                    const string browseLabel = "...";
-                    const string openLabel = "Browse";
-                    float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
-                    float openWidth = ImGui.CalcTextSize(openLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
-                    float inputWidth = ImGui.GetContentRegionAvail().X - browseWidth - openWidth - ImGui.GetStyle().ItemSpacing.X * 2f;
+                    const string selectLabel = "...";
+                    const string browseLabel = "Browse";
+                    var (selectWidth, browseWidth, inputWidth) = CalculateFileNameInputWidth(selectLabel, browseLabel);
 
                     ImGui.SetNextItemWidth(inputWidth);
                     ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
                     ImGui.SameLine();
-                    if (ImGui.Button($"{browseLabel}##choose_filename_button", new Vector2(browseWidth, 0)))
+                    if (ImGui.Button($"{selectLabel}##choose_filename_button", new Vector2(selectWidth, 0)))
                     {
                         if (saveDialogTask == null || saveDialogTask.IsCompleted)
                         {
@@ -140,9 +138,9 @@ public class FilePanel
                     }
 
                     ImGui.SameLine();
-                    if (ImGui.Button($"{openLabel}##open_folder_button", new Vector2(openWidth, 0)))
+                    if (ImGui.Button($"{browseLabel}##open_folder_button", new Vector2(browseWidth, 0)))
                     {
-                        var dir = GetDirectory(fileName);
+                        var dir = FileDialogHelpers.GetDirectory(fileName);
                         if (Directory.Exists(dir))
                             System.Diagnostics.Process.Start("explorer.exe", dir);
                     }
@@ -301,18 +299,24 @@ public class FilePanel
         });
     }
 
-    static string GetDirectory(string path) => Path.GetDirectoryName(Path.GetFullPath(string.IsNullOrEmpty(path)
-        ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-        : path));
-
-    static Task<string> CreateSaveFileDialogTask(string fileName) => FileDialogHelpers.RunFileDialogTask(() => new SaveFileDialog
+    static Task<string> CreateSaveFileDialogTask(string fileName) => FileDialogHelpers.RunDialogTask(() => new SaveFileDialog
     {
-        InitialDirectory = GetDirectory(fileName),
+        InitialDirectory = FileDialogHelpers.GetDirectory(fileName),
         Filter = "All Files|*.*",
-        Title = "Choose where to save Miniscope data.",
+        Title = "Choose a filename template and a folder to save Miniscope data.",
         AddExtension = false,
         CheckFileExists = false,
         CheckPathExists = false,
         FileName = Path.GetFileName(fileName)
-    });
+    },
+    (dlg) => (dlg as SaveFileDialog).FileName);
+
+    internal static (float selectWidth, float browseWidth, float inputWidth) CalculateFileNameInputWidth(string selectLabel, string browseLabel)
+    {
+        float selectWidth = ImGui.CalcTextSize(selectLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
+        float browseWidth = ImGui.CalcTextSize(browseLabel).X + ImGui.GetStyle().FramePadding.X * 2f;
+        return (selectWidth,
+            browseWidth,
+            ImGui.GetContentRegionAvail().X - selectWidth - browseWidth - ImGui.GetStyle().ItemSpacing.X * 2f);
+    }
 }

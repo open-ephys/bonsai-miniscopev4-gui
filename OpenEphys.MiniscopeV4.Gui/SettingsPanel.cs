@@ -398,7 +398,7 @@ public class SettingsPanel
         });
     }
 
-    Task<string> CreateSaveConfigDialogTask() => FileDialogHelpers.RunFileDialogTask(() => new SaveFileDialog
+    Task<string> CreateSaveConfigDialogTask() => FileDialogHelpers.RunDialogTask(() => new SaveFileDialog
     {
         InitialDirectory = ConfigFilePath,
         Filter = "JSON files (*.json)|*.json|All Files|*.*",
@@ -407,14 +407,14 @@ public class SettingsPanel
         DefaultExt = "json",
         FileName = "config.json",
         OverwritePrompt = true,
-    });
+    }, (dlg) => (dlg as SaveFileDialog).FileName);
 
-    Task<string> CreateOpenConfigDialogTask() => FileDialogHelpers.RunFileDialogTask(() => new OpenFileDialog
+    Task<string> CreateOpenConfigDialogTask() => FileDialogHelpers.RunDialogTask(() => new OpenFileDialog
     {
         InitialDirectory = ConfigFilePath,
         Filter = "JSON files (*.json)|*.json|All Files|*.*",
         Title = "Choose a Miniscope configuration to load.",
         CheckFileExists = true,
         Multiselect = false
-    });
+    }, (dlg) => (dlg as OpenFileDialog).FileName);
 }
