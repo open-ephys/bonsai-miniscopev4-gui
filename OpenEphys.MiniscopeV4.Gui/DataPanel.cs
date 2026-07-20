@@ -202,10 +202,13 @@ public class DataPanel
                         ActiveImage = default;
                     }
 
+                    bool expanded = layout.ImageExpanded;
+                    if (!expanded)
+                        ImGui.SameLine();
+
                     float consoleReserve = layout.ReservedConsoleHeight(ImGui.GetStyle().ItemSpacing.Y);
                     if (ImGui.BeginChild("##Data", new Vector2(-1f, -consoleReserve)))
                     {
-                        bool expanded = layout.ImageExpanded;
                         float totalHeight = ImGui.GetContentRegionAvail().Y;
                         float tabBarHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ItemSpacing.Y;
                         float itemSpacingY = ImGui.GetStyle().ItemSpacing.Y;

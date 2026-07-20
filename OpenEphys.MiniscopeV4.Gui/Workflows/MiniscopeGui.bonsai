@@ -1449,9 +1449,6 @@
                 </Edges>
               </Workflow>
             </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="p3:SameLine" />
-            </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>Plot Data</Name>
               <Workflow>
@@ -2708,7 +2705,6 @@
             <Edge From="6" To="7" Label="Source1" />
             <Edge From="7" To="8" Label="Source1" />
             <Edge From="8" To="9" Label="Source1" />
-            <Edge From="9" To="10" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
