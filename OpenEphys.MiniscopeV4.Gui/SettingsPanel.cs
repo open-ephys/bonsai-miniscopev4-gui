@@ -81,6 +81,7 @@ public class SettingsPanel
             var portNames = SerialPort.GetPortNames();
             Task<string> saveConfigTask = null;
             Task<string> loadConfigTask = null;
+            bool wasAcquiring = false;
 
             // NB: Expect this to be a BehaviorSubject, so we can take the first value immediately.
             MiniscopeLog log = null;
@@ -106,6 +107,20 @@ public class SettingsPanel
                 bool commutatorConnected = hardwareSettings.Commutator.IsConnected;
                 bool commutatorEnable = hardwareSettings.Commutator.Enable;
                 bool commutatorEnableLed = hardwareSettings.Commutator.EnableLed;
+                bool commutatorAutoConnect = hardwareSettings.Commutator.AutoConnect;
+
+                bool validPort = !string.IsNullOrEmpty(portName) && portNames.Contains(portName);
+                if (AcquisitionStatus && !wasAcquiring && commutatorAutoConnect && !commutatorConnected)
+                {
+                    if (validPort)
+                        commutatorConnected = true;
+
+                    else
+                    {
+                        log.Warning($"{nameof(hardwareSettings.Commutator.AutoConnect)} is enabled but no commutator was connected; the selected COM port '{portName}' is not valid.");
+                    }
+                }
+                wasAcquiring = AcquisitionStatus;
 
                 if (imageExpanded)
                 {
@@ -314,22 +329,40 @@ public class SettingsPanel
 
                             var style = ImGui.GetStyle();
                             float refreshButtonWidth = ImGui.CalcTextSize("Refresh").X + style.FramePadding.X * 2;
-                            float connectButtonWidth = ImGui.CalcTextSize("Disconnect").X + style.FramePadding.X * 2;
-                            float comboWidth = ImGui.GetContentRegionAvail().X - refreshButtonWidth - connectButtonWidth - style.ItemSpacing.X * 2;
+                            float comboWidth = ImGui.GetContentRegionAvail().X - refreshButtonWidth - style.ItemSpacing.X;
                             ImGui.SetNextItemWidth(comboWidth);
 
                             if (commutatorConnected)
                                 ImGui.BeginDisabled();
 
                             int portIndex = Array.IndexOf(portNames, portName);
-                            if (portIndex < 0 && portNames.Length > 0)
+                            if (portIndex < 0)
                             {
-                                portIndex = 0;
-                                portName = portNames[0];
+                                if (portNames.Length > 0)
+                                {
+                                    portIndex = 0;
+                                    portName = portNames[0];
+                                }
+                                else if (!string.IsNullOrEmpty(portName))
+                                {
+                                    portName = "";
+                                }
                             }
-                            if (ImGui.Combo("##comport", ref portIndex, portNames, portNames.Length) && portNames.Length > 0)
+
+                            if (ImGui.BeginCombo("##comport", portIndex >= 0 ? portNames[portIndex] : "No commutator found"))
                             {
-                                portName = portNames[portIndex];
+                                for (int i = 0; i < portNames.Length; i++)
+                                {
+                                    bool isSelected = (i == portIndex);
+                                    if (ImGui.Selectable(portNames[i], isSelected))
+                                    {
+                                        portIndex = i;
+                                        portName = portNames[i];
+                                    }
+                                    if (isSelected)
+                                        ImGui.SetItemDefaultFocus();
+                                }
+                                ImGui.EndCombo();
                             }
 
                             ImGui.SameLine();
@@ -341,11 +374,32 @@ public class SettingsPanel
                             if (commutatorConnected)
                                 ImGui.EndDisabled();
 
-                            ImGui.SameLine();
-                            if (ImGui.Button(commutatorConnected ? "Disconnect##combutton" : "Connect##combutton"))
+                            if (ImGui.BeginTable("##commutator_connect", 2, ImGuiTableFlags.SizingStretchSame))
                             {
-                                commutatorConnected = !commutatorConnected;
+                                ImGui.TableNextColumn();
+                                ImGui.Checkbox("Auto Connect##commutator_autoconnect", ref commutatorAutoConnect);
+                                if (ImGui.BeginItemTooltip())
+                                {
+                                    ImGui.Text("Automatically connect the commutator when acquisition starts, provided a valid COM port is selected.");
+                                    ImGui.EndTooltip();
+                                }
+
+                                ImGui.TableNextColumn();
+                                using (Palette.PushButtonColors(
+                                    commutatorConnected ? Palette.Red : Palette.Green,
+                                    commutatorConnected ? Palette.RedHovered : Palette.GreenHovered,
+                                    commutatorConnected ? Palette.RedActive : Palette.GreenActive))
+                                {
+                                    if (ImGui.Button(commutatorConnected ? "Disconnect##combutton" : "Connect##combutton", new Vector2(-1f, 0f)))
+                                    {
+                                        commutatorConnected = !commutatorConnected;
+                                    }
+                                }
+
+                                ImGui.EndTable();
                             }
+
+                            ImGui.Separator();
 
                             if (!commutatorConnected)
                                 ImGui.BeginDisabled();
@@ -387,7 +441,7 @@ public class SettingsPanel
 
                 var updatedHardwareSettings = new HardwareSettings(
                     new MiniscopeSettings(ledBrightness, focus, sensorGain, frameRate, ledRespectsDigitalIn),
-                    new CommutatorSettings(portName, commutatorConnected, commutatorEnable, commutatorEnableLed));
+                    new CommutatorSettings(portName, commutatorConnected, commutatorEnable, commutatorEnableLed, commutatorAutoConnect));
 
                 observer.OnNext(Tuple.Create(layout, updatedHardwareSettings));
             },
