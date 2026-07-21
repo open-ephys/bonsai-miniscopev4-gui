@@ -1,34 +1,22 @@
-using Bonsai;
 using System;
-using System.ComponentModel;
-using System.Reactive.Linq;
+using YamlDotNet.Serialization;
 
 namespace OpenEphys.MiniscopeV4.Gui;
 
-/// <summary>
-/// Represents the max pixel-value projection settings edited in the Max Projection tab.
-/// </summary>
-/// <param name="Reset">
-/// Raised for a single frame when the user clicks the Reset button, to reset the accumulation.
-/// </param>
-public record MaxProjectionSettings(bool Reset);
-
-
-/// <summary>
-/// Combines individual saturation setting values into a single <see cref="SaturationSettings"/>.
-/// </summary>
-[Description("Combines individual saturation setting values into a single object.")]
-[Combinator]
-public class CreateMaxProjectionSettings
+partial class MaxProjectionSettings : IEquatable<MaxProjectionSettings>
 {
     /// <summary>
-    /// Creates a <see cref="MaxProjectionSettings"/> by combining the latest values from each individual saturation setting sequence.
+    /// Raised when the user clicks the Reset button, to reset the accumulation.
     /// </summary>
-    /// <param name="reset">The reset signal.</param>
-    /// <returns>A sequence of <see cref="MaxProjectionSettings"/> objects.</returns>
-    public IObservable<MaxProjectionSettings> Process(
-        IObservable<bool> reset)
-    {
-        return reset.Select(reset => new MaxProjectionSettings(reset));
-    }
+    [YamlIgnore]
+    public bool Reset { get; set; }
+
+    /// <inheritdoc/>
+    public bool Equals(MaxProjectionSettings other) => other is not null && Reset == other.Reset;
+
+    /// <inheritdoc/>
+    public override bool Equals(object obj) => Equals(obj as MaxProjectionSettings);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => Reset.GetHashCode();
 }

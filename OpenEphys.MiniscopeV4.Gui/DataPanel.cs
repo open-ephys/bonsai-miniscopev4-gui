@@ -653,12 +653,14 @@ public class DataPanel
 
                     ImGui.EndChild();
 
-                    var updatedDisplaySettings = new DataDisplaySettings(
-                        bufferSize,
-                        new SaturationSettings(satThreshold, new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255)),
-                        new DffSettings(backgroundFrames, backgroundThreshold, sigma),
-                        new MaxProjectionSettings(resetMaxProjection),
-                        new OverlaySettings(captureScreenshot, applyOverlay, overlayReferencePath));
+                    var updatedDisplaySettings = new DataDisplaySettings
+                    {
+                        BufferSize = bufferSize,
+                        Saturation = new SaturationSettings { Threshold = satThreshold, Color = new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255) },
+                        Dff = new DffSettings { BackgroundFrames = backgroundFrames, BackgroundThreshold = backgroundThreshold, Sigma = sigma },
+                        MaxProjection = new MaxProjectionSettings { Reset = resetMaxProjection },
+                        Overlay = new OverlaySettings { Capture = captureScreenshot, ApplyOverlay = applyOverlay, ReferencePath = overlayReferencePath },
+                    };
 
                     observer.OnNext(Tuple.Create(layout, updatedDisplaySettings, activeTab));
                 },

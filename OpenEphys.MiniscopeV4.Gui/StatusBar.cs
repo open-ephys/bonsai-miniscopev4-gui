@@ -156,7 +156,14 @@ public class StatusBar
                 if (!isConnected)
                     paused = false;
 
-                observer.OnNext(Tuple.Create(value.Item1, new CameraStatus(cameraIndex, isConnected, paused)));
+                var updatedCameraStatus = new CameraStatus
+                {
+                    CameraIndex = cameraIndex,
+                    IsConnected = isConnected,
+                    Paused = paused
+                };
+
+                observer.OnNext(Tuple.Create(value.Item1, updatedCameraStatus));
             },
             observer.OnError,
             observer.OnCompleted);

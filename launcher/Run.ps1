@@ -10,7 +10,6 @@ $ProgressPreference     = "SilentlyContinue"
 $ScriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $BonsaiDir  = Join-Path $ScriptDir ".bonsai"
 $BonsaiExe  = Join-Path $BonsaiDir "Bonsai.exe"
-$ConfigFile = if ($ConfigPath) { $ConfigPath } else { Join-Path $ScriptDir "config.json" }
 
 if (-not (Test-Path $BonsaiExe)) {
     $bonsaiConfigPath = Join-Path $BonsaiDir "Bonsai.config"
@@ -63,32 +62,8 @@ $bonsaiArgs = @(
     "--no-editor"
 )
 
-if (Test-Path $ConfigFile) {
-    $config = Get-Content $ConfigFile -Raw | ConvertFrom-Json
-    foreach ($prop in $config.PSObject.Properties) {
-        if ($prop.Name -like "_*") { continue }
-
-        $value = $prop.Value
-
-        if ($value -is [bool]) { $value = $value.ToString().ToLower() }
-
-        if ($null -eq $value -or "$value" -eq "") { continue }
-
-        if ($prop.Name -eq "FileName" -and "$value".StartsWith("~")) {
-            $value = ($env:USERPROFILE + ("$value".Substring(1))).Replace("\", "/")
-        }
-        
-        if ($prop.Name -eq "FrameRate" -and "$value".StartsWith("Fps")) {
-            $value = $value.Substring(3) + " Hz"
-        }
-
-        $bonsaiArgs += "-p:$($prop.Name)=$value"
-    }
-} else {
-    Write-Warning "config.json not found at '$ConfigFile'; default values will be used."
-}
-
 $bonsaiArgs += "-p:StopWorkflowOnClose=true"
+$bonsaiArgs += "-p:ConfigFilePath=./config.yml"
 
 Write-Host "Starting Miniscope GUI..."
 & $BonsaiExe @bonsaiArgs
