@@ -175,19 +175,19 @@ public class DataPanel
 
     static readonly PlotLegend quaternionLegend = new(
         "quaternion",
-        new PlotLegend.Entry("X", Palette.RedHovered),
-        new PlotLegend.Entry("Y", Palette.GreenHovered),
-        new PlotLegend.Entry("Z", Palette.BlueHovered),
-        new PlotLegend.Entry("W", Palette.PurpleHovered));
+        new PlotLegend.Entry("X", Palette.LineColor(0)),
+        new PlotLegend.Entry("Y", Palette.LineColor(1)),
+        new PlotLegend.Entry("Z", Palette.LineColor(2)),
+        new PlotLegend.Entry("W", Palette.LineColor(3)));
     static readonly PlotLegend digitalInLegend = new(
         "digitalin",
-        new PlotLegend.Entry(digitalInLabels[0], Palette.YellowHovered),
-        new PlotLegend.Entry(digitalInLabels[1], new Vector4(0.256f, 0.700f, 0.800f, 1f)));
+        new PlotLegend.Entry(digitalInLabels[0], Palette.LineColor(4)),
+        new PlotLegend.Entry(digitalInLabels[1], Palette.LineColor(5)));
     static readonly PlotLegend eulerAngleLegend = new(
         "euler_angles",
-        new PlotLegend.Entry("Yaw", Palette.RedHovered),
-        new PlotLegend.Entry("Pitch", Palette.GreenHovered),
-        new PlotLegend.Entry("Roll", Palette.BlueHovered));
+        new PlotLegend.Entry("Yaw", Palette.LineColor(0)),
+        new PlotLegend.Entry("Pitch", Palette.LineColor(1)),
+        new PlotLegend.Entry("Roll", Palette.LineColor(2)));
 
     /// <summary>
     /// Renders the data panel and returns the updated shared layout, display settings, and active tab.

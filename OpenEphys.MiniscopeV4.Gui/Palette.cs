@@ -35,6 +35,35 @@ internal static class Palette
     public static readonly Vector4 GrayActive = new(0.320f, 0.320f, 0.320f, 1f);
     public static readonly Vector4 GrayDimmed = new(0.380f, 0.380f, 0.380f, 1f);
 
+    /// <summary>
+    /// The channel line colors from the Open Ephys GUI classic color scheme (<c>DefaultColourScheme</c> in
+    /// the plugin-GUI LFP viewer), used to color individual lines of time-series plots.
+    /// </summary>
+    static readonly Vector4[] LineColors =
+    {
+        FromRgb(224, 185, 36),
+        FromRgb(214, 210, 182),
+        FromRgb(243, 119, 33),
+        FromRgb(186, 157, 168),
+        FromRgb(237, 37, 36),
+        FromRgb(179, 122, 79),
+        FromRgb(217, 46, 171),
+        FromRgb(217, 139, 196),
+        FromRgb(101, 31, 255),
+        FromRgb(141, 111, 181),
+        FromRgb(48, 117, 255),
+        FromRgb(184, 198, 224),
+        FromRgb(116, 227, 156),
+        FromRgb(150, 158, 155),
+        FromRgb(82, 173, 0),
+        FromRgb(125, 99, 32),
+    };
+
+    static Vector4 FromRgb(byte r, byte g, byte b) => new(r / 255f, g / 255f, b / 255f, 1f);
+
+    /// <summary>Gets the line color at <paramref name="index"/>, cycling through <see cref="LineColors"/>.</summary>
+    public static Vector4 LineColor(int index) => LineColors[index % LineColors.Length];
+
     public readonly ref struct StyleColorScope
     {
         readonly int count;
