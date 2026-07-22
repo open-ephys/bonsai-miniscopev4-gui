@@ -156,6 +156,18 @@ public class DataPanel
         return Math.Max(MinImagePaneHeight, Math.Min(maxHeight, height));
     }
 
+    static Vector4 ConvertScalarColorToVector4(Scalar color) => new((float)color.Val2 / 255, (float)color.Val1 / 255, (float)color.Val0 / 255, (float)color.Val3 / 255);
+
+    static Scalar ConvertVector4ColorToScalar(Vector4 color) => new(color.Z * 255, color.Y * 255, color.X * 255, color.W * 255);
+
+    static Vector4 ClampVector4Color(Vector4 color)
+    {
+        color.X = Math.Max(0f, Math.Min(1f, color.X));
+        color.Y = Math.Max(0f, Math.Min(1f, color.Y));
+        color.Z = Math.Max(0f, Math.Min(1f, color.Z));
+        return color;
+    }
+
     static readonly Vector2 fillAvailable = new(-1, -1);
     static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle | ImPlotFlags.NoLegend;
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
@@ -203,12 +215,11 @@ public class DataPanel
                     bool applyOverlay = dataDisplaySettings.Overlay.ApplyOverlay;
                     bool captureScreenshot = false;
 
+                    var overlayReferenceColor = ConvertScalarColorToVector4(dataDisplaySettings.Overlay.ReferenceColor);
+                    var overlayLiveColor = ConvertScalarColorToVector4(dataDisplaySettings.Overlay.LiveColor);
+
                     int satThreshold = dataDisplaySettings.Saturation.Threshold;
-                    var satColor = new Vector4(
-                        (float)dataDisplaySettings.Saturation.Color.Val2 / 255,
-                        (float)dataDisplaySettings.Saturation.Color.Val1 / 255,
-                        (float)dataDisplaySettings.Saturation.Color.Val0 / 255,
-                        (float)dataDisplaySettings.Saturation.Color.Val3 / 255);
+                    var satColor = ConvertScalarColorToVector4(dataDisplaySettings.Saturation.Color);
 
                     int backgroundFrames = dataDisplaySettings.Dff.BackgroundFrames;
                     double backgroundThreshold = dataDisplaySettings.Dff.BackgroundThreshold;
@@ -330,9 +341,7 @@ public class DataPanel
                                         ImGui.TextUnformatted("Color:");
                                         if (ImGui.ColorEdit4("##saturation_color", ref satColor, ImGuiColorEditFlags.Uint8 | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoOptions | ImGuiColorEditFlags.NoInputs))
                                         {
-                                            satColor.X = Math.Max(0f, Math.Min(1f, satColor.X));
-                                            satColor.Y = Math.Max(0f, Math.Min(1f, satColor.Y));
-                                            satColor.Z = Math.Max(0f, Math.Min(1f, satColor.Z));
+                                            satColor = ClampVector4Color(satColor);
                                         }
 
                                         layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
@@ -452,6 +461,20 @@ public class DataPanel
                                         ImGui.Checkbox("Apply Live Overlay", ref applyOverlay);
 
                                         if (string.IsNullOrEmpty(overlayReferencePath)) ImGui.EndDisabled();
+
+                                        ImGui.Spacing();
+
+                                        ImGui.TextUnformatted("Reference Color:");
+                                        if (ImGui.ColorEdit4("##overlay_reference_color", ref overlayReferenceColor, ImGuiColorEditFlags.Uint8 | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoOptions | ImGuiColorEditFlags.NoInputs))
+                                        {
+                                            overlayReferenceColor = ClampVector4Color(overlayReferenceColor);
+                                        }
+
+                                        ImGui.TextUnformatted("Live Color:");
+                                        if (ImGui.ColorEdit4("##overlay_live_color", ref overlayLiveColor, ImGuiColorEditFlags.Uint8 | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoOptions | ImGuiColorEditFlags.NoInputs))
+                                        {
+                                            overlayLiveColor = ClampVector4Color(overlayLiveColor);
+                                        }
 
                                         layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
                                     }
@@ -641,10 +664,17 @@ public class DataPanel
                     var updatedDisplaySettings = new DataDisplaySettings
                     {
                         BufferSize = bufferSize,
-                        Saturation = new SaturationSettings { Threshold = satThreshold, Color = new Scalar(satColor.Z * 255, satColor.Y * 255, satColor.X * 255, satColor.W * 255) },
+                        Saturation = new SaturationSettings { Threshold = satThreshold, Color = ConvertVector4ColorToScalar(satColor) },
                         Dff = new DffSettings { BackgroundFrames = backgroundFrames, BackgroundThreshold = backgroundThreshold, Sigma = sigma },
                         MaxProjection = new MaxProjectionSettings { Reset = resetMaxProjection },
-                        Overlay = new OverlaySettings { Capture = captureScreenshot, ApplyOverlay = applyOverlay, ReferencePath = overlayReferencePath },
+                        Overlay = new OverlaySettings
+                        {
+                            Capture = captureScreenshot,
+                            ApplyOverlay = applyOverlay,
+                            ReferencePath = overlayReferencePath,
+                            ReferenceColor = ConvertVector4ColorToScalar(overlayReferenceColor),
+                            LiveColor = ConvertVector4ColorToScalar(overlayLiveColor),
+                        },
                     };
 
                     observer.OnNext(Tuple.Create(layout, updatedDisplaySettings, activeTab));

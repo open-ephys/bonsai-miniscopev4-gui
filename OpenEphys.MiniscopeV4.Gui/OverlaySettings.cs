@@ -16,11 +16,13 @@ partial class OverlaySettings : IEquatable<OverlaySettings>
         other is not null &&
         Capture == other.Capture &&
         ApplyOverlay == other.ApplyOverlay &&
-        ReferencePath == other.ReferencePath;
+        ReferencePath == other.ReferencePath &&
+        ReferenceColor == other.ReferenceColor &&
+        LiveColor == other.LiveColor;
 
     /// <inheritdoc/>
     public override bool Equals(object obj) => Equals(obj as OverlaySettings);
 
     /// <inheritdoc/>
-    public override int GetHashCode() => (Capture, ApplyOverlay, ReferencePath).GetHashCode();
+    public override int GetHashCode() => (Capture, ApplyOverlay, ReferencePath, ReferenceColor, LiveColor).GetHashCode();
 }
