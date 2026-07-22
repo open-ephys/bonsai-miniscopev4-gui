@@ -251,18 +251,17 @@ public class SettingsPanel
                                         sensorGain = result;
                                 }
 
-                                ImGui.TableNextColumn();
-                                ImGui.AlignTextToFramePadding();
-                                ImGui.Text("LED Trigger: ");
-                                ImGui.SameLine();
-                                ImGui.SetNextItemWidth(-1f);
-                                int digitalInIndex = Array.IndexOf(DigitalInValues, ledRespectsDigitalIn);
-                                if (ImGui.Combo("##ledrespectdigitalin", ref digitalInIndex, DigitalInNames, DigitalInNames.Length))
-                                {
-                                    ledRespectsDigitalIn = DigitalInValues[digitalInIndex];
-                                }
-
                                 ImGui.EndTable();
+                            }
+
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.Text("LED Trigger: ");
+                            ImGui.SameLine();
+                            ImGui.SetNextItemWidth(-1f);
+                            int digitalInIndex = Array.IndexOf(DigitalInValues, ledRespectsDigitalIn);
+                            if (ImGui.Combo("##ledrespectdigitalin", ref digitalInIndex, DigitalInNames, DigitalInNames.Length))
+                            {
+                                ledRespectsDigitalIn = DigitalInValues[digitalInIndex];
                             }
 
                             ImGui.Spacing();
