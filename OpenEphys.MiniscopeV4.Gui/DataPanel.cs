@@ -577,7 +577,7 @@ public class DataPanel
                                         if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
                                         {
                                             ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -200.0, 200.0, ImPlotCond.Always);
+                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -185.0, 365.0, ImPlotCond.Always);
 
                                             if (EulerAnglesSeries != null)
                                             {
