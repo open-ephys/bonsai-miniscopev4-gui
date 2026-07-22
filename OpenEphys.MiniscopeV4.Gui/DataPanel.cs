@@ -141,7 +141,7 @@ public class DataPanel
     /// <summary>Thickness, in pixels, of the draggable splitter between the image and signal panes.</summary>
     float ImageSplitterThickness => 6f * UiScale.Current;
 
-    const float DefaultImagePaneHeightFraction = 0.6f;
+    const float DefaultImagePaneHeightFraction = 0.7f;
 
     /// <summary>
     /// Clamps the image pane height so it never shrinks below its minimum height given
@@ -537,25 +537,7 @@ public class DataPanel
                                                 }
                                             }
 
-                                            if (DigitalInSeries != null)
-                                            {
-                                                // NB: Plot a dummy line to ensure the digital lines are plotted above the axis line.
-                                                float* xs = stackalloc float[2] { 0, 1 };
-                                                float* ys = stackalloc float[2] { 0, 0 };
-                                                ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, 0.0f);
-                                                ImPlot.PlotDigital("##dummy", xs, ys, 2);
-                                                ImPlot.PopStyleVar();
-
-                                                for (int i = 0; i < DigitalInSeries.Series.Length; i++)
-                                                {
-                                                    if (!digitalInLegend.IsVisible(i))
-                                                        continue;
-
-                                                    var line = DigitalInSeries.Series[i];
-                                                    ImPlot.SetNextFillStyle(digitalInLegend.ColorOf(i));
-                                                    ImPlot.PlotDigitalG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
-                                                }
-                                            }
+                                            PlotDigitalInSeries();
 
                                             ImPlot.EndPlot();
                                         }
@@ -570,6 +552,7 @@ public class DataPanel
                                         {
                                             PlotBufferSizeControl(ref bufferSize);
                                             eulerAngleLegend.DrawSameLine();
+                                            digitalInLegend.DrawSameLine();
                                         }
 
                                         ImGui.EndChild();
@@ -577,7 +560,7 @@ public class DataPanel
                                         if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
                                         {
                                             ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -200.0, 200.0, ImPlotCond.Always);
+                                            ImPlot.SetupAxisLimits(ImAxis.Y1, -185.0, 365.0, ImPlotCond.Always);
 
                                             if (EulerAnglesSeries != null)
                                             {
@@ -591,6 +574,8 @@ public class DataPanel
                                                     ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
                                                 }
                                             }
+
+                                            PlotDigitalInSeries();
 
                                             ImPlot.EndPlot();
                                         }
@@ -740,5 +725,28 @@ public class DataPanel
         }
 
         if (AcquisitionStatus) ImGui.EndDisabled();
+    }
+
+    unsafe void PlotDigitalInSeries()
+    {
+        if (DigitalInSeries != null)
+        {
+            // NB: Plot a dummy line to ensure the digital lines are plotted above the axis line.
+            float* xs = stackalloc float[2] { 0, 1 };
+            float* ys = stackalloc float[2] { 0, 0 };
+            ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, 0.0f);
+            ImPlot.PlotDigital("##dummy", xs, ys, 2);
+            ImPlot.PopStyleVar();
+
+            for (int i = 0; i < DigitalInSeries.Series.Length; i++)
+            {
+                if (!digitalInLegend.IsVisible(i))
+                    continue;
+
+                var line = DigitalInSeries.Series[i];
+                ImPlot.SetNextFillStyle(digitalInLegend.ColorOf(i));
+                ImPlot.PlotDigitalG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
+            }
+        }
     }
 }
