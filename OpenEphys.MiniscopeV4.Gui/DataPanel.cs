@@ -141,7 +141,7 @@ public class DataPanel
     /// <summary>Thickness, in pixels, of the draggable splitter between the image and signal panes.</summary>
     float ImageSplitterThickness => 6f * UiScale.Current;
 
-    const float DefaultImagePaneHeightFraction = 0.6f;
+    const float DefaultImagePaneHeightFraction = 0.7f;
 
     /// <summary>
     /// Clamps the image pane height so it never shrinks below its minimum height given
