@@ -61,12 +61,16 @@ sealed class PlotLegend
     public int Count => entries.Length;
 
     /// <summary>Gets whether the line at <paramref name="index"/> is currently shown.</summary>
-    public bool IsVisible(int index) => entries[index].Visible;
+    public bool IsVisible(int index) => index < Count && entries[index].Visible;
 
-    void ToggleVisibility(int index) => entries[index].Visible = !entries[index].Visible;
+    void ToggleVisibility(int index)
+    {
+        if (index < Count)
+            entries[index].Visible = !entries[index].Visible;
+    }
 
     /// <summary>Gets the color of the line at <paramref name="index"/>.</summary>
-    public Vector4 ColorOf(int index) => entries[index].Color;
+    public Vector4 ColorOf(int index) => index < Count ? entries[index].Color : Vector4.Zero;
 
     /// <summary>
     /// Renders the legend as a row of clickable color swatches with labels, each placed on the current line
