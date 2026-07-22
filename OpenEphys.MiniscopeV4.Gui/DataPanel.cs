@@ -537,25 +537,7 @@ public class DataPanel
                                                 }
                                             }
 
-                                            if (DigitalInSeries != null)
-                                            {
-                                                // NB: Plot a dummy line to ensure the digital lines are plotted above the axis line.
-                                                float* xs = stackalloc float[2] { 0, 1 };
-                                                float* ys = stackalloc float[2] { 0, 0 };
-                                                ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, 0.0f);
-                                                ImPlot.PlotDigital("##dummy", xs, ys, 2);
-                                                ImPlot.PopStyleVar();
-
-                                                for (int i = 0; i < DigitalInSeries.Series.Length; i++)
-                                                {
-                                                    if (!digitalInLegend.IsVisible(i))
-                                                        continue;
-
-                                                    var line = DigitalInSeries.Series[i];
-                                                    ImPlot.SetNextFillStyle(digitalInLegend.ColorOf(i));
-                                                    ImPlot.PlotDigitalG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
-                                                }
-                                            }
+                                            PlotDigitalInSeries();
 
                                             ImPlot.EndPlot();
                                         }
@@ -570,6 +552,7 @@ public class DataPanel
                                         {
                                             PlotBufferSizeControl(ref bufferSize);
                                             eulerAngleLegend.DrawSameLine();
+                                            digitalInLegend.DrawSameLine();
                                         }
 
                                         ImGui.EndChild();
@@ -591,6 +574,8 @@ public class DataPanel
                                                     ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
                                                 }
                                             }
+
+                                            PlotDigitalInSeries();
 
                                             ImPlot.EndPlot();
                                         }
@@ -740,5 +725,28 @@ public class DataPanel
         }
 
         if (AcquisitionStatus) ImGui.EndDisabled();
+    }
+
+    unsafe void PlotDigitalInSeries()
+    {
+        if (DigitalInSeries != null)
+        {
+            // NB: Plot a dummy line to ensure the digital lines are plotted above the axis line.
+            float* xs = stackalloc float[2] { 0, 1 };
+            float* ys = stackalloc float[2] { 0, 0 };
+            ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, 0.0f);
+            ImPlot.PlotDigital("##dummy", xs, ys, 2);
+            ImPlot.PopStyleVar();
+
+            for (int i = 0; i < DigitalInSeries.Series.Length; i++)
+            {
+                if (!digitalInLegend.IsVisible(i))
+                    continue;
+
+                var line = DigitalInSeries.Series[i];
+                ImPlot.SetNextFillStyle(digitalInLegend.ColorOf(i));
+                ImPlot.PlotDigitalG(digitalInLabels[i], line.Getter, null, DigitalInSeries.Count);
+            }
+        }
     }
 }
