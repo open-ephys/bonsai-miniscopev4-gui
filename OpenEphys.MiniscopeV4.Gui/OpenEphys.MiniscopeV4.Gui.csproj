@@ -1,31 +1,52 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <Title>OpenEphys.MiniscopeV4.Gui</Title>
-    <Description>Bonsai library that contains a custom GUI for using Miniscopes.</Description>
-    <PackageTags>Bonsai Rx Open Ephys Miniscope Imaging Calcium Gui</PackageTags>
-    <TargetFramework>net472</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <Features>strict</Features>
-    <TargetPlatform>x64</TargetPlatform>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Title>OpenEphys.MiniscopeV4.Gui</Title>
+		<Description>Bonsai library that contains a custom GUI for using Miniscopes.</Description>
+		<PackageTags>Bonsai Rx Open Ephys Miniscope Imaging Calcium Gui</PackageTags>
+		<TargetFramework>net472</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<Features>strict</Features>
+		<TargetPlatform>x64</TargetPlatform>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Bonsai.Design" Version="2.9.1" />
-    <PackageReference Include="Bonsai.ImGui" Version="0.2.0" />
-    <PackageReference Include="Bonsai.ImGui.Design" Version="0.2.0" />
-    <PackageReference Include="Bonsai.ImGui.Visualizers" Version="0.2.0" />
-    <PackageReference Include="Bonsai.ImPlot" Version="0.2.0" />
-    <PackageReference Include="Bonsai.Vision" Version="2.9.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="OpenEphys.Miniscope" Version="0.5.0" />
-    <PackageReference Include="OpenEphys.Commutator" Version="0.3.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Bonsai.Design" Version="2.9.1" />
+		<PackageReference Include="Bonsai.ImGui" Version="0.2.0" />
+		<PackageReference Include="Bonsai.ImGui.Design" Version="0.2.0" />
+		<PackageReference Include="Bonsai.ImGui.Visualizers" Version="0.2.0" />
+		<PackageReference Include="Bonsai.ImPlot" Version="0.2.0" />
+		<PackageReference Include="Bonsai.Vision" Version="2.9.1" />
+		<PackageReference Include="OpenEphys.Miniscope" Version="0.5.0" />
+		<PackageReference Include="OpenEphys.Commutator" Version="0.3.1" />
+		<PackageReference Include="YamlDotNet" Version="16.3.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="**\*.bonsai" />
-    <EmbeddedResource Include="Fonts\*" />
-    <EmbeddedResource Include="Resources\icon.ico" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="**\*.bonsai" />
+		<EmbeddedResource Include="Fonts\*" />
+		<EmbeddedResource Include="Resources\icon.ico" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<SettingsSchema>Configuration\miniscope-config.schema.json</SettingsSchema>
+		<SettingsGenerated>Configuration\Settings.cs</SettingsGenerated>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="$(SettingsGenerated)" />
+	</ItemGroup>
+
+	<Target Name="GenerateSettings" Condition="'$(DesignTimeBuild)' != 'true'" Inputs="$(SettingsSchema);..\.config\dotnet-tools.json" Outputs="$(SettingsGenerated)">
+		<Exec Command="dotnet tool restore" />
+		<Exec Command="dotnet bonsai.sgen &quot;$(SettingsSchema)&quot; -o Configuration --name Settings --namespace OpenEphys.MiniscopeV4.Gui --serializer yaml" />
+	</Target>
+
+	<Target Name="IncludeGeneratedSettings" BeforeTargets="BeforeCompile;CoreCompile" DependsOnTargets="GenerateSettings">
+		<ItemGroup>
+			<Compile Include="$(SettingsGenerated)" />
+		</ItemGroup>
+	</Target>
+
 </Project>

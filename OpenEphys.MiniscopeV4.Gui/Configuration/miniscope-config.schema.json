@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MiniscopeConfiguration",
+  "description": "Root configuration object persisted to a single JSON file and used as the source of truth for the GUI and the workflow.",
+  "$defs": {
+    "GainV4": {
+      "title": "GainV4",
+      "description": "Image sensor gain.",
+      "type": "string",
+      "x-sgen-typename": "OpenEphys.Miniscope.GainV4",
+      "enum": [ "" ]
+    },
+    "FrameRateV4": {
+      "title": "FrameRateV4",
+      "description": "Image sensor frame rate.",
+      "type": "string",
+      "x-sgen-typename": "OpenEphys.Miniscope.FrameRateV4",
+      "enum": [ "" ]
+    },
+    "MiniscopeDaqDigitalIn": {
+      "title": "MiniscopeDaqDigitalIn",
+      "description": "Digital input line.",
+      "type": "string",
+      "x-sgen-typename": "OpenEphys.Miniscope.MiniscopeDaqDigitalIn",
+      "enum": [ "" ]
+    },
+    "PathSuffix": {
+      "title": "PathSuffix",
+      "description": "File name suffix strategy.",
+      "type": "string",
+      "x-sgen-typename": "Bonsai.IO.PathSuffix",
+      "enum": [ "" ]
+    },
+    "Scalar": {
+      "title": "Scalar",
+      "description": "A four-component OpenCV scalar.",
+      "type": "object",
+      "x-sgen-typename": "OpenCV.Net.Scalar"
+    },
+    "CameraStatus": {
+      "title": "CameraStatus",
+      "description": "Camera acquisition selection.",
+      "type": "object",
+      "properties": {
+        "CameraIndex": {
+          "description": "The index of the camera to connect to.",
+          "type": "integer",
+          "default": 0
+        }
+      }
+    },
+    "MiniscopeSettings": {
+      "title": "MiniscopeSettings",
+      "description": "Miniscope acquisition settings displayed and edited by the GUI.",
+      "type": "object",
+      "properties": {
+        "LedBrightness": {
+          "description": "The brightness of the excitation LED, as a percentage.",
+          "type": "number",
+          "default": 0
+        },
+        "Focus": {
+          "description": "The electrowetting lens focus value.",
+          "type": "number",
+          "default": 0
+        },
+        "SensorGain": {
+          "description": "The image sensor gain.",
+          "allOf": [ { "$ref": "#/$defs/GainV4" } ],
+          "default": "Low"
+        },
+        "FrameRate": {
+          "description": "The image sensor frame rate.",
+          "allOf": [ { "$ref": "#/$defs/FrameRateV4" } ],
+          "default": "Fps30"
+        },
+        "LedRespectsDigitalIn": {
+          "description": "The digital input line that gates the excitation LED, if any.",
+          "allOf": [ { "$ref": "#/$defs/MiniscopeDaqDigitalIn" } ],
+          "default": "None"
+        }
+      }
+    },
+    "CommutatorSettings": {
+      "title": "CommutatorSettings",
+      "description": "Commutator connection settings.",
+      "type": "object",
+      "properties": {
+        "PortName": {
+          "description": "The name of the serial port the commutator is connected to.",
+          "type": "string",
+          "default": ""
+        },
+        "Enable": {
+          "description": "Whether the commutator motor is enabled.",
+          "type": "boolean",
+          "default": true
+        },
+        "EnableLed": {
+          "description": "Whether the commutator indication LED is enabled.",
+          "type": "boolean",
+          "default": true
+        },
+        "AutoConnect": {
+          "description": "Whether to automatically connect the commutator when acquisition starts.",
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "HardwareSettings": {
+      "title": "HardwareSettings",
+      "description": "Combined Miniscope and commutator settings.",
+      "type": "object",
+      "properties": {
+        "Miniscope": {
+          "description": "The Miniscope acquisition settings.",
+          "allOf": [ { "$ref": "#/$defs/MiniscopeSettings" } ],
+          "default": {}
+        },
+        "Commutator": {
+          "description": "The commutator connection and settings.",
+          "allOf": [ { "$ref": "#/$defs/CommutatorSettings" } ],
+          "default": {}
+        }
+      }
+    },
+    "SaturationSettings": {
+      "title": "SaturationSettings",
+      "description": "Saturation overlay settings.",
+      "type": "object",
+      "properties": {
+        "Threshold": {
+          "description": "The minimum pixel intensity considered saturated.",
+          "type": "integer",
+          "default": 192
+        },
+        "Color": {
+          "description": "The color used to highlight saturated pixels.",
+          "allOf": [ { "$ref": "#/$defs/Scalar" } ],
+          "default": {}
+        }
+      }
+    },
+    "DffSettings": {
+      "title": "DffSettings",
+      "description": "dF/F calculation settings.",
+      "type": "object",
+      "properties": {
+        "BackgroundFrames": {
+          "description": "The number of frames used to estimate the background.",
+          "type": "integer",
+          "default": 100
+        },
+        "BackgroundThreshold": {
+          "description": "The background threshold.",
+          "type": "number",
+          "default": 14.3
+        },
+        "Sigma": {
+          "description": "The Gaussian smoothing sigma.",
+          "type": "integer",
+          "default": 3
+        }
+      }
+    },
+    "MaxProjectionSettings": {
+      "title": "MaxProjectionSettings",
+      "description": "Max projection settings.",
+      "type": "object",
+      "properties": {}
+    },
+    "OverlaySettings": {
+      "title": "OverlaySettings",
+      "description": "Reference-image overlay settings.",
+      "type": "object",
+      "properties": {
+        "ApplyOverlay": {
+          "description": "Whether the reference image should be applied as an overlay.",
+          "type": "boolean",
+          "default": false
+        },
+        "ReferencePath": {
+          "description": "The path to the reference image file to overlay.",
+          "type": "string",
+          "default": ""
+        }
+      }
+    },
+    "DataDisplaySettings": {
+      "title": "DataDisplaySettings",
+      "description": "Data panel display settings.",
+      "type": "object",
+      "properties": {
+        "BufferSize": {
+          "description": "The rolling buffer size, in samples, used by the time series plots.",
+          "type": "integer",
+          "default": 100
+        },
+        "Saturation": {
+          "description": "The saturation overlay settings.",
+          "allOf": [ { "$ref": "#/$defs/SaturationSettings" } ],
+          "default": {}
+        },
+        "Dff": {
+          "description": "The dF/F calculation settings.",
+          "allOf": [ { "$ref": "#/$defs/DffSettings" } ],
+          "default": {}
+        },
+        "MaxProjection": {
+          "description": "The max pixel-value projection settings.",
+          "allOf": [ { "$ref": "#/$defs/MaxProjectionSettings" } ],
+          "default": {}
+        },
+        "Overlay": {
+          "description": "The reference-image overlay settings.",
+          "allOf": [ { "$ref": "#/$defs/OverlaySettings" } ],
+          "default": {}
+        }
+      }
+    },
+    "FileSettings": {
+      "title": "FileSettings",
+      "description": "File saving settings.",
+      "type": "object",
+      "properties": {
+        "TriggerMode": {
+          "description": "Whether recording is started on a trigger (true) or manually (false).",
+          "type": "boolean",
+          "default": false
+        },
+        "CompressVideo": {
+          "description": "Whether recordings should be compressed.",
+          "type": "boolean",
+          "default": false
+        },
+        "FileName": {
+          "description": "The file name template used to save Miniscope data.",
+          "type": "string",
+          "default": ""
+        },
+        "Suffix": {
+          "description": "The suffix appended to the file name when saving Miniscope data.",
+          "allOf": [ { "$ref": "#/$defs/PathSuffix" } ],
+          "default": "FileCount"
+        },
+        "RecordingDuration": {
+          "description": "The configured recording duration, in seconds.",
+          "type": "integer",
+          "default": 600
+        },
+        "UseRecordDuration": {
+          "description": "Whether recording should automatically stop after RecordingDuration seconds.",
+          "type": "boolean",
+          "default": false
+        },
+        "TriggerInput": {
+          "description": "Which digital input is used to trigger recording.",
+          "allOf": [ { "$ref": "#/$defs/MiniscopeDaqDigitalIn" } ],
+          "default": "DigitalIn0"
+        },
+        "AutomaticRestart": {
+          "description": "Whether a new recording should start automatically each time the recording duration elapses.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "Camera": {
+      "description": "Camera acquisition selection.",
+      "allOf": [ { "$ref": "#/$defs/CameraStatus" } ],
+      "default": {}
+    },
+    "Hardware": {
+      "description": "The Miniscope and commutator settings.",
+      "allOf": [ { "$ref": "#/$defs/HardwareSettings" } ],
+      "default": {}
+    },
+    "Display": {
+      "description": "The data panel display settings.",
+      "allOf": [ { "$ref": "#/$defs/DataDisplaySettings" } ],
+      "default": {}
+    },
+    "File": {
+      "description": "The file saving settings.",
+      "allOf": [ { "$ref": "#/$defs/FileSettings" } ],
+      "default": {}
+    }
+  }
+}

@@ -288,7 +288,18 @@ public class FilePanel
 
                 recordRequested = recordButton;
 
-                var updatedFileSettings = new FileSettings(recordButton, triggerMode, isCompressed, fileName, suffix, recordingDurationSeconds, useRecordDuration, triggerInput, automaticRestart);
+                var updatedFileSettings = new FileSettings
+                {
+                    RecordButton = recordButton,
+                    TriggerMode = triggerMode,
+                    CompressVideo = isCompressed,
+                    FileName = fileName,
+                    Suffix = suffix,
+                    RecordingDuration = recordingDurationSeconds,
+                    UseRecordDuration = useRecordDuration,
+                    TriggerInput = triggerInput,
+                    AutomaticRestart = automaticRestart,
+                };
 
                 observer.OnNext(Tuple.Create(layout, updatedFileSettings));
             },

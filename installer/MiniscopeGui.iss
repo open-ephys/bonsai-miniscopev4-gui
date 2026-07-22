@@ -63,7 +63,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 Source: "..\launcher\Run.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "..\launcher\config.json"; DestDir: "{app}"; \
+Source: "..\launcher\config.yml"; DestDir: "{app}"; \
   Flags: onlyifdoesntexist uninsneveruninstall
 
 Source: "..\OpenEphys.MiniscopeV4.Gui\Workflows\MiniscopeGui.bonsai"; \
@@ -93,20 +93,12 @@ Name: "{autodesktop}\{#AppName}"; \
   IconFilename: "{app}\icon.ico"; \
   Comment: "Launch the Miniscope GUI"
 
-Name: "{autodesktop}\{#AppName} Settings"; \
-  Filename: "{app}\config.json"; \
-  Comment: "Edit Miniscope GUI startup settings"
-
 Name: "{group}\{#AppName}"; \
   Filename: "powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Run.ps1"""; \
   WorkingDir: "{app}"; \
   IconFilename: "{app}\icon.ico"; \
   Comment: "Launch the Miniscope GUI"
-
-Name: "{group}\{#AppName} Settings"; \
-  Filename: "{app}\config.json"; \
-  Comment: "Edit Miniscope GUI startup settings"
 
 ; ---------------------------------------------------------------------------
 [Run]
@@ -115,7 +107,7 @@ Name: "{group}\{#AppName} Settings"; \
 Filename: "powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\Run.ps1"" -BootstrapOnly"; \
   WorkingDir: "{app}"; \
-  StatusMsg: "Downloading and installing Bonsai (this might take a while)..."; \
+  StatusMsg: "Downloading and installing dependencies (this might take a while)..."; \
   Flags: runhidden waituntilterminated
 
 Filename: "powershell.exe"; \

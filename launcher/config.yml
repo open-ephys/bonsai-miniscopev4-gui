@@ -1,0 +1,40 @@
+Camera:
+  CameraIndex: 0
+Hardware:
+  Miniscope:
+    LedBrightness: 0
+    Focus: 0
+    SensorGain: Low
+    FrameRate: Fps30
+    LedRespectsDigitalIn: None
+  Commutator:
+    PortName: ''
+    Enable: true
+    EnableLed: true
+    AutoConnect: true
+Display:
+  BufferSize: 100
+  Saturation:
+    Threshold: 160
+    Color:
+      Val0: 0
+      Val1: 0
+      Val2: 100
+      Val3: 0
+  Dff:
+    BackgroundFrames: 100
+    BackgroundThreshold: 92
+    Sigma: 3
+  MaxProjection: {}
+  Overlay:
+    ApplyOverlay: false
+    ReferencePath: ''
+File:
+  TriggerMode: false
+  CompressVideo: true
+  FileName: ''
+  Suffix: FileCount
+  RecordingDuration: 600
+  UseRecordDuration: true
+  TriggerInput: DigitalIn0
+  AutomaticRestart: true

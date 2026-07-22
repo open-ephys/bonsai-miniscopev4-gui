@@ -1,5 +1,4 @@
 using Bonsai;
-using Bonsai.Dsp;
 using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
