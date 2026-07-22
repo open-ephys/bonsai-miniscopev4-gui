@@ -79,6 +79,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:FileSettings">
+                <p1:RecordButton>false</p1:RecordButton>
                 <p1:TriggerMode>false</p1:TriggerMode>
                 <p1:CompressVideo>false</p1:CompressVideo>
                 <p1:FileName />
@@ -87,7 +88,6 @@
                 <p1:UseRecordDuration>false</p1:UseRecordDuration>
                 <p1:TriggerInput>None</p1:TriggerInput>
                 <p1:AutomaticRestart>false</p1:AutomaticRestart>
-                <p1:RecordButton>false</p1:RecordButton>
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
@@ -1731,7 +1731,7 @@
                                         <cv:Color>
                                           <cv:Val0>0</cv:Val0>
                                           <cv:Val1>0</cv:Val1>
-                                          <cv:Val2>0</cv:Val2>
+                                          <cv:Val2>255</cv:Val2>
                                           <cv:Val3>0</cv:Val3>
                                         </cv:Color>
                                       </Combinator>
@@ -3010,13 +3010,12 @@
                   <Edge From="2" To="3" Label="Source1" />
                   <Edge From="3" To="4" Label="Source1" />
                   <Edge From="3" To="6" Label="Source1" />
-                  <Edge From="3" To="10" Label="Source1" />
+                  <Edge From="3" To="9" Label="Source1" />
                   <Edge From="4" To="5" Label="Source1" />
                   <Edge From="6" To="7" Label="Source1" />
                   <Edge From="7" To="8" Label="Source1" />
-                  <Edge From="8" To="9" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
                   <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="11" To="12" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -3432,7 +3431,7 @@
             </Expression>
             <Expression xsi:type="HasFlag">
               <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
-                <Value>None</Value>
+                <Value>DigitalIn0</Value>
               </Operand>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
