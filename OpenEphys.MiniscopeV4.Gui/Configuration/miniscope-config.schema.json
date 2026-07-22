@@ -184,6 +184,16 @@
           "description": "The path to the reference image file to overlay.",
           "type": "string",
           "default": ""
+        },
+        "ReferenceColor": {
+          "description": "The color used to tint the reference image.",
+          "allOf": [ { "$ref": "#/$defs/Scalar" } ],
+          "default": {}
+        },
+        "LiveColor": {
+          "description": "The color used to tint the live image.",
+          "allOf": [ { "$ref": "#/$defs/Scalar" } ],
+          "default": {}
         }
       }
     },

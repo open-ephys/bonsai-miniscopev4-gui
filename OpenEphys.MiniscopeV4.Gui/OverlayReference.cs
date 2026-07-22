@@ -8,13 +8,13 @@ using System.Reactive.Linq;
 namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
-/// Superimposes a saved reference image over the live image using a two-color overlay: the live frame
-/// is rendered green and the reference is rendered magenta, so overlapping regions appear white. The
-/// reference must match the live frame's dimensions; a mismatched or unreadable image is rejected with
-/// a warning and the live frame is passed through unchanged.
+/// Superimposes a saved reference image over the live image using a multi-color overlay: each grayscale
+/// source is tinted by its own user-selected color (<see cref="OverlaySettings.ReferenceColor"/> and
+/// <see cref="OverlaySettings.LiveColor"/>) and the tinted results are added together, so overlapping
+/// bright regions blend towards the combination of both colors.
 /// </summary>
 [Combinator]
-[Description("Superimposes a reference image over the live image using a green/magenta two-color overlay.")]
+[Description("Superimposes a reference image over the live image, tinting each with its own configurable color.")]
 public class OverlayReference
 {
     /// <summary>
@@ -30,6 +30,9 @@ public class OverlayReference
             IplImage referenceImage = null;
             IplImage currentImage = null;
             IplImage compositeImage = null;
+            IplImage scratchReference = null;
+            IplImage scratchLive = null;
+            IplImage[] channelBuffers = null;
             string cachedPath = null;
 
             // NB: Expect this to be a BehaviorSubject, so we can take the first value immediately.
@@ -69,6 +72,23 @@ public class OverlayReference
                     {
                         currentImage?.Dispose();
                         currentImage = new IplImage(image.Size, IplDepth.U8, 1);
+                        scratchReference?.Dispose();
+                        scratchReference = new IplImage(image.Size, IplDepth.U8, 1);
+                        scratchLive?.Dispose();
+                        scratchLive = new IplImage(image.Size, IplDepth.U8, 1);
+
+                        if (channelBuffers != null)
+                        {
+                            foreach (var buffer in channelBuffers)
+                                buffer.Dispose();
+                        }
+
+                        channelBuffers = new[]
+                        {
+                            new IplImage(image.Size, IplDepth.U8, 1),
+                            new IplImage(image.Size, IplDepth.U8, 1),
+                            new IplImage(image.Size, IplDepth.U8, 1),
+                        };
                     }
 
                     if (compositeImage == null || compositeImage.Width != image.Width || compositeImage.Height != image.Height)
@@ -80,8 +100,30 @@ public class OverlayReference
 
                     CV.CvtColor(image, currentImage, ColorConversion.Bgr2Gray);
 
-                    // NB: BGR channel order B = reference, G = live. Overlapping regions appear yellow
-                    CV.Merge(referenceImage, currentImage, null, null, compositeImage);
+                    // NB: BGR channel order. Each grayscale source is scaled by its color's weight for that
+                    // channel, then the two scaled images are added together (saturating), so overlapping
+                    // bright regions blend towards the additive combination of both colors.
+                    Span<double> referenceWeights = stackalloc double[]
+                    {
+                        overlay.ReferenceColor.Val0 / 255.0,
+                        overlay.ReferenceColor.Val1 / 255.0,
+                        overlay.ReferenceColor.Val2 / 255.0,
+                    };
+                    Span<double> liveWeights = stackalloc double[]
+                    {
+                        overlay.LiveColor.Val0 / 255.0,
+                        overlay.LiveColor.Val1 / 255.0,
+                        overlay.LiveColor.Val2 / 255.0,
+                    };
+
+                    for (int channel = 0; channel < 3; channel++)
+                    {
+                        CV.ConvertScale(referenceImage, scratchReference, referenceWeights[channel], 0);
+                        CV.ConvertScale(currentImage, scratchLive, liveWeights[channel], 0);
+                        CV.Add(scratchReference, scratchLive, channelBuffers[channel], null);
+                    }
+
+                    CV.Merge(channelBuffers[0], channelBuffers[1], channelBuffers[2], null, compositeImage);
                     observer.OnNext(compositeImage);
                 },
                 observer.OnError,
@@ -94,6 +136,14 @@ public class OverlayReference
                     referenceImage?.Dispose(); referenceImage = null;
                     currentImage?.Dispose(); currentImage = null;
                     compositeImage?.Dispose(); compositeImage = null;
+                    scratchReference?.Dispose(); scratchReference = null;
+                    scratchLive?.Dispose(); scratchLive = null;
+                    if (channelBuffers != null)
+                    {
+                        foreach (var buffer in channelBuffers)
+                            buffer.Dispose();
+                        channelBuffers = null;
+                    }
                 }));
         });
     }
