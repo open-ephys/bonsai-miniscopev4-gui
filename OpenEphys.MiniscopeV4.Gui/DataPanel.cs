@@ -517,11 +517,13 @@ public class DataPanel
                                                 System.Diagnostics.Process.Start("explorer.exe", dir);
                                         }
 
-                                        if (string.IsNullOrEmpty(overlayReferencePath)) ImGui.BeginDisabled();
+                                        bool fileMissing = string.IsNullOrEmpty(overlayReferencePath) || !File.Exists(overlayReferencePath);
+
+                                        if (fileMissing) ImGui.BeginDisabled();
 
                                         ImGui.Checkbox("Apply Live Overlay", ref applyOverlay);
 
-                                        if (string.IsNullOrEmpty(overlayReferencePath)) ImGui.EndDisabled();
+                                        if (fileMissing) ImGui.EndDisabled();
 
                                         ImGui.Spacing();
 
