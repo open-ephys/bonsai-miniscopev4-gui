@@ -6,8 +6,8 @@ namespace OpenEphys.MiniscopeV4.Gui;
 partial class FileSettings : IEquatable<FileSettings>
 {
     /// <summary>
-    /// Indicates whether the record button is engaged. When TriggerMode is false this starts recording
-    /// directly; when true it arms recording.
+    /// Indicates whether the record button is engaged. When RecordingMode is Trigger this arms
+    /// recording; otherwise it starts recording directly.
     /// </summary>
     [YamlIgnore]
     public bool RecordButton { get; set; }
@@ -16,11 +16,13 @@ partial class FileSettings : IEquatable<FileSettings>
     public bool Equals(FileSettings other) =>
         other is not null &&
         RecordButton == other.RecordButton &&
-        TriggerMode == other.TriggerMode &&
+        RecordingMode == other.RecordingMode &&
         CompressVideo == other.CompressVideo &&
         FileName == other.FileName &&
         Suffix == other.Suffix &&
         RecordingDuration == other.RecordingDuration &&
+        TotalDuration == other.TotalDuration &&
+        UseTotalDuration == other.UseTotalDuration &&
         UseRecordDuration == other.UseRecordDuration &&
         TriggerInput == other.TriggerInput &&
         AutomaticRestart == other.AutomaticRestart;
@@ -30,5 +32,5 @@ partial class FileSettings : IEquatable<FileSettings>
 
     /// <inheritdoc/>
     public override int GetHashCode() =>
-        (RecordButton, TriggerMode, CompressVideo, FileName, Suffix, RecordingDuration, UseRecordDuration, TriggerInput, AutomaticRestart).GetHashCode();
+        (RecordButton, RecordingMode, CompressVideo, FileName, Suffix, RecordingDuration, TotalDuration, UseTotalDuration, UseRecordDuration, TriggerInput, AutomaticRestart).GetHashCode();
 }

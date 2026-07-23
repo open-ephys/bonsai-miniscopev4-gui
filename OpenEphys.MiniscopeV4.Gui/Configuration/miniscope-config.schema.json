@@ -31,6 +31,12 @@
       "x-sgen-typename": "Bonsai.IO.PathSuffix",
       "enum": [ "" ]
     },
+    "RecordingMode": {
+      "title": "RecordingMode",
+      "description": "The recording mode selected in the Recording section of the GUI.",
+      "type": "string",
+      "enum": [ "Manual", "TimedRecording", "Trigger" ]
+    },
     "Scalar": {
       "title": "Scalar",
       "description": "A four-component OpenCV scalar.",
@@ -234,10 +240,10 @@
       "description": "File saving settings.",
       "type": "object",
       "properties": {
-        "TriggerMode": {
-          "description": "Whether recording is started on a trigger (true) or manually (false).",
-          "type": "boolean",
-          "default": false
+        "RecordingMode": {
+          "description": "The recording mode selected in the Recording section of the GUI.",
+          "allOf": [ { "$ref": "#/$defs/RecordingMode" } ],
+          "default": "Manual"
         },
         "CompressVideo": {
           "description": "Whether recordings should be compressed.",
@@ -258,6 +264,16 @@
           "description": "The configured recording duration, in seconds.",
           "type": "integer",
           "default": 600
+        },
+        "TotalDuration": {
+          "description": "The total configured length of a recording (across all files), in seconds.",
+          "type": "integer",
+          "default": 3600
+        },
+        "UseTotalDuration": {
+          "description": "Whether recording should automatically stop after TotalDuration seconds, splitting into multiple files as needed.",
+          "type": "boolean",
+          "default": false
         },
         "UseRecordDuration": {
           "description": "Whether recording should automatically stop after RecordingDuration seconds.",

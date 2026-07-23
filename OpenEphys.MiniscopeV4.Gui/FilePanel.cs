@@ -56,12 +56,13 @@ public class FilePanel
             bool recordRequested = false;
             bool lastRecordButtonInput = false;
             bool recordStateInitialized = false;
+            DateTime? recordingStart = null;
 
             var sourceObserver = Observer.Create<Tuple<GuiLayout, FileSettings>>(value =>
             {
                 var layout = value.Item1;
                 var fileSettings = value.Item2;
-                var triggerMode = fileSettings.TriggerMode;
+                var recordingMode = fileSettings.RecordingMode;
 
                 if (!recordStateInitialized)
                 {
@@ -79,11 +80,23 @@ public class FilePanel
                 fileName = fileSettings.FileName;
                 PathSuffix suffix = fileSettings.Suffix;
                 int recordingDurationSeconds = fileSettings.RecordingDuration;
-                bool useRecordDuration = fileSettings.UseRecordDuration;
+                int totalDurationSeconds = fileSettings.TotalDuration;
+                bool useTotalDuration = fileSettings.UseTotalDuration;
                 bool isCompressed = fileSettings.CompressVideo;
                 bool automaticRestart = fileSettings.AutomaticRestart;
                 var triggerInput = fileSettings.TriggerInput;
                 int triggerIndex = Array.IndexOf(DigitalInValues, triggerInput);
+
+                if (triggerIndex < 1) triggerIndex = 1;
+
+                if (recordButton)
+                {
+                    recordingStart ??= DateTime.Now;
+                }
+                else if (recordingStart != null)
+                {
+                    recordingStart = null;
+                }
 
                 if (layout.ImageExpanded)
                 {
@@ -170,32 +183,48 @@ public class FilePanel
                     ImGui.AlignTextToFramePadding();
                     ImGui.Text("Mode: ");
                     ImGui.SameLine();
-                    if (ImGui.RadioButton("Manual##record_mode_manual", !triggerMode) && triggerMode)
+                    if (ImGui.RadioButton("Manual##record_mode_manual", recordingMode == RecordingMode.Manual))
                     {
-                        triggerMode = false;
+                        recordingMode = RecordingMode.Manual;
                     }
                     ImGui.SameLine();
-                    if (ImGui.RadioButton("Triggered##record_mode_triggered", triggerMode) && !triggerMode)
+                    if (ImGui.RadioButton("Timed Recording##record_mode_timed", recordingMode == RecordingMode.TimedRecording))
                     {
-                        triggerMode = true;
+                        recordingMode = RecordingMode.TimedRecording;
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.RadioButton("Trigger##record_mode_trigger", recordingMode == RecordingMode.Trigger))
+                    {
+                        recordingMode = RecordingMode.Trigger;
                     }
                     if (recordButton) ImGui.EndDisabled();
 
-                    var recordingSettingsHeight = ImGui.GetFrameHeightWithSpacing() * 2 + ImGui.GetStyle().ItemSpacing.Y * 2;
+                    var recordingSettingsHeight = ImGui.GetFrameHeightWithSpacing() * 3 + ImGui.GetStyle().ItemSpacing.Y * 2;
 
                     if (ImGui.BeginChild("##recording_settings", new Vector2(-1, recordingSettingsHeight), ImGuiChildFlags.None))
                     {
-                        if (!triggerMode)
+                        if (recordingMode == RecordingMode.TimedRecording)
                         {
                             if (recordButton) ImGui.BeginDisabled();
-                            ImGui.Checkbox("Use Recording Duration##use_record_duration", ref useRecordDuration);
-
-                            if (!useRecordDuration) ImGui.BeginDisabled();
 
                             if (ImGui.BeginTable("##record_duration_table", 2, ImGuiTableFlags.SizingStretchSame))
                             {
                                 ImGui.TableNextColumn();
+                                if (automaticRestart) ImGui.BeginDisabled();
+                                ImGui.Checkbox("Total Duration##use_total_duration", ref useTotalDuration);
+                                if (automaticRestart) ImGui.EndDisabled();
 
+                                ImGui.TableNextColumn();
+                                if (useTotalDuration) ImGui.BeginDisabled();
+                                ImGui.Checkbox("Auto Restart##automatic_restart", ref automaticRestart);
+                                if (ImGui.BeginItemTooltip())
+                                {
+                                    ImGui.Text("When enabled, a new recording starts automatically each time the\nrecording duration elapses, until you press Stop Recording.");
+                                    ImGui.EndTooltip();
+                                }
+                                if (useTotalDuration) ImGui.EndDisabled();
+
+                                ImGui.TableNextColumn();
                                 ImGui.AlignTextToFramePadding();
                                 ImGui.Text("Duration [s]:");
                                 ImGui.SameLine();
@@ -206,20 +235,35 @@ public class FilePanel
                                 }
 
                                 ImGui.TableNextColumn();
-                                ImGui.Checkbox("Auto Restart##automatic_restart", ref automaticRestart);
-                                if (ImGui.BeginItemTooltip())
+
+                                ImGui.TableNextColumn();
+                                if (useTotalDuration)
                                 {
-                                    ImGui.Text("When enabled, a new recording starts automatically each time the\nrecording duration elapses, until you press Stop Recording.");
-                                    ImGui.EndTooltip();
+                                    ImGui.AlignTextToFramePadding();
+                                    ImGui.Text("Total [s]:");
+                                    ImGui.SameLine();
+                                    ImGui.SetNextItemWidth(-1f);
+                                    if (ImGui.InputInt("##total_duration", ref totalDurationSeconds, 0, 0, ImGuiInputTextFlags.AutoSelectAll))
+                                    {
+                                        totalDurationSeconds = Math.Max(1, totalDurationSeconds);
+                                    }
+                                }
+
+                                ImGui.TableNextColumn();
+                                if (useTotalDuration && recordingDurationSeconds > 0)
+                                {
+                                    ImGui.AlignTextToFramePadding();
+                                    int filesCount = (int)Math.Ceiling((double)totalDurationSeconds / recordingDurationSeconds);
+                                    var endTime = (recordingStart ?? DateTime.Now) + TimeSpan.FromSeconds(totalDurationSeconds);
+                                    ImGui.Text($"{filesCount} file{(filesCount == 1 ? "" : "s")} · ends {endTime:HH:mm:ss}");
                                 }
 
                                 ImGui.EndTable();
                             }
 
-                            if (!useRecordDuration) ImGui.EndDisabled();
                             if (recordButton) ImGui.EndDisabled();
                         }
-                        else
+                        else if (recordingMode == RecordingMode.Trigger)
                         {
                             ImGui.AlignTextToFramePadding();
                             ImGui.Text("Digital Input: ");
@@ -254,7 +298,7 @@ public class FilePanel
                     {
                         Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
                         if (!AcquisitionStatus) ImGui.BeginDisabled();
-                        string recordLabel = !triggerMode
+                        string recordLabel = recordingMode != RecordingMode.Trigger
                             ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
                             : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
                         if (ImGui.Button(recordLabel, recordButtonSize))
@@ -291,12 +335,14 @@ public class FilePanel
                 var updatedFileSettings = new FileSettings
                 {
                     RecordButton = recordButton,
-                    TriggerMode = triggerMode,
+                    RecordingMode = recordingMode,
                     CompressVideo = isCompressed,
                     FileName = fileName,
                     Suffix = suffix,
                     RecordingDuration = recordingDurationSeconds,
-                    UseRecordDuration = useRecordDuration,
+                    TotalDuration = totalDurationSeconds,
+                    UseTotalDuration = useTotalDuration,
+                    UseRecordDuration = recordingMode == RecordingMode.TimedRecording,
                     TriggerInput = triggerInput,
                     AutomaticRestart = automaticRestart,
                 };
