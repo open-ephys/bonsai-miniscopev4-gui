@@ -594,6 +594,9 @@ public class DataPanel
                                 if (ImGui.BeginTabBar("##SignalTabBar"))
                                 {
                                     ImPlotAxisFlags axisFlags = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoMenus | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines | ImPlotAxisFlags.NoTickLabels;
+                                    const float minimumPlotHeight = 160f;
+
+                                    static Vector2 CalculateChildHeight() => new(-1f, Math.Max(minimumPlotHeight, ImGui.GetContentRegionAvail().Y));
 
                                     if (ImGui.BeginTabItem("Euler Angles"))
                                     {
@@ -607,45 +610,50 @@ public class DataPanel
 
                                         ImGui.EndChild();
 
-                                        if (ImPlot.BeginSubplots("##euler_subplots", 2, 1, fillAvailable, signalSubplotFlags, subplotRowRatios, null))
+                                        if (ImGui.BeginChild("##euler_child", CalculateChildHeight()))
                                         {
-                                            if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
+                                            if (ImPlot.BeginSubplots("##euler_subplots", 2, 1, fillAvailable, signalSubplotFlags, subplotRowRatios, null))
                                             {
-                                                const double eulerAxisMin = -185.0, eulerAxisMax = 365.0;
-
-                                                ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                ImPlot.SetupAxisLimits(ImAxis.Y1, eulerAxisMin, eulerAxisMax, ImPlotCond.Always);
-
-                                                double eulerGridStep = ChooseGridStep(eulerAxisMax - eulerAxisMin, ImPlot.GetPlotSize().Y, eulerGridStepCandidates, MinGridPixelSpacing * UiScale.Current);
-                                                DrawPlotGrid(eulerAxisMin, eulerAxisMax, eulerGridStep, FormatDegreeLabel);
-
-                                                if (EulerAnglesSeries != null)
+                                                if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
                                                 {
-                                                    for (int i = 0; i < EulerAnglesSeries.Series.Length; i++)
-                                                    {
-                                                        if (!eulerAngleLegend.IsVisible(i))
-                                                            continue;
+                                                    const double eulerAxisMin = -185.0, eulerAxisMax = 365.0;
 
-                                                        var line = EulerAnglesSeries.Series[i];
-                                                        ImPlot.SetNextLineStyle(eulerAngleLegend.ColorOf(i));
-                                                        ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
+                                                    ImPlot.SetupAxes("", "", axisFlags, axisFlags);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, eulerAxisMin, eulerAxisMax, ImPlotCond.Always);
+
+                                                    double eulerGridStep = ChooseGridStep(eulerAxisMax - eulerAxisMin, ImPlot.GetPlotSize().Y, eulerGridStepCandidates, MinGridPixelSpacing * UiScale.Current);
+                                                    DrawPlotGrid(eulerAxisMin, eulerAxisMax, eulerGridStep, FormatDegreeLabel);
+
+                                                    if (EulerAnglesSeries != null)
+                                                    {
+                                                        for (int i = 0; i < EulerAnglesSeries.Series.Length; i++)
+                                                        {
+                                                            if (!eulerAngleLegend.IsVisible(i))
+                                                                continue;
+
+                                                            var line = EulerAnglesSeries.Series[i];
+                                                            ImPlot.SetNextLineStyle(eulerAngleLegend.ColorOf(i));
+                                                            ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
+                                                        }
                                                     }
+
+                                                    ImPlot.EndPlot();
                                                 }
 
-                                                ImPlot.EndPlot();
+                                                if (ImPlot.BeginPlot("##euler_digital_series", fillAvailable, plotFlags))
+                                                {
+                                                    ImPlot.SetupAxes("", "", axisFlags, axisFlags);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
+
+                                                    PlotDigitalInSeries();
+
+                                                    ImPlot.EndPlot();
+                                                }
                                             }
 
-                                            if (ImPlot.BeginPlot("##euler_digital_series", fillAvailable, plotFlags))
-                                            {
-                                                ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                ImPlot.SetupAxisLimits(ImAxis.Y1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
-
-                                                PlotDigitalInSeries();
-
-                                                ImPlot.EndPlot();
-                                            }
+                                            ImPlot.EndSubplots();
                                         }
-                                        ImPlot.EndSubplots();
+                                        ImGui.EndChild();
 
                                         ImGui.EndTabItem();
                                     }
@@ -663,45 +671,49 @@ public class DataPanel
 
                                         ImGui.EndChild();
 
-                                        if (ImPlot.BeginSubplots("##quaternion_subplots", 2, 1, fillAvailable, signalSubplotFlags, subplotRowRatios, null))
+                                        if (ImGui.BeginChild("##quaternion_child", CalculateChildHeight()))
                                         {
-                                            if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
+                                            if (ImPlot.BeginSubplots("##quaternion_subplots", 2, 1, fillAvailable, signalSubplotFlags, subplotRowRatios, null))
                                             {
-                                                const double quaternionAxisMin = -1.05, quaternionAxisMax = 1.05;
-                                                const double quaternionGridStep = 0.5;
-
-                                                ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                ImPlot.SetupAxisLimits(ImAxis.Y1, quaternionAxisMin, quaternionAxisMax, ImPlotCond.Always);
-
-                                                DrawPlotGrid(quaternionAxisMin, quaternionAxisMax, quaternionGridStep, null);
-
-                                                if (QuaternionSeries != null)
+                                                if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
                                                 {
-                                                    for (int i = 0; i < QuaternionSeries.Series.Length; i++)
-                                                    {
-                                                        if (!quaternionLegend.IsVisible(i))
-                                                            continue;
+                                                    const double quaternionAxisMin = -1.05, quaternionAxisMax = 1.05;
+                                                    const double quaternionGridStep = 0.5;
 
-                                                        var line = QuaternionSeries.Series[i];
-                                                        ImPlot.SetNextLineStyle(quaternionLegend.ColorOf(i));
-                                                        ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
+                                                    ImPlot.SetupAxes("", "", axisFlags, axisFlags);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, quaternionAxisMin, quaternionAxisMax, ImPlotCond.Always);
+
+                                                    DrawPlotGrid(quaternionAxisMin, quaternionAxisMax, quaternionGridStep, null);
+
+                                                    if (QuaternionSeries != null)
+                                                    {
+                                                        for (int i = 0; i < QuaternionSeries.Series.Length; i++)
+                                                        {
+                                                            if (!quaternionLegend.IsVisible(i))
+                                                                continue;
+
+                                                            var line = QuaternionSeries.Series[i];
+                                                            ImPlot.SetNextLineStyle(quaternionLegend.ColorOf(i));
+                                                            ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
+                                                        }
                                                     }
+
+                                                    ImPlot.EndPlot();
                                                 }
 
-                                                ImPlot.EndPlot();
+                                                if (ImPlot.BeginPlot("##quaternion_digital_series", fillAvailable, plotFlags))
+                                                {
+                                                    ImPlot.SetupAxes("", "", axisFlags, axisFlags);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
+
+                                                    PlotDigitalInSeries();
+
+                                                    ImPlot.EndPlot();
+                                                }
                                             }
-
-                                            if (ImPlot.BeginPlot("##quaternion_digital_series", fillAvailable, plotFlags))
-                                            {
-                                                ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                ImPlot.SetupAxisLimits(ImAxis.Y1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
-
-                                                PlotDigitalInSeries();
-
-                                                ImPlot.EndPlot();
-                                            }
+                                            ImPlot.EndSubplots();
                                         }
-                                        ImPlot.EndSubplots();
+                                        ImGui.EndChild();
 
                                         ImGui.EndTabItem();
                                     }
@@ -730,23 +742,27 @@ public class DataPanel
                                                 for (int i = 0; i < binCount; i++)
                                                     bins[i] /= max;
 
-                                            if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
+                                            if (ImGui.BeginChild("##histogram_child", CalculateChildHeight()))
                                             {
-                                                double minValue = 0, maxValue = byte.MaxValue, axisOffset = 5;
-                                                int numLabels = histogramAxisTickLabels.Length;
-
-
-                                                ImPlot.SetupAxes("", "", flagsX, flagsY);
-                                                ImPlot.SetupAxisLimits(ImAxis.X1, minValue - axisOffset, maxValue + axisOffset, ImPlotCond.Always);
-                                                ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
-
-                                                fixed (float* binPtr = bins)
+                                                if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
                                                 {
-                                                    ImPlot.PlotBars("##pixel_intensity", binPtr, hist.Bins.GetDimSize(0), 2.0f);
-                                                }
+                                                    double minValue = 0, maxValue = byte.MaxValue, axisOffset = 5;
+                                                    int numLabels = histogramAxisTickLabels.Length;
 
-                                                ImPlot.EndPlot();
+
+                                                    ImPlot.SetupAxes("", "", flagsX, flagsY);
+                                                    ImPlot.SetupAxisLimits(ImAxis.X1, minValue - axisOffset, maxValue + axisOffset, ImPlotCond.Always);
+                                                    ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
+
+                                                    fixed (float* binPtr = bins)
+                                                    {
+                                                        ImPlot.PlotBars("##pixel_intensity", binPtr, hist.Bins.GetDimSize(0), 2.0f);
+                                                    }
+
+                                                    ImPlot.EndPlot();
+                                                }
                                             }
+                                            ImGui.EndChild();
                                         }
 
                                         ImGui.EndTabItem();
