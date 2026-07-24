@@ -23,7 +23,6 @@ partial class FileSettings : IEquatable<FileSettings>
         RecordingDuration == other.RecordingDuration &&
         TotalDuration == other.TotalDuration &&
         UseTotalDuration == other.UseTotalDuration &&
-        UseRecordDuration == other.UseRecordDuration &&
         TriggerInput == other.TriggerInput &&
         AutomaticRestart == other.AutomaticRestart;
 
@@ -32,5 +31,5 @@ partial class FileSettings : IEquatable<FileSettings>
 
     /// <inheritdoc/>
     public override int GetHashCode() =>
-        (RecordButton, RecordingMode, CompressVideo, FileName, Suffix, RecordingDuration, TotalDuration, UseTotalDuration, UseRecordDuration, TriggerInput, AutomaticRestart).GetHashCode();
+        (RecordButton, RecordingMode, CompressVideo, FileName, Suffix, RecordingDuration, TotalDuration, UseTotalDuration, TriggerInput, AutomaticRestart).GetHashCode();
 }

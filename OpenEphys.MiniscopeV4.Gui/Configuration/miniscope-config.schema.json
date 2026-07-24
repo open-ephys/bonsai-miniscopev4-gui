@@ -33,9 +33,9 @@
     },
     "RecordingMode": {
       "title": "RecordingMode",
-      "description": "The recording mode selected in the Recording section of the GUI.",
+      "description": "The recording mode selected.",
       "type": "string",
-      "enum": [ "Manual", "TimedRecording", "Trigger" ]
+      "enum": [ "Manual", "Timed", "Trigger" ]
     },
     "Scalar": {
       "title": "Scalar",
@@ -272,11 +272,6 @@
         },
         "UseTotalDuration": {
           "description": "Whether recording should automatically stop after TotalDuration seconds, splitting into multiple files as needed.",
-          "type": "boolean",
-          "default": false
-        },
-        "UseRecordDuration": {
-          "description": "Whether recording should automatically stop after RecordingDuration seconds.",
           "type": "boolean",
           "default": false
         },

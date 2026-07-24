@@ -188,9 +188,9 @@ public class FilePanel
                         recordingMode = RecordingMode.Manual;
                     }
                     ImGui.SameLine();
-                    if (ImGui.RadioButton("Timed Recording##record_mode_timed", recordingMode == RecordingMode.TimedRecording))
+                    if (ImGui.RadioButton("Timed##record_mode_timed", recordingMode == RecordingMode.Timed))
                     {
-                        recordingMode = RecordingMode.TimedRecording;
+                        recordingMode = RecordingMode.Timed;
                     }
                     ImGui.SameLine();
                     if (ImGui.RadioButton("Trigger##record_mode_trigger", recordingMode == RecordingMode.Trigger))
@@ -203,7 +203,7 @@ public class FilePanel
 
                     if (ImGui.BeginChild("##recording_settings", new Vector2(-1, recordingSettingsHeight), ImGuiChildFlags.None))
                     {
-                        if (recordingMode == RecordingMode.TimedRecording)
+                        if (recordingMode == RecordingMode.Timed)
                         {
                             if (recordButton) ImGui.BeginDisabled();
 
@@ -342,7 +342,6 @@ public class FilePanel
                     RecordingDuration = recordingDurationSeconds,
                     TotalDuration = totalDurationSeconds,
                     UseTotalDuration = useTotalDuration,
-                    UseRecordDuration = recordingMode == RecordingMode.TimedRecording,
                     TriggerInput = triggerInput,
                     AutomaticRestart = automaticRestart,
                 };
