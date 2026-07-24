@@ -307,7 +307,7 @@ public class DataPanel
                         SetMaxProjectionReset(true);
 
                     if (!textInputActive && ImGui.IsKeyPressed(ImGuiKey.E))
-                        layout = layout with { ImageExpanded = !layout.ImageExpanded };
+                        layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
 
                     bool expanded = layout.ImageExpanded;
                     if (!expanded)
@@ -395,7 +395,8 @@ public class DataPanel
                                             ImGui.EndTooltip();
                                         }
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
                                     EndControlColumn();
 
@@ -420,7 +421,8 @@ public class DataPanel
                                             satColor = ClampVector4Color(satColor);
                                         }
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
                                     EndControlColumn();
 
@@ -452,7 +454,8 @@ public class DataPanel
                                         if (ImGui.InputInt("##sigma", ref sigma))
                                             sigma = Math.Max(0, sigma);
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
                                     EndControlColumn();
 
@@ -472,7 +475,8 @@ public class DataPanel
                                         if (ImGui.Button("Reset (R)##maxprojection_reset", new Vector2(-1f, 0f)))
                                             SetMaxProjectionReset(true);
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
                                     EndControlColumn();
 
@@ -554,7 +558,8 @@ public class DataPanel
                                             overlayLiveColor = ClampVector4Color(overlayLiveColor);
                                         }
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
 
                                     EndControlColumn();
@@ -852,8 +857,8 @@ public class DataPanel
             ImGui.SetCursorPosY(targetY);
 
         if (ImGui.Button(imageExpanded ? "Collapse (E)##image_expand_toggle" : "Expand (E)##image_expand_toggle", new Vector2(-1f, buttonHeight)))
-            return !imageExpanded;
-        return imageExpanded;
+            return true;
+        return false;
     }
 
     static Vector2 CalculateDisplaySize(Vector2 availableRegion, Vector2 imageSize)

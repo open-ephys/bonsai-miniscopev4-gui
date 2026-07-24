@@ -39,17 +39,19 @@ public class StatusBar
     /// </summary>
     /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
     /// <returns>A sequence of values paired with the status bar state updated from the rendered controls.</returns>
-    public IObservable<Tuple<TSource, CameraStatus>> Process<TSource>(IObservable<Tuple<TSource, CameraStatus>> source)
+    public IObservable<Tuple<GuiLayout, CameraStatus>> Process(IObservable<Tuple<GuiLayout, CameraStatus>> source)
     {
         double elapsedAcquisitionTime = 0;
 
-        return Observable.Create<Tuple<TSource, CameraStatus>>(observer =>
+        return Observable.Create<Tuple<GuiLayout, CameraStatus>>(observer =>
         {
             DateTime? acquisitionStart = null;
             DateTime? recordingStart = null;
 
-            var sourceObserver = Observer.Create<Tuple<TSource, CameraStatus>>(value =>
+            var sourceObserver = Observer.Create<Tuple<GuiLayout, CameraStatus>>(value =>
             {
+                var guiLayout = value.Item1;
+
                 var cameraStatus = value.Item2;
                 var cameraIndex = cameraStatus.CameraIndex;
                 var isConnected = cameraStatus.IsConnected;
@@ -163,7 +165,11 @@ public class StatusBar
                     Paused = paused
                 };
 
-                observer.OnNext(Tuple.Create(value.Item1, updatedCameraStatus));
+                // NB: If the ImageExpanded was requested to be toggled last frame, respect that request here at the top of the current frame.
+                if (guiLayout.ImageExpandedRequested != guiLayout.ImageExpanded)
+                    guiLayout = guiLayout with { ImageExpanded = guiLayout.ImageExpandedRequested };
+
+                observer.OnNext(Tuple.Create(guiLayout, updatedCameraStatus));
             },
             observer.OnError,
             observer.OnCompleted);
