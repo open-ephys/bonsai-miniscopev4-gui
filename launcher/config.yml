@@ -47,6 +47,5 @@ File:
   RecordingDuration: 600
   TotalDuration: 3600
   UseTotalDuration: false
-  UseRecordDuration: false
   TriggerInput: DigitalIn0
   AutomaticRestart: false
