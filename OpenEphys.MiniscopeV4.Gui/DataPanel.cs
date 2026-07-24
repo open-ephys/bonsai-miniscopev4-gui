@@ -294,6 +294,21 @@ public class DataPanel
                         ActiveImage = default;
                     }
 
+                    void SetScreenshotCapture(bool flag) => captureScreenshot = flag;
+                    void SetMaxProjectionReset(bool flag) => resetMaxProjection = flag;
+
+                    bool textInputActive = ImGui.GetIO().WantTextInput;
+                    bool screenshotButtonActive = AcquisitionStatus && !string.IsNullOrEmpty(DataPath);
+
+                    if (screenshotButtonActive && !textInputActive && ImGui.IsKeyPressed(ImGuiKey.S))
+                        SetScreenshotCapture(true);
+
+                    if (!textInputActive && ImGui.IsKeyPressed(ImGuiKey.R))
+                        SetMaxProjectionReset(true);
+
+                    if (!textInputActive && ImGui.IsKeyPressed(ImGuiKey.E))
+                        layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
+
                     bool expanded = layout.ImageExpanded;
                     if (!expanded)
                         ImGui.SameLine();
@@ -361,12 +376,12 @@ public class DataPanel
 
                                         ImGui.Spacing();
 
-                                        if (!AcquisitionStatus || string.IsNullOrEmpty(DataPath)) ImGui.BeginDisabled();
+                                        if (!screenshotButtonActive) ImGui.BeginDisabled();
 
-                                        if (ImGui.Button("Take Screenshot##overlay_screenshot", new Vector2(-1f, ButtonHeight)))
-                                            captureScreenshot = true;
+                                        if (ImGui.Button("Take Screenshot (S)##overlay_screenshot", new Vector2(-1f, ButtonHeight)))
+                                            SetScreenshotCapture(true);
 
-                                        if (!AcquisitionStatus || string.IsNullOrEmpty(DataPath)) ImGui.EndDisabled();
+                                        if (!screenshotButtonActive) ImGui.EndDisabled();
 
                                         if (ImGui.BeginItemTooltip())
                                         {
@@ -380,7 +395,8 @@ public class DataPanel
                                             ImGui.EndTooltip();
                                         }
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
                                     EndControlColumn();
 
@@ -405,7 +421,8 @@ public class DataPanel
                                             satColor = ClampVector4Color(satColor);
                                         }
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
                                     EndControlColumn();
 
@@ -437,7 +454,8 @@ public class DataPanel
                                         if (ImGui.InputInt("##sigma", ref sigma))
                                             sigma = Math.Max(0, sigma);
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
                                     EndControlColumn();
 
@@ -454,10 +472,11 @@ public class DataPanel
                                         ImGui.TextUnformatted("Max pixel-value projection");
                                         ImGui.Spacing();
 
-                                        if (ImGui.Button("Reset##maxprojection_reset", new Vector2(-1f, 0f)))
-                                            resetMaxProjection = true;
+                                        if (ImGui.Button("Reset (R)##maxprojection_reset", new Vector2(-1f, 0f)))
+                                            SetMaxProjectionReset(true);
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
                                     EndControlColumn();
 
@@ -539,7 +558,8 @@ public class DataPanel
                                             overlayLiveColor = ClampVector4Color(overlayLiveColor);
                                         }
 
-                                        layout = layout with { ImageExpanded = RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded) };
+                                        if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
+                                            layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
                                     }
 
                                     EndControlColumn();
@@ -836,9 +856,9 @@ public class DataPanel
         if (targetY > ImGui.GetCursorPosY())
             ImGui.SetCursorPosY(targetY);
 
-        if (ImGui.Button(imageExpanded ? "Collapse##image_expand_toggle" : "Expand##image_expand_toggle", new Vector2(-1f, buttonHeight)))
-            return !imageExpanded;
-        return imageExpanded;
+        if (ImGui.Button(imageExpanded ? "Collapse (E)##image_expand_toggle" : "Expand (E)##image_expand_toggle", new Vector2(-1f, buttonHeight)))
+            return true;
+        return false;
     }
 
     static Vector2 CalculateDisplaySize(Vector2 availableRegion, Vector2 imageSize)

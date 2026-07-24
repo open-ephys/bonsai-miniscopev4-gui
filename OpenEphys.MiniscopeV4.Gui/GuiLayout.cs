@@ -22,6 +22,11 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// Whether the image pane fills the entire data panel. When set, the settings sidebar and the
 /// console are both fully hidden and the image/signal splitter and signal pane are skipped.
 /// </param>
+/// <param name="ImageExpandedRequested">
+/// The Expand/Collapse button has been toggled, and on the next frame it will be drawn as toggled;
+/// this is to remove the one-frame lag that can cause visual flickering in the GUI by changing the <see cref="ImageExpanded"/>
+/// value halfway through the frame, leaving some panels drawn with and some without this value.
+/// </param>
 /// <param name="ImagePaneHeight">
 /// The dragged pixel height of the image pane inside <see cref="DataPanel"/>.
 /// </param>
@@ -36,6 +41,7 @@ public record GuiLayout(
     bool SidebarOpen,
     float RecordingSectionHeight,
     bool ImageExpanded,
+    bool ImageExpandedRequested,
     float ImagePaneHeight,
     bool ConsoleOpen,
     float ConsoleHeight)
@@ -50,6 +56,7 @@ public record GuiLayout(
         SidebarOpen: false,
         RecordingSectionHeight: 0f,
         ImageExpanded: false,
+        ImageExpandedRequested: false,
         ImagePaneHeight: -1f,
         ConsoleOpen: true,
         ConsoleHeight: 130f)
