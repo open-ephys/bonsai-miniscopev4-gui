@@ -40,11 +40,13 @@ Display:
       Val2: 0
       Val3: 0
 File:
-  TriggerMode: false
-  CompressVideo: true
+  RecordingMode: Manual
+  CompressVideo: false
   FileName: ''
   Suffix: FileCount
   RecordingDuration: 600
-  UseRecordDuration: true
+  TotalDuration: 3600
+  UseTotalDuration: false
+  UseRecordDuration: false
   TriggerInput: DigitalIn0
-  AutomaticRestart: true
+  AutomaticRestart: false
