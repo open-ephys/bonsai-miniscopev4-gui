@@ -121,13 +121,7 @@ public class FilePanel
                     recordingStart = null;
                 }
 
-                if (layout.ImageExpanded)
-                {
-                    // SettingsPanel didn't open a shared child this frame (fully hidden), so there's
-                    // nothing here to render into or close.
-                    layout = layout with { RecordingSectionHeight = 0f };
-                }
-                else if (layout.SidebarOpen)
+                if (!layout.ImageExpanded && layout.SidebarOpen)
                 {
                     ImGui.BeginChild("##file_pane", new Vector2(-1f, 0f), ImGuiChildFlags.AutoResizeY);
 
@@ -332,11 +326,7 @@ public class FilePanel
                     }
 
                     ImGui.EndChild();
-                    layout = layout with { RecordingSectionHeight = ImGui.GetItemRectSize().Y };
-                }
-                else
-                {
-                    layout = layout with { RecordingSectionHeight = 0f };
+                    layout = layout with { RecordingSectionHeight = ImGui.GetItemRectSize().Y + ImGui.GetStyle().ItemSpacing.Y };
                 }
 
                 if (!layout.ImageExpanded)

@@ -198,8 +198,7 @@ public class SettingsPanel
                         ImGui.Separator();
                         ImGui.Spacing();
 
-                        float fileReserve = layout.RecordingSectionHeight > 0f ? layout.RecordingSectionHeight + ImGui.GetStyle().ItemSpacing.Y : 0f;
-                        ImGui.BeginChild("##settings_content", new Vector2(-1f, -fileReserve), ImGuiChildFlags.None);
+                        ImGui.BeginChild("##settings_content", new Vector2(-1f, -layout.RecordingSectionHeight), ImGuiChildFlags.None);
 
                         ImGui.SetNextItemOpen(true, ImGuiCond.Once);
                         if (ImGui.CollapsingHeader("Miniscope##miniscope_header"))
