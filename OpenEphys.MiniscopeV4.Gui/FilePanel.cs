@@ -39,6 +39,8 @@ public class FilePanel
     static readonly MiniscopeDaqDigitalIn[] DigitalInValues = (MiniscopeDaqDigitalIn[])Enum.GetValues(typeof(MiniscopeDaqDigitalIn));
     static readonly string[] PathSuffixValues = Enum.GetNames(typeof(PathSuffix));
 
+    static readonly string RecordButtonLabelText = " (Ctrl+R)##record_button";
+
     /// <summary>
     /// Renders the file saving and recording controls and returns an updated <see cref="FileSettings"/> alongside the shared layout.
     /// </summary>
@@ -86,6 +88,27 @@ public class FilePanel
                 bool automaticRestart = fileSettings.AutomaticRestart;
                 var triggerInput = fileSettings.TriggerInput;
                 int triggerIndex = Array.IndexOf(DigitalInValues, triggerInput);
+
+                bool recordButtonActive = AcquisitionStatus;
+
+                void RecordButtonPressed()
+                {
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        if (saveDialogTask == null || saveDialogTask.IsCompleted)
+                        {
+                            shouldStartRecordingWhenCompleted = true;
+                            saveDialogTask = CreateSaveFileDialogTask(fileName);
+                        }
+                    }
+                    else
+                    {
+                        recordButton = !recordButton;
+                    }
+                }
+
+                if (recordButtonActive && !ImGui.GetIO().WantTextInput && ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.R))
+                    RecordButtonPressed();
 
                 if (triggerIndex < 1) triggerIndex = 1;
 
@@ -297,26 +320,15 @@ public class FilePanel
                             recordButton ? Palette.RedActive : Palette.GreenActive))
                     {
                         Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
-                        if (!AcquisitionStatus) ImGui.BeginDisabled();
+                        if (!recordButtonActive) ImGui.BeginDisabled();
                         string recordLabel = recordingMode != RecordingMode.Trigger
-                            ? (recordButton ? "Stop Recording##record_button" : "Record##record_button")
-                            : (recordButton ? "Disarm##record_button" : "Arm Recording##record_button");
+                            ? (recordButton ? "Stop Recording" + RecordButtonLabelText : "Record" + RecordButtonLabelText)
+                            : (recordButton ? "Disarm" + RecordButtonLabelText : "Arm Recording" + RecordButtonLabelText);
                         if (ImGui.Button(recordLabel, recordButtonSize))
                         {
-                            if (string.IsNullOrEmpty(fileName))
-                            {
-                                if (saveDialogTask == null || saveDialogTask.IsCompleted)
-                                {
-                                    shouldStartRecordingWhenCompleted = true;
-                                    saveDialogTask = CreateSaveFileDialogTask(fileName);
-                                }
-                            }
-                            else
-                            {
-                                recordButton = !recordButton;
-                            }
+                            RecordButtonPressed();
                         }
-                        if (!AcquisitionStatus) ImGui.EndDisabled();
+                        if (!recordButtonActive) ImGui.EndDisabled();
                     }
 
                     ImGui.EndChild();
