@@ -76,6 +76,13 @@ public class StatusBar
 
                     ImGui.SetNextItemWidth(60f * UiScale.Current);
                     ImGui.InputInt("##statusbar_index", ref cameraIndex, 0, 0);
+                    if (Tooltip.Begin(allowWhenDisabled: true))
+                    {
+                        Tooltip.AddLine("Index of the Miniscope to acquire from, in the order the cameras are detected (0 is the first camera).");
+                        if (isConnected)
+                            Tooltip.Note("Cannot be changed while acquiring.");
+                        Tooltip.End();
+                    }
 
                     if (isConnected)
                         ImGui.EndDisabled();
@@ -92,6 +99,9 @@ public class StatusBar
                             isConnected = !isConnected;
                         }
                     }
+                    Tooltip.Describe(isConnected
+                        ? "Stop acquiring frames from the Miniscope."
+                        : "Start acquiring frames from the Miniscope at the selected index.");
 
                     ImGui.SameLine();
                     if (!isConnected)
@@ -104,10 +114,20 @@ public class StatusBar
                         paused ? Palette.YellowHovered : Palette.GrayHovered,
                         paused ? Palette.YellowActive : Palette.GrayActive))
                     {
-                        if (ImGui.Button(paused ? "Resume##statusbar_pause" : "Pause##statusbar_pause", pauseButtonSize) || spacePressed)
+                        if (ImGui.Button(paused ? "Resume ( )##statusbar_pause" : "Pause ( )##statusbar_pause", pauseButtonSize) || spacePressed)
                         {
                             paused = !paused;
                         }
+                    }
+                    if (Tooltip.Begin(allowWhenDisabled: true))
+                    {
+                        Tooltip.AddLine(paused
+                            ? "Resume updating the live display and plots. Acquisition and recording are unaffected."
+                            : "Freeze the live display and plots without stopping acquisition or recording.");
+                        Tooltip.AddKeyboardShortcut("Space", "pause or resume the display");
+                        if (!isConnected)
+                            Tooltip.Note("Available only while acquiring.");
+                        Tooltip.End();
                     }
 
                     if (!isConnected)

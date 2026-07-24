@@ -383,16 +383,17 @@ public class DataPanel
 
                                         if (!screenshotButtonActive) ImGui.EndDisabled();
 
-                                        if (ImGui.BeginItemTooltip())
+                                        if (Tooltip.Begin(allowWhenDisabled: true))
                                         {
-                                            ImGui.Text("Take a screenshot of the current image.");
+                                            Tooltip.AddLine("Save a snapshot of the current image to the data folder.");
+                                            Tooltip.AddKeyboardShortcut("S", "take a snapshot at any time");
 
                                             if (!AcquisitionStatus)
-                                                ImGui.Text("Cannot take a screenshot while acquisition is stopped.");
-                                            else if (string.IsNullOrEmpty(DataPath))
-                                                ImGui.Text("Cannot take a screenshot because the data path is not set.");
+                                                Tooltip.Note("Unavailable while acquisition is stopped.");
+                                            if (string.IsNullOrEmpty(DataPath))
+                                                Tooltip.Note("Unavailable until a data path is set.");
 
-                                            ImGui.EndTooltip();
+                                            Tooltip.End();
                                         }
 
                                         if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
@@ -413,6 +414,7 @@ public class DataPanel
                                         ImGui.TextUnformatted("Threshold:");
                                         ImGui.SetNextItemWidth(-1f);
                                         ImGui.SliderInt("##saturation_threshold", ref satThreshold, byte.MinValue, byte.MaxValue - 1, ImGuiSliderFlags.AlwaysClamp);
+                                        Tooltip.Slider($"Pixels above this intensity value [{byte.MinValue} - {byte.MaxValue - 1}] are highlighted as saturated.");
                                         ImGui.Spacing();
 
                                         ImGui.TextUnformatted("Color:");
@@ -420,6 +422,7 @@ public class DataPanel
                                         {
                                             satColor = ClampVector4Color(satColor);
                                         }
+                                        Tooltip.Describe("Color used to highlight saturated pixels. Click to change it.");
 
                                         if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
                                             layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
@@ -441,18 +444,21 @@ public class DataPanel
                                         int backgroundFramesMin = 2, backgroundFramesMax = 1000;
                                         if (ImGui.InputInt("##background_frames", ref backgroundFrames))
                                             backgroundFrames = Math.Max(backgroundFramesMin, Math.Min(backgroundFramesMax, backgroundFrames));
+                                        Tooltip.Describe($"Number of frames averaged to form the baseline (F) for the dF/F calculation [{backgroundFramesMin} - {backgroundFramesMax}].");
                                         ImGui.Spacing();
 
                                         ImGui.TextUnformatted("Background threshold:");
                                         ImGui.SetNextItemWidth(-1f);
                                         double bgThreshMin = 0, bgThreshMax = 255;
                                         ImGui.SliderScalar("##background_threshold", ImGuiDataType.Double, &backgroundThreshold, &bgThreshMin, &bgThreshMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
+                                        Tooltip.Slider($"Minimum baseline intensity [{bgThreshMin} - {bgThreshMax}] for a pixel to be included in the dF/F image.");
                                         ImGui.Spacing();
 
                                         ImGui.TextUnformatted("Sigma (px):");
                                         ImGui.SetNextItemWidth(-1f);
                                         if (ImGui.InputInt("##sigma", ref sigma))
                                             sigma = Math.Max(0, sigma);
+                                        Tooltip.Describe("Standard deviation, in pixels, of the Gaussian blur applied before computing dF/F. Set to 0 to disable blurring.");
 
                                         if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
                                             layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
@@ -474,6 +480,13 @@ public class DataPanel
 
                                         if (ImGui.Button("Reset (R)##maxprojection_reset", new Vector2(-1f, 0f)))
                                             SetMaxProjectionReset(true);
+
+                                        if (Tooltip.Begin(allowWhenDisabled: true))
+                                        {
+                                            Tooltip.AddLine("Clear the accumulated projection and start building it again from the current frame.");
+                                            Tooltip.AddKeyboardShortcut("R", "reset the max projection accumulation");
+                                            Tooltip.End();
+                                        }
 
                                         if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
                                             layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
@@ -519,6 +532,7 @@ public class DataPanel
                                                 (dlg) => (dlg as OpenFileDialog).FileName);
                                             }
                                         }
+                                        Tooltip.Describe("Choose a reference image (e.g., a previous screenshot) to overlay on the live view.");
 
                                         if (overlayDialogTask != null && overlayDialogTask.IsCompleted)
                                         {
@@ -535,12 +549,20 @@ public class DataPanel
                                             if (Directory.Exists(dir))
                                                 System.Diagnostics.Process.Start("explorer.exe", dir);
                                         }
+                                        Tooltip.Describe("Open the data folder in File Explorer to browse for previous screenshots.");
 
                                         bool fileMissing = string.IsNullOrEmpty(overlayReferencePath) || !File.Exists(overlayReferencePath);
 
                                         if (fileMissing) ImGui.BeginDisabled();
 
                                         ImGui.Checkbox("Apply Live Overlay", ref applyOverlay);
+                                        if (Tooltip.Begin(allowWhenDisabled: true))
+                                        {
+                                            Tooltip.AddLine("Overlay the live image on the reference image to align the current field of view with a previous one.");
+                                            if (fileMissing)
+                                                Tooltip.Note("Choose a valid reference image first.");
+                                            Tooltip.End();
+                                        }
 
                                         if (fileMissing) ImGui.EndDisabled();
 
@@ -551,12 +573,14 @@ public class DataPanel
                                         {
                                             overlayReferenceColor = ClampVector4Color(overlayReferenceColor);
                                         }
+                                        Tooltip.Describe("Color used to tint the reference image in the overlay. Click to change it.");
 
                                         ImGui.TextUnformatted("Live Color:");
                                         if (ImGui.ColorEdit4("##overlay_live_color", ref overlayLiveColor, ImGuiColorEditFlags.Uint8 | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoOptions | ImGuiColorEditFlags.NoInputs))
                                         {
                                             overlayLiveColor = ClampVector4Color(overlayLiveColor);
                                         }
+                                        Tooltip.Describe("Color used to tint the live image in the overlay. Click to change it.");
 
                                         if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
                                             layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
@@ -856,9 +880,24 @@ public class DataPanel
         if (targetY > ImGui.GetCursorPosY())
             ImGui.SetCursorPosY(targetY);
 
-        if (ImGui.Button(imageExpanded ? "Collapse (E)##image_expand_toggle" : "Expand (E)##image_expand_toggle", new Vector2(-1f, buttonHeight)))
-            return true;
-        return false;
+        bool clicked = ImGui.Button(imageExpanded ? "Collapse (E)##image_expand_toggle" : "Expand (E)##image_expand_toggle", new Vector2(-1f, buttonHeight));
+
+        if (Tooltip.Begin())
+        {
+            if (imageExpanded)
+            {
+                Tooltip.AddLine("Restore the side panels and signal plots.");
+                Tooltip.AddKeyboardShortcut("E", "restore all other controls");
+            }
+            else
+            {
+                Tooltip.AddLine("Expand the image to fill the window, hiding the side panels and signal plots.");
+                Tooltip.AddKeyboardShortcut("E", "expand the image");
+            }
+            Tooltip.End();
+        }
+
+        return clicked;
     }
 
     static Vector2 CalculateDisplaySize(Vector2 availableRegion, Vector2 imageSize)
@@ -889,6 +928,13 @@ public class DataPanel
         if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
         {
             bufferSize = Math.Max(2, bufferSize);
+        }
+        if (Tooltip.Begin(allowWhenDisabled: true))
+        {
+            Tooltip.AddLine("Number of most recent samples shown in the scrolling plots.");
+            if (AcquisitionStatus)
+                Tooltip.Note("Cannot be changed while acquiring data.");
+            Tooltip.End();
         }
 
         if (AcquisitionStatus) ImGui.EndDisabled();

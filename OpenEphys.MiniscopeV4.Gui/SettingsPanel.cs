@@ -151,6 +151,7 @@ public class SettingsPanel
                             ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonHovered));
 
                         ImGui.ArrowButton("##settings_open", ImGuiDir.Right);
+                        Tooltip.Describe("Expand the control panel.");
 
                         if (areaHovered)
                             ImGui.PopStyleColor();
@@ -164,6 +165,7 @@ public class SettingsPanel
                     {
                         if (ImGui.ArrowButton("##settings_close", ImGuiDir.Left))
                             settingsOpen = false;
+                        Tooltip.Describe("Collapse the control panel.");
 
                         ImGui.SameLine();
                         ImGui.Text("Control Panel");
@@ -177,22 +179,14 @@ public class SettingsPanel
                         {
                             requestType = ConfigurationRequestType.ManualSave;
                         }
-                        if (ImGui.BeginItemTooltip())
-                        {
-                            ImGui.Text("Save the current configuration.");
-                            ImGui.EndTooltip();
-                        }
+                        Tooltip.Describe("Export the current settings to a configuration file.");
 
                         ImGui.SameLine();
                         if (ImGui.Button("Import Config##miniscope_load", new Vector2(configButtonWidth, 0)))
                         {
                             requestType = ConfigurationRequestType.ManualLoad;
                         }
-                        if (ImGui.BeginItemTooltip())
-                        {
-                            ImGui.Text("Load an existing configuration.");
-                            ImGui.EndTooltip();
-                        }
+                        Tooltip.Describe("Import settings from a previously exported configuration file.");
 
                         ImGui.Spacing();
                         ImGui.Separator();
@@ -211,18 +205,15 @@ public class SettingsPanel
                             ImGui.SetNextItemWidth(-1f);
                             double focusMin = -100, focusMax = 100;
                             ImGui.SliderScalar("##focus", ImGuiDataType.Double, &focus, &focusMin, &focusMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
+                            Tooltip.Slider($"Adjust the focal plane of the Miniscope's electrowetting lens ({focusMin} - {focusMax}).");
 
                             ImGui.AlignTextToFramePadding();
                             ImGui.Text("LED Brightness: ");
-                            if (ImGui.BeginItemTooltip())
-                            {
-                                ImGui.Text("Change the brightness of the LED.\n\nTo type in a specific value, press `Ctrl` and click on the slider before typing. Press enter to set the brightness value.");
-                                ImGui.EndTooltip();
-                            }
                             ImGui.SameLine();
                             ImGui.SetNextItemWidth(-1f);
                             double brightnessMin = 0, brightnessMax = 100;
                             ImGui.SliderScalar("##ledbrightness", ImGuiDataType.Double, &ledBrightness, &brightnessMin, &brightnessMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
+                            Tooltip.Slider("Set the excitation LED brightness, as a percentage of maximum (0 - 100%).");
 
                             if (ImGui.BeginTable("##row2", 2, ImGuiTableFlags.SizingStretchSame))
                             {
@@ -237,6 +228,7 @@ public class SettingsPanel
                                     if (Enum.TryParse<FrameRateV4>(FrameRateValues[frameRateIndex], out var result))
                                         frameRate = result;
                                 }
+                                Tooltip.Describe("Select the acquisition frame rate, in frames per second (Hz).");
 
                                 ImGui.TableNextColumn();
                                 ImGui.AlignTextToFramePadding();
@@ -249,6 +241,7 @@ public class SettingsPanel
                                     if (Enum.TryParse<GainV4>(SensorGainValues[sensorGainIndex], out var result))
                                         sensorGain = result;
                                 }
+                                Tooltip.Describe("Select the image sensor's analog gain.");
 
                                 ImGui.EndTable();
                             }
@@ -262,6 +255,7 @@ public class SettingsPanel
                             {
                                 ledRespectsDigitalIn = DigitalInValues[digitalInIndex];
                             }
+                            Tooltip.Describe("Gate the excitation LED with a digital input. The LED turns on only while the selected input is high. Set to None to keep the LED always on.");
 
                             ImGui.Spacing();
                             ImGui.Separator();
@@ -326,11 +320,25 @@ public class SettingsPanel
                                 }
                                 ImGui.EndCombo();
                             }
+                            if (Tooltip.Begin(allowWhenDisabled: true))
+                            {
+                                Tooltip.AddLine("Select the serial (COM) port the commutator is connected to.");
+                                if (commutatorConnected)
+                                    Tooltip.Note("Disconnect the commutator to change the port.");
+                                Tooltip.End();
+                            }
 
                             ImGui.SameLine();
                             if (ImGui.Button("Refresh##comrefresh"))
                             {
                                 portNames = SerialPort.GetPortNames();
+                            }
+                            if (Tooltip.Begin(allowWhenDisabled: true))
+                            {
+                                Tooltip.AddLine("Rescan the system for available serial (COM) ports.");
+                                if (commutatorConnected)
+                                    Tooltip.Note("Disconnect the commutator to rescan.");
+                                Tooltip.End();
                             }
 
                             if (commutatorConnected)
@@ -340,11 +348,7 @@ public class SettingsPanel
                             {
                                 ImGui.TableNextColumn();
                                 ImGui.Checkbox("Auto Connect##commutator_autoconnect", ref commutatorAutoConnect);
-                                if (ImGui.BeginItemTooltip())
-                                {
-                                    ImGui.Text("Automatically connect the commutator when acquisition starts, provided a valid COM port is selected.");
-                                    ImGui.EndTooltip();
-                                }
+                                Tooltip.Describe("Automatically connect the commutator when acquisition starts, provided a valid COM port is selected.");
 
                                 ImGui.TableNextColumn();
                                 using (Palette.PushButtonColors(
@@ -357,6 +361,9 @@ public class SettingsPanel
                                         commutatorConnected = !commutatorConnected;
                                     }
                                 }
+                                Tooltip.Describe(commutatorConnected
+                                    ? "Disconnect from the commutator."
+                                    : "Connect to the commutator on the selected COM port.");
 
                                 ImGui.EndTable();
                             }
@@ -370,9 +377,23 @@ public class SettingsPanel
                             {
                                 ImGui.TableNextColumn();
                                 ImGui.Checkbox("Enable##commutator_enable", ref commutatorEnable);
+                                if (Tooltip.Begin(allowWhenDisabled: true))
+                                {
+                                    Tooltip.AddLine("Enable the commutator motor so it counteracts cable twist as the animal rotates.");
+                                    if (!commutatorConnected)
+                                        Tooltip.Note("Connect the commutator to change this.");
+                                    Tooltip.End();
+                                }
 
                                 ImGui.TableNextColumn();
                                 ImGui.Checkbox("Enable LED##commutator_led", ref commutatorEnableLed);
+                                if (Tooltip.Begin(allowWhenDisabled: true))
+                                {
+                                    Tooltip.AddLine("Turn on the commutator's indicator LED.");
+                                    if (!commutatorConnected)
+                                        Tooltip.Note("Connect the commutator to change this.");
+                                    Tooltip.End();
+                                }
 
                                 ImGui.EndTable();
                             }

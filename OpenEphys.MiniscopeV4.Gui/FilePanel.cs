@@ -130,13 +130,6 @@ public class FilePanel
                     ImGui.Dummy(new Vector2(0f, ImGui.GetStyle().ItemSpacing.Y));
 
                     ImGui.Text("Data Path");
-                    if (ImGui.BeginItemTooltip())
-                    {
-                        ImGui.Text("Choose the location and format to save all files.");
-                        ImGui.Text("If Suffix is set, the selected suffix will be added after the format and before the extension.");
-                        ImGui.Text("Video files will have '.avi' appended, CSV files will have '.csv' appended, and log files will have '.log' appended.");
-                        ImGui.EndTooltip();
-                    }
 
                     const string selectLabel = "...";
                     const string browseLabel = "Browse";
@@ -144,6 +137,13 @@ public class FilePanel
 
                     ImGui.SetNextItemWidth(inputWidth);
                     ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
+                    if (Tooltip.Begin())
+                    {
+                        Tooltip.AddLine("Folder and filename template used to save all data.");
+                        Tooltip.AddLine("The selected suffix (if any) is inserted after the template and before the extension.");
+                        Tooltip.AddLine($"Video files get '{GenerateRecordingFileNames.ImageExtension}', data files get '{GenerateRecordingFileNames.CsvExtension}', logs get '{GenerateRecordingFileNames.LogExtension}', configuration files get '{GenerateRecordingFileNames.ConfigExtension}' appended automatically.");
+                        Tooltip.End();
+                    }
                     ImGui.SameLine();
                     if (ImGui.Button($"{selectLabel}##choose_filename_button", new Vector2(selectWidth, 0)))
                     {
@@ -152,6 +152,7 @@ public class FilePanel
                             saveDialogTask = CreateSaveFileDialogTask(fileName);
                         }
                     }
+                    Tooltip.Describe("Browse for a folder and filename template to save data to.");
 
                     if (saveDialogTask != null && saveDialogTask.IsCompleted)
                     {
@@ -174,6 +175,7 @@ public class FilePanel
                         if (Directory.Exists(dir))
                             System.Diagnostics.Process.Start("explorer.exe", dir);
                     }
+                    Tooltip.Describe("Open the data folder in File Explorer to browse for previously saved data files.");
 
                     if (ImGui.BeginTable("##writer_parameters", 2, ImGuiTableFlags.SizingStretchSame))
                     {
@@ -187,9 +189,25 @@ public class FilePanel
                         if (ImGui.Combo("##path_suffix", ref currentPathSuffix, PathSuffixValues, PathSuffixValues.Length))
                             suffix = (PathSuffix)currentPathSuffix;
 
+                        if (Tooltip.Begin())
+                        {
+                            Tooltip.AddLine("Text appended to each filename to keep successive recordings unique:");
+                            Tooltip.AddLine("- None leaves the name as-is.");
+                            Tooltip.AddLine("- FileCount adds an incrementing number.");
+                            Tooltip.AddLine("- Timestamp adds the recording's date and time.");
+                            Tooltip.End();
+                        }
+
                         ImGui.TableNextColumn();
                         ImGui.SetNextItemWidth(-1f);
                         ImGui.Checkbox("Compress Video##compress_video", ref isCompressed);
+                        if (Tooltip.Begin())
+                        {
+                            Tooltip.AddLine("Encode saved video with compression to reduce file size, at the cost of higher CPU usage during recording.");
+                            Tooltip.AddLine("When compression is disabled, videos are saved using the 'Y800' codec.");
+                            Tooltip.AddLine("When compression is enabled, videos are saved using the 'MJPG' codec.");
+                            Tooltip.End();
+                        }
 
                         ImGui.EndTable();
                     }
@@ -204,16 +222,19 @@ public class FilePanel
                     {
                         recordingMode = RecordingMode.Manual;
                     }
+                    RecordModeTooltip("Start and stop recording manually with the Record button.", recordButton);
                     ImGui.SameLine();
                     if (ImGui.RadioButton("Timed##record_mode_timed", recordingMode == RecordingMode.Timed))
                     {
                         recordingMode = RecordingMode.Timed;
                     }
+                    RecordModeTooltip("Record for a fixed duration, then stop automatically.", recordButton);
                     ImGui.SameLine();
                     if (ImGui.RadioButton("Trigger##record_mode_trigger", recordingMode == RecordingMode.Trigger))
                     {
                         recordingMode = RecordingMode.Trigger;
                     }
+                    RecordModeTooltip("Arm recording so a digital input enables recording while the input is high.", recordButton);
                     if (recordButton) ImGui.EndDisabled();
 
                     var recordingSettingsHeight = ImGui.GetFrameHeightWithSpacing() * 3 + ImGui.GetStyle().ItemSpacing.Y * 2;
@@ -229,15 +250,24 @@ public class FilePanel
                                 ImGui.TableNextColumn();
                                 if (automaticRestart) ImGui.BeginDisabled();
                                 ImGui.Checkbox("Total Duration##use_total_duration", ref useTotalDuration);
+                                if (Tooltip.Begin(allowWhenDisabled: true))
+                                {
+                                    Tooltip.AddLine("Split a long recording into successive files of the duration below, stopping once the total duration is reached.");
+                                    if (automaticRestart)
+                                        Tooltip.Note("Turn off Auto Restart to use this.");
+                                    Tooltip.End();
+                                }
                                 if (automaticRestart) ImGui.EndDisabled();
 
                                 ImGui.TableNextColumn();
                                 if (useTotalDuration) ImGui.BeginDisabled();
                                 ImGui.Checkbox("Auto Restart##automatic_restart", ref automaticRestart);
-                                if (ImGui.BeginItemTooltip())
+                                if (Tooltip.Begin(allowWhenDisabled: true))
                                 {
-                                    ImGui.Text("When enabled, a new recording starts automatically each time the\nrecording duration elapses, until you press Stop Recording.");
-                                    ImGui.EndTooltip();
+                                    Tooltip.AddLine("Automatically start a new recording each time the recording duration elapses, until you press Stop Recording.");
+                                    if (useTotalDuration)
+                                        Tooltip.Note("Turn off Total Duration to use this.");
+                                    Tooltip.End();
                                 }
                                 if (useTotalDuration) ImGui.EndDisabled();
 
@@ -250,6 +280,7 @@ public class FilePanel
                                 {
                                     recordingDurationSeconds = Math.Max(1, recordingDurationSeconds);
                                 }
+                                Tooltip.Describe("Length of each recording file, in seconds.");
 
                                 ImGui.TableNextColumn();
 
@@ -264,6 +295,7 @@ public class FilePanel
                                     {
                                         totalDurationSeconds = Math.Max(1, totalDurationSeconds);
                                     }
+                                    Tooltip.Describe("Total recording length across all files, in seconds.");
                                 }
 
                                 ImGui.TableNextColumn();
@@ -302,6 +334,12 @@ public class FilePanel
                                 }
                                 ImGui.EndCombo();
                             }
+                            if (Tooltip.Begin(allowWhenDisabled: true))
+                            {
+                                Tooltip.AddLine("Digital input line that triggers recording: recording runs while this input is high.");
+                                if (recordButton) Tooltip.Note("Disarm to change the trigger input.");
+                                Tooltip.End();
+                            }
                             if (recordButton) ImGui.EndDisabled();
                         }
                     }
@@ -315,13 +353,54 @@ public class FilePanel
                     {
                         Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
                         if (!recordButtonActive) ImGui.BeginDisabled();
-                        string recordLabel = recordingMode != RecordingMode.Trigger
-                            ? (recordButton ? "Stop Recording" + RecordButtonLabelText : "Record" + RecordButtonLabelText)
-                            : (recordButton ? "Disarm" + RecordButtonLabelText : "Arm Recording" + RecordButtonLabelText);
+
+                        string recordLabel = "", tooltipLine = "", shortcutAction = "";
+
+                        if (recordingMode == RecordingMode.Manual || recordingMode == RecordingMode.Timed)
+                        {
+                            if (recordButton)
+                            {
+                                recordLabel = "Stop Recording" + RecordButtonLabelText;
+                                tooltipLine = "Stop the current recording.";
+                                shortcutAction = "stop recording";
+                            }
+                            else
+                            {
+                                recordLabel = "Record" + RecordButtonLabelText;
+                                tooltipLine = "Start recording to the data path.";
+                                shortcutAction = "start recording";
+                            }
+                        }
+                        else if (recordingMode == RecordingMode.Trigger)
+                        {
+                            if (recordButton)
+                            {
+                                recordLabel = "Disarm" + RecordButtonLabelText;
+                                tooltipLine = "Disarm recording.";
+                                shortcutAction = "disarm recording";
+                            }
+                            else
+                            {
+                                recordLabel = "Arm Recording" + RecordButtonLabelText;
+                                tooltipLine = "Arm recording so the selected digital input can control it.";
+                                shortcutAction = "arm recording";
+                            }
+                        }
+
                         if (ImGui.Button(recordLabel, recordButtonSize))
                         {
                             RecordButtonPressed();
                         }
+
+                        if (Tooltip.Begin(allowWhenDisabled: true))
+                        {
+                            Tooltip.AddLine(tooltipLine);
+                            Tooltip.AddKeyboardShortcut("Ctrl + R", shortcutAction);
+                            if (!recordButtonActive)
+                                Tooltip.Note("Start acquisition before recording.");
+                            Tooltip.End();
+                        }
+
                         if (!recordButtonActive) ImGui.EndDisabled();
                     }
 
@@ -355,6 +434,17 @@ public class FilePanel
 
             return source.SubscribeSafe(sourceObserver);
         });
+    }
+
+    static void RecordModeTooltip(string description, bool recording)
+    {
+        if (Tooltip.Begin(allowWhenDisabled: true))
+        {
+            Tooltip.AddLine(description);
+            if (recording)
+                Tooltip.Note("Cannot change the recording mode while recording.");
+            Tooltip.End();
+        }
     }
 
     static Task<string> CreateSaveFileDialogTask(string fileName) => FileDialogHelpers.RunDialogTask(() => new SaveFileDialog

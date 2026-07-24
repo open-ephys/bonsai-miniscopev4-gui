@@ -96,6 +96,7 @@ sealed class PlotLegend
             var origin = ImGui.GetCursorScreenPos();
             if (ImGui.InvisibleButton($"##sig_legend_{id}_{i}", itemSize))
                 ToggleVisibility(i);
+            Tooltip.Describe($"Click to show or hide the {entry.Label} line.");
 
             bool shown = entry.Visible;
             if (ImGui.IsItemHovered())

@@ -169,6 +169,7 @@ public class ConsolePanel
                                 ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonHovered));
 
                             ImGui.ArrowButton("##console_toggle", ImGuiDir.Up);
+                            Tooltip.Describe("Expand the console.");
 
                             if (areaHovered)
                                 ImGui.PopStyleColor();
@@ -183,6 +184,7 @@ public class ConsolePanel
                         {
                             if (ImGui.ArrowButton("##console_toggle", ImGuiDir.Down))
                                 layout = layout with { ConsoleOpen = false };
+                            Tooltip.Describe("Collapse the console.");
 
                             ImGui.SameLine();
 
@@ -203,12 +205,16 @@ public class ConsolePanel
 
                                 ImGui.SameLine();
                                 ImGui.Checkbox("Info##console_filter_info", ref showInfo);
+                                Tooltip.Describe("Show or hide informational messages.");
                                 ImGui.SameLine();
                                 ImGui.Checkbox("Warnings##console_filter_warning", ref showWarnings);
+                                Tooltip.Describe("Show or hide warning messages.");
                                 ImGui.SameLine();
                                 ImGui.Checkbox("Errors##console_filter_error", ref showErrors);
+                                Tooltip.Describe("Show or hide error messages.");
                                 ImGui.SameLine();
                                 ImGui.Checkbox("Property Changes##console_filter_property", ref showPropertyChanges);
+                                Tooltip.Describe("Show or hide messages logged when hardware settings change.");
                             }
 
                             ImGui.EndChild();
@@ -216,6 +222,7 @@ public class ConsolePanel
                             ImGui.SameLine(rowWidth - clearWidth);
                             if (ImGui.Button("Clear##console_clear"))
                                 log.Clear();
+                            Tooltip.Describe("Remove all messages from the console.");
 
                             ImGui.Separator();
 

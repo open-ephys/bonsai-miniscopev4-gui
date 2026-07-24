@@ -49,10 +49,10 @@ public class GenerateRecordingFileNames
     [Description("The suffix applied to the base name, before each file extension.")]
     public PathSuffix Suffix { get; set; }
 
-    const string CsvExtension = ".csv";
-    const string ImageExtension = ".avi";
-    const string LogExtension = ".log";
-    const string ConfigExtension = ".yml";
+    internal const string CsvExtension = ".csv";
+    internal const string ImageExtension = ".avi";
+    internal const string LogExtension = ".log";
+    internal const string ConfigExtension = ".yml";
 
     /// <summary>
     /// Generates a synchronized <see cref="RecordingFileNames"/> set each time the <paramref name="source"/>
