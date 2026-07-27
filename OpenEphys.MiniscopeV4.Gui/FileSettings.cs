@@ -22,14 +22,13 @@ partial class FileSettings : IEquatable<FileSettings>
         Suffix == other.Suffix &&
         RecordingDuration == other.RecordingDuration &&
         TotalDuration == other.TotalDuration &&
-        UseTotalDuration == other.UseTotalDuration &&
-        TriggerInput == other.TriggerInput &&
-        AutomaticRestart == other.AutomaticRestart;
+        SegmentMode == other.SegmentMode &&
+        TriggerInput == other.TriggerInput;
 
     /// <inheritdoc/>
     public override bool Equals(object obj) => Equals(obj as FileSettings);
 
     /// <inheritdoc/>
     public override int GetHashCode() =>
-        (RecordButton, RecordingMode, CompressVideo, FileName, Suffix, RecordingDuration, TotalDuration, UseTotalDuration, TriggerInput, AutomaticRestart).GetHashCode();
+        (RecordButton, RecordingMode, CompressVideo, FileName, Suffix, RecordingDuration, TotalDuration, SegmentMode, TriggerInput).GetHashCode();
 }
