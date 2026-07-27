@@ -170,19 +170,23 @@ public class SettingsPanel
                         ImGui.SameLine();
                         ImGui.Text("Control Panel");
 
-                        ImGui.Spacing();
-                        ImGui.Separator();
-                        ImGui.Spacing();
+                        string exportButtonString = "Export##miniscope_save";
+                        string importButtonString = "Import##miniscope_load";
+                        var exportButtonWidth = ImGui.CalcTextSize(exportButtonString, true).X + ImGui.GetStyle().FramePadding.X * 2.0f;
+                        var importButtonWidth = ImGui.CalcTextSize(importButtonString, true).X + ImGui.GetStyle().FramePadding.X * 2.0f;
+                        var buttonGap = ImGui.GetStyle().ItemSpacing.X * 2.0f;
 
-                        float configButtonWidth = (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / 2f;
-                        if (ImGui.Button("Export Config##miniscope_save", new Vector2(configButtonWidth, 0)))
+                        ImGui.SameLine();
+                        var avail = ImGui.GetContentRegionAvail().X;
+                        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + avail - exportButtonWidth - buttonGap - importButtonWidth);
+                        if (ImGui.Button(exportButtonString, new Vector2(exportButtonWidth, 0f)))
                         {
                             requestType = ConfigurationRequestType.ManualSave;
                         }
                         Tooltip.Describe("Export the current settings to a configuration file.");
 
-                        ImGui.SameLine();
-                        if (ImGui.Button("Import Config##miniscope_load", new Vector2(configButtonWidth, 0)))
+                        ImGui.SameLine(0, ImGui.GetStyle().ItemSpacing.X);
+                        if (ImGui.Button(importButtonString, new Vector2(importButtonWidth, 0f)))
                         {
                             requestType = ConfigurationRequestType.ManualLoad;
                         }
