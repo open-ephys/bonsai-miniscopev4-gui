@@ -63,7 +63,7 @@ public class StatusBar
                     AutomaticRestartTriggered = false;
                 }
 
-                if (ImGui.BeginTable("##statusbar", 2))
+                if (ImGui.BeginTable("##statusbar", 3))
                 {
                     ImGui.TableNextColumn();
 
@@ -103,36 +103,6 @@ public class StatusBar
                         ? "Stop acquiring frames from the Miniscope."
                         : "Start acquiring frames from the Miniscope at the selected index.");
 
-                    ImGui.SameLine();
-                    if (!isConnected)
-                        ImGui.BeginDisabled();
-
-                    var pauseButtonSize = new Vector2(140f * UiScale.Current, 0f);
-                    bool spacePressed = isConnected && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.Space);
-                    using (Palette.PushButtonColors(
-                        paused ? Palette.Yellow : Palette.Gray,
-                        paused ? Palette.YellowHovered : Palette.GrayHovered,
-                        paused ? Palette.YellowActive : Palette.GrayActive))
-                    {
-                        if (ImGui.Button(paused ? "Resume ( )##statusbar_pause" : "Pause ( )##statusbar_pause", pauseButtonSize) || spacePressed)
-                        {
-                            paused = !paused;
-                        }
-                    }
-                    if (Tooltip.Begin(allowWhenDisabled: true))
-                    {
-                        Tooltip.AddLine(paused
-                            ? "Resume updating the live display and plots. Acquisition and recording are unaffected."
-                            : "Freeze the live display and plots without stopping acquisition or recording.");
-                        Tooltip.AddKeyboardShortcut("Space", "pause or resume the display");
-                        if (!isConnected)
-                            Tooltip.Note("Available only while acquiring.");
-                        Tooltip.End();
-                    }
-
-                    if (!isConnected)
-                        ImGui.EndDisabled();
-
                     ImGui.TableNextColumn();
 
                     if (ImGui.BeginTable("##status_timers", 2))
@@ -169,7 +139,40 @@ public class StatusBar
 
                         ImGui.EndTable();
                     }
-                    
+
+                    ImGui.TableNextColumn();
+
+                    if (!isConnected)
+                        ImGui.BeginDisabled();
+
+                    var pauseButtonSize = new Vector2(200f * UiScale.Current, 0f);
+                    float avail = ImGui.GetContentRegionAvail().X;
+                    ImGui.SetCursorPosX(ImGui.GetCursorPosX() + avail - pauseButtonSize.X);
+                    bool spacePressed = isConnected && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.Space);
+                    using (Palette.PushButtonColors(
+                        paused ? Palette.Yellow : Palette.Gray,
+                        paused ? Palette.YellowHovered : Palette.GrayHovered,
+                        paused ? Palette.YellowActive : Palette.GrayActive))
+                    {
+                        if (ImGui.Button(paused ? "Resume Display (Spacebar)##statusbar_pause" : "Freeze Display (Spacebar)##statusbar_pause", pauseButtonSize) || spacePressed)
+                        {
+                            paused = !paused;
+                        }
+                    }
+                    if (Tooltip.Begin(allowWhenDisabled: true))
+                    {
+                        Tooltip.AddLine(paused
+                            ? "Resume updating the live display and plots. Acquisition and recording are unaffected."
+                            : "Freeze the live display and plots without stopping acquisition or recording.");
+                        Tooltip.AddKeyboardShortcut("Spacebar", "pause or resume the display");
+                        if (!isConnected)
+                            Tooltip.Note("Available only while acquiring.");
+                        Tooltip.End();
+                    }
+
+                    if (!isConnected)
+                        ImGui.EndDisabled();
+
                     ImGui.EndTable();
                 }
 
