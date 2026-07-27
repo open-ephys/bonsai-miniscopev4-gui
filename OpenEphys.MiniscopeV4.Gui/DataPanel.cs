@@ -1,5 +1,4 @@
 using Bonsai;
-using Bonsai.ImGui.Visualizers;
 using Bonsai.Vision;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImPlot;
@@ -68,25 +67,25 @@ public class DataPanel
     public int ImageWidth { get; set; } = 100;
 
     /// <summary>
-    /// Gets or sets the rolling series of quaternion orientation values plotted in the time series tab.
+    /// Gets or sets the circular buffer of quaternion orientation values plotted in the time series tab.
     /// </summary>
     [XmlIgnore]
     [Browsable(false)]
-    public RollingPlotPointSeries<Quaternion> QuaternionSeries { get; set; }
+    public CircularPlotPointSeries<Quaternion> QuaternionSeries { get; set; }
 
     /// <summary>
-    /// Gets or sets the rolling series of digital input values plotted in the time series tab.
+    /// Gets or sets the circular buffer of digital input values plotted in the time series tab.
     /// </summary>
     [XmlIgnore]
     [Browsable(false)]
-    public RollingPlotPointSeries<Tuple<bool, bool>> DigitalInSeries { get; set; }
+    public CircularPlotPointSeries<Tuple<bool, bool>> DigitalInSeries { get; set; }
 
     /// <summary>
-    /// Gets or sets the rolling series of Euler angle values plotted in the time series tab.
+    /// Gets or sets the circular buffer of Euler angle values plotted in the time series tab.
     /// </summary>
     [XmlIgnore]
     [Browsable(false)]
-    public RollingPlotPointSeries<TaitBryanAngles> EulerAnglesSeries { get; set; }
+    public CircularPlotPointSeries<TaitBryanAngles> EulerAnglesSeries { get; set; }
 
     /// <summary>
     /// Gets or sets the pixel intensity histogram plotted in the histogram tab.
@@ -663,22 +662,14 @@ public class DataPanel
                                                     const double eulerAxisMin = -185.0, eulerAxisMax = 365.0;
 
                                                     ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, eulerAxisMin, eulerAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxesLimits(0, bufferSize - 1, eulerAxisMin, eulerAxisMax, ImPlotCond.Always);
 
                                                     double eulerGridStep = ChooseGridStep(eulerAxisMax - eulerAxisMin, ImPlot.GetPlotSize().Y, eulerGridStepCandidates, MinGridPixelSpacing * UiScale.Current);
                                                     DrawPlotGrid(eulerAxisMin, eulerAxisMax, eulerGridStep, FormatDegreeLabel);
 
                                                     if (EulerAnglesSeries != null)
                                                     {
-                                                        for (int i = 0; i < EulerAnglesSeries.Series.Length; i++)
-                                                        {
-                                                            if (!eulerAngleLegend.IsVisible(i))
-                                                                continue;
-
-                                                            var line = EulerAnglesSeries.Series[i];
-                                                            ImPlot.SetNextLineStyle(eulerAngleLegend.ColorOf(i));
-                                                            ImPlot.PlotLineG(line.Name, line.Getter, null, EulerAnglesSeries.Count);
-                                                        }
+                                                        PlotCircularPlotPointSeries(EulerAnglesSeries, eulerAngleLegend, bufferSize);
                                                     }
 
                                                     ImPlot.EndPlot();
@@ -687,9 +678,9 @@ public class DataPanel
                                                 if (ImPlot.BeginPlot("##euler_digital_series", fillAvailable, plotFlags))
                                                 {
                                                     ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxesLimits(0, bufferSize - 1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
 
-                                                    PlotDigitalInSeries();
+                                                    PlotDigitalInSeries(bufferSize);
 
                                                     ImPlot.EndPlot();
                                                 }
@@ -725,21 +716,13 @@ public class DataPanel
                                                     const double quaternionGridStep = 0.5;
 
                                                     ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, quaternionAxisMin, quaternionAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxesLimits(0, bufferSize - 1, quaternionAxisMin, quaternionAxisMax, ImPlotCond.Always);
 
                                                     DrawPlotGrid(quaternionAxisMin, quaternionAxisMax, quaternionGridStep, null);
 
                                                     if (QuaternionSeries != null)
                                                     {
-                                                        for (int i = 0; i < QuaternionSeries.Series.Length; i++)
-                                                        {
-                                                            if (!quaternionLegend.IsVisible(i))
-                                                                continue;
-
-                                                            var line = QuaternionSeries.Series[i];
-                                                            ImPlot.SetNextLineStyle(quaternionLegend.ColorOf(i));
-                                                            ImPlot.PlotLineG(line.Name, line.Getter, null, QuaternionSeries.Count);
-                                                        }
+                                                        PlotCircularPlotPointSeries(QuaternionSeries, quaternionLegend, bufferSize);
                                                     }
 
                                                     ImPlot.EndPlot();
@@ -748,9 +731,9 @@ public class DataPanel
                                                 if (ImPlot.BeginPlot("##quaternion_digital_series", fillAvailable, plotFlags))
                                                 {
                                                     ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxesLimits(0, bufferSize - 1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
 
-                                                    PlotDigitalInSeries();
+                                                    PlotDigitalInSeries(bufferSize);
 
                                                     ImPlot.EndPlot();
                                                 }
@@ -940,7 +923,33 @@ public class DataPanel
         if (AcquisitionStatus) ImGui.EndDisabled();
     }
 
-    unsafe void PlotDigitalInSeries()
+    static unsafe void PlotCircularPlotPointSeries<T>(CircularPlotPointSeries<T> buffer, PlotLegend legend, int bufferSize)
+    {
+        for (int i = 0; i < buffer.Series.Length; i++)
+        {
+            if (!legend.IsVisible(i))
+                continue;
+
+            var line = buffer.Series[i];
+            ImPlot.SetNextLineStyle(legend.ColorOf(i));
+            ImPlot.PlotLineG(line.Name, line.Getter, null, buffer.Count);
+        }
+
+        PlotVerticalLine((float)(buffer.Count < bufferSize ? buffer.End - 1 : buffer.End), Palette.Yellow);
+    }
+
+    static unsafe void PlotVerticalLine(float end, Vector4 color)
+    {
+        float[] endArray = { end };
+        fixed (float* endPtr = endArray)
+        {
+            ImPlot.PushStyleColor(ImPlotCol.Line, color);
+            ImPlot.PlotInfLines("##end_index", endPtr, 1);
+            ImPlot.PopStyleColor();
+        }
+    }
+
+    unsafe void PlotDigitalInSeries(int bufferSize)
     {
         if (DigitalInSeries == null)
             return;
@@ -1003,5 +1012,7 @@ public class DataPanel
             ImPlot.SetNextLineStyle(color);
             ImPlot.PlotLineG(digitalInLabels[i] + "##line", valueGetter, null, stepCount);
         }
+
+        PlotVerticalLine((float)(DigitalInSeries.Count < bufferSize ? DigitalInSeries.End - 1 : DigitalInSeries.End), Palette.Yellow);
     }
 }
