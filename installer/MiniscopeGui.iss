@@ -63,7 +63,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 Source: "..\launcher\Run.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "..\launcher\config.yml"; DestDir: "{app}"; \
+Source: "..\launcher\default_minscopev4_config.yml"; DestDir: "{app}"; \
   Flags: onlyifdoesntexist uninsneveruninstall
 
 Source: "..\OpenEphys.MiniscopeV4.Gui\Workflows\MiniscopeGui.bonsai"; \

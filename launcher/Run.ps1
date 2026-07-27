@@ -63,7 +63,7 @@ $bonsaiArgs = @(
 )
 
 $bonsaiArgs += "-p:StopWorkflowOnClose=true"
-$bonsaiArgs += "-p:ConfigFilePath=./config.yml"
+$bonsaiArgs += "-p:ConfigFilePath=./default_minscopev4_config.yml"
 
 Write-Host "Starting Miniscope GUI..."
 & $BonsaiExe @bonsaiArgs
