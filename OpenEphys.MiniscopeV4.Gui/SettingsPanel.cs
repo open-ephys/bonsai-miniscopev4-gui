@@ -309,7 +309,7 @@ public class SettingsPanel
                                 }
                             }
 
-                            if (ImGui.BeginCombo("##comport", portIndex >= 0 ? portNames[portIndex] : "No commutator found"))
+                            if (ImGui.BeginCombo("##comport", portIndex >= 0 ? portNames[portIndex] : "No COM port detected"))
                             {
                                 for (int i = 0; i < portNames.Length; i++)
                                 {
