@@ -46,6 +46,5 @@ File:
   Suffix: FileCount
   RecordingDuration: 600
   TotalDuration: 3600
-  UseTotalDuration: false
+  SegmentMode: SingleFile
   TriggerInput: DigitalIn0
-  AutomaticRestart: false

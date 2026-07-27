@@ -83,9 +83,8 @@ public class FilePanel
                 PathSuffix suffix = fileSettings.Suffix;
                 int recordingDurationSeconds = fileSettings.RecordingDuration;
                 int totalDurationSeconds = fileSettings.TotalDuration;
-                bool useTotalDuration = fileSettings.UseTotalDuration;
+                var segmentMode = fileSettings.SegmentMode;
                 bool isCompressed = fileSettings.CompressVideo;
-                bool automaticRestart = fileSettings.AutomaticRestart;
                 var triggerInput = fileSettings.TriggerInput;
                 int triggerIndex = Array.IndexOf(DigitalInValues, triggerInput);
 
@@ -224,11 +223,11 @@ public class FilePanel
                     }
                     RecordModeTooltip("Start and stop recording manually with the Record button.", recordButton);
                     ImGui.SameLine();
-                    if (ImGui.RadioButton("Timed##record_mode_timed", recordingMode == RecordingMode.Timed))
+                    if (ImGui.RadioButton("Segmented##record_mode_segmented", recordingMode == RecordingMode.Segmented))
                     {
-                        recordingMode = RecordingMode.Timed;
+                        recordingMode = RecordingMode.Segmented;
                     }
-                    RecordModeTooltip("Record for a fixed duration, then stop automatically.", recordButton);
+                    RecordModeTooltip("Record in segments of a fixed duration, as a single file, split into multiple files, or restarted automatically.", recordButton);
                     ImGui.SameLine();
                     if (ImGui.RadioButton("Trigger##record_mode_trigger", recordingMode == RecordingMode.Trigger))
                     {
@@ -241,36 +240,12 @@ public class FilePanel
 
                     if (ImGui.BeginChild("##recording_settings", new Vector2(-1, recordingSettingsHeight), ImGuiChildFlags.None))
                     {
-                        if (recordingMode == RecordingMode.Timed)
+                        if (recordingMode == RecordingMode.Segmented)
                         {
                             if (recordButton) ImGui.BeginDisabled();
 
-                            if (ImGui.BeginTable("##record_duration_table", 2, ImGuiTableFlags.SizingStretchSame))
+                            if (ImGui.BeginTable("##record_duration_table", 2))
                             {
-                                ImGui.TableNextColumn();
-                                if (automaticRestart) ImGui.BeginDisabled();
-                                ImGui.Checkbox("Total Duration##use_total_duration", ref useTotalDuration);
-                                if (Tooltip.Begin(allowWhenDisabled: true))
-                                {
-                                    Tooltip.AddLine("Split a long recording into successive files of the duration below, stopping once the total duration is reached.");
-                                    if (automaticRestart)
-                                        Tooltip.Note("Turn off Auto Restart to use this.");
-                                    Tooltip.End();
-                                }
-                                if (automaticRestart) ImGui.EndDisabled();
-
-                                ImGui.TableNextColumn();
-                                if (useTotalDuration) ImGui.BeginDisabled();
-                                ImGui.Checkbox("Auto Restart##automatic_restart", ref automaticRestart);
-                                if (Tooltip.Begin(allowWhenDisabled: true))
-                                {
-                                    Tooltip.AddLine("Automatically start a new recording each time the recording duration elapses, until you press Stop Recording.");
-                                    if (useTotalDuration)
-                                        Tooltip.Note("Turn off Total Duration to use this.");
-                                    Tooltip.End();
-                                }
-                                if (useTotalDuration) ImGui.EndDisabled();
-
                                 ImGui.TableNextColumn();
                                 ImGui.AlignTextToFramePadding();
                                 ImGui.Text("Duration [s]:");
@@ -282,11 +257,32 @@ public class FilePanel
                                 }
                                 Tooltip.Describe("Length of each recording file, in seconds.");
 
-                                ImGui.TableNextColumn();
+                                ImGui.EndTable();
+                            }
 
-                                ImGui.TableNextColumn();
-                                if (useTotalDuration)
+                            if (ImGui.RadioButton("Single File##segment_mode_single_file", segmentMode == SegmentMode.SingleFile))
+                            {
+                                segmentMode = SegmentMode.SingleFile;
+                            }
+                            Tooltip.Describe("Record to a single file until the duration is reached.");
+                            ImGui.SameLine();
+                            if (ImGui.RadioButton("Total Duration##segment_mode_total_duration", segmentMode == SegmentMode.TotalDuration))
+                            {
+                                segmentMode = SegmentMode.TotalDuration;
+                            }
+                            Tooltip.Describe("Split a long recording into successive files of the duration above, stopping once the total duration is reached.");
+                            ImGui.SameLine();
+                            if (ImGui.RadioButton("Auto Restart##segment_mode_auto_restart", segmentMode == SegmentMode.AutoRestart))
+                            {
+                                segmentMode = SegmentMode.AutoRestart;
+                            }
+                            Tooltip.Describe("Automatically start a new recording each time the recording duration elapses, until you press Stop Recording.");
+
+                            if (segmentMode == SegmentMode.TotalDuration)
+                            {
+                                if (ImGui.BeginTable("##total_duration_table", 2))
                                 {
+                                    ImGui.TableNextColumn();
                                     ImGui.AlignTextToFramePadding();
                                     ImGui.Text("Total [s]:");
                                     ImGui.SameLine();
@@ -296,18 +292,18 @@ public class FilePanel
                                         totalDurationSeconds = Math.Max(1, totalDurationSeconds);
                                     }
                                     Tooltip.Describe("Total recording length across all files, in seconds.");
-                                }
 
-                                ImGui.TableNextColumn();
-                                if (useTotalDuration && recordingDurationSeconds > 0)
-                                {
-                                    ImGui.AlignTextToFramePadding();
-                                    int filesCount = (int)Math.Ceiling((double)totalDurationSeconds / recordingDurationSeconds);
-                                    var endTime = (recordingStart ?? DateTime.Now) + TimeSpan.FromSeconds(totalDurationSeconds);
-                                    ImGui.Text($"{filesCount} file{(filesCount == 1 ? "" : "s")} · ends {endTime:HH:mm:ss}");
-                                }
+                                    ImGui.TableNextColumn();
+                                    if (recordingDurationSeconds > 0)
+                                    {
+                                        ImGui.AlignTextToFramePadding();
+                                        int filesCount = (int)Math.Ceiling((double)totalDurationSeconds / recordingDurationSeconds);
+                                        var endTime = (recordingStart ?? DateTime.Now) + TimeSpan.FromSeconds(totalDurationSeconds);
+                                        ImGui.Text($"{filesCount} file{(filesCount == 1 ? "" : "s")} · ends {endTime:HH:mm:ss}");
+                                    }
 
-                                ImGui.EndTable();
+                                    ImGui.EndTable();
+                                }
                             }
 
                             if (recordButton) ImGui.EndDisabled();
@@ -356,7 +352,7 @@ public class FilePanel
 
                         string recordLabel = "", tooltipLine = "", shortcutAction = "";
 
-                        if (recordingMode == RecordingMode.Manual || recordingMode == RecordingMode.Timed)
+                        if (recordingMode == RecordingMode.Manual || recordingMode == RecordingMode.Segmented)
                         {
                             if (recordButton)
                             {
@@ -422,9 +418,8 @@ public class FilePanel
                     Suffix = suffix,
                     RecordingDuration = recordingDurationSeconds,
                     TotalDuration = totalDurationSeconds,
-                    UseTotalDuration = useTotalDuration,
+                    SegmentMode = segmentMode,
                     TriggerInput = triggerInput,
-                    AutomaticRestart = automaticRestart,
                 };
 
                 observer.OnNext(Tuple.Create(layout, updatedFileSettings));

@@ -35,7 +35,13 @@
       "title": "RecordingMode",
       "description": "The recording mode selected.",
       "type": "string",
-      "enum": [ "Manual", "Timed", "Trigger" ]
+      "enum": [ "Manual", "Segmented", "Trigger" ]
+    },
+    "SegmentMode": {
+      "title": "SegmentMode",
+      "description": "How a segmented recording is split into files and when it stops.",
+      "type": "string",
+      "enum": [ "SingleFile", "TotalDuration", "AutoRestart" ]
     },
     "Scalar": {
       "title": "Scalar",
@@ -270,20 +276,15 @@
           "type": "integer",
           "default": 3600
         },
-        "UseTotalDuration": {
-          "description": "Whether recording should automatically stop after TotalDuration seconds, splitting into multiple files as needed.",
-          "type": "boolean",
-          "default": false
+        "SegmentMode": {
+          "description": "How a segmented recording is split into files and when it stops.",
+          "allOf": [ { "$ref": "#/$defs/SegmentMode" } ],
+          "default": "SingleFile"
         },
         "TriggerInput": {
           "description": "Which digital input is used to trigger recording.",
           "allOf": [ { "$ref": "#/$defs/MiniscopeDaqDigitalIn" } ],
           "default": "DigitalIn0"
-        },
-        "AutomaticRestart": {
-          "description": "Whether a new recording should start automatically each time the recording duration elapses.",
-          "type": "boolean",
-          "default": false
         }
       }
     }
