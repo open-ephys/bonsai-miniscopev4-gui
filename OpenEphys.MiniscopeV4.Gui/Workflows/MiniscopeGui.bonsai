@@ -2682,10 +2682,9 @@
                               <Expression xsi:type="ExternalizedMapping">
                                 <Property Name="Capacity" />
                               </Expression>
-                              <Expression xsi:type="imviz:RollingBufferBuilder">
-                                <imviz:Capacity>100</imviz:Capacity>
-                                <imviz:IndexSelector />
-                                <imviz:ValueSelector>X,Y,Z,W</imviz:ValueSelector>
+                              <Expression xsi:type="p1:CircularBufferBuilder">
+                                <p1:Capacity>0</p1:Capacity>
+                                <p1:ValueSelector>X,Y,Z,W</p1:ValueSelector>
                               </Expression>
                               <Expression xsi:type="SubscribeSubject">
                                 <Name>Status</Name>
@@ -2783,10 +2782,9 @@
                               <Expression xsi:type="ExternalizedMapping">
                                 <Property Name="Capacity" />
                               </Expression>
-                              <Expression xsi:type="imviz:RollingBufferBuilder">
-                                <imviz:Capacity>100</imviz:Capacity>
-                                <imviz:IndexSelector />
-                                <imviz:ValueSelector>Item1,Item2</imviz:ValueSelector>
+                              <Expression xsi:type="p1:CircularBufferBuilder">
+                                <p1:Capacity>0</p1:Capacity>
+                                <p1:ValueSelector>Item1,Item2</p1:ValueSelector>
                               </Expression>
                               <Expression xsi:type="SubscribeSubject">
                                 <Name>Status</Name>
@@ -2878,10 +2876,9 @@
                               <Expression xsi:type="ExternalizedMapping">
                                 <Property Name="Capacity" />
                               </Expression>
-                              <Expression xsi:type="imviz:RollingBufferBuilder">
-                                <imviz:Capacity>100</imviz:Capacity>
-                                <imviz:IndexSelector />
-                                <imviz:ValueSelector>Yaw,Pitch,Roll</imviz:ValueSelector>
+                              <Expression xsi:type="p1:CircularBufferBuilder">
+                                <p1:Capacity>0</p1:Capacity>
+                                <p1:ValueSelector>Yaw,Pitch,Roll</p1:ValueSelector>
                               </Expression>
                               <Expression xsi:type="SubscribeSubject">
                                 <Name>Status</Name>
