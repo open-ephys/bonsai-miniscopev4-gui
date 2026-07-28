@@ -811,38 +811,427 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Catch" />
             </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Camera</Selector>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>UpdateStatus</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Camera</Selector>
+                  </Expression>
+                  <Expression xsi:type="rx:Condition">
+                    <Name>Not Connected</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Status</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>IsConnected</Selector>
+                        </Expression>
+                        <Expression xsi:type="BitwiseNot" />
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>CameraIndex</Selector>
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject">
+                    <Name>UpdateIndex</Name>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>UpdateIndex</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="CameraIndex" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p1:CameraStatus">
+                      <p1:IsConnected>false</p1:IsConnected>
+                      <p1:Paused>false</p1:Paused>
+                      <p1:CameraIndex>1</p1:CameraIndex>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="MulticastSubject">
+                    <Name>Status</Name>
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                  <Expression xsi:type="rx:Condition">
+                    <Name>Connected</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Status</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>IsConnected</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Status</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>CameraIndex</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionCondition">
+                    <scr:Name>DifferentIndices</scr:Name>
+                    <scr:Expression>it.Item1.CameraIndex != it.Item2</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="StringProperty">
+                      <Value>Cannot update camera index while connected to a camera. Stop acquisition and try to import settings again.</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p1:LogWarning" />
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="1" To="10" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="7" Label="Source1" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source2" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="8" To="9" Label="Source1" />
+                  <Edge From="10" To="13" Label="Source1" />
+                  <Edge From="11" To="12" Label="Source1" />
+                  <Edge From="12" To="13" Label="Source2" />
+                  <Edge From="13" To="14" Label="Source1" />
+                  <Edge From="14" To="15" Label="Source1" />
+                  <Edge From="15" To="17" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source2" />
+                  <Edge From="17" To="18" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
-            <Expression xsi:type="MulticastSubject">
-              <Name>Status</Name>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>UpdateHardwareSettings</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Hardware</Selector>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Miniscope</Selector>
+                  </Expression>
+                  <Expression xsi:type="MulticastSubject">
+                    <Name>Miniscope</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Commutator</Selector>
+                  </Expression>
+                  <Expression xsi:type="rx:Condition">
+                    <Name>Not Connected</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Commutator</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>IsConnected</Selector>
+                        </Expression>
+                        <Expression xsi:type="BitwiseNot" />
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="rx:Condition">
+                    <Name>Connected</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Commutator</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>IsConnected</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Commutator</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>PortName</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionCondition">
+                    <scr:Name>SamePorts</scr:Name>
+                    <scr:Expression>it.Item1.PortName == it.Item2</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Item1</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Merge" />
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>UpdateCommutatorSettings</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="rx:PublishSubject">
+                          <Name>UpdateCommutator</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>UpdateCommutator</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>PortName</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="PortName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Enable</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Enable" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>EnableLed</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="EnableLed" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>AutoConnect</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="AutoConnect" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:CommutatorSettings">
+                            <p1:IsConnected>false</p1:IsConnected>
+                            <p1:PortName />
+                            <p1:Enable>true</p1:Enable>
+                            <p1:EnableLed>true</p1:EnableLed>
+                            <p1:AutoConnect>true</p1:AutoConnect>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>Commutator</Name>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="11" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="2" To="5" Label="Source1" />
+                        <Edge From="2" To="7" Label="Source1" />
+                        <Edge From="2" To="9" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="11" Label="Source2" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="11" Label="Source3" />
+                        <Edge From="7" To="8" Label="Source1" />
+                        <Edge From="8" To="11" Label="Source4" />
+                        <Edge From="9" To="10" Label="Source1" />
+                        <Edge From="10" To="11" Label="Source5" />
+                        <Edge From="11" To="12" Label="Source1" />
+                        <Edge From="12" To="13" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionCondition">
+                    <scr:Name>DifferentPorts</scr:Name>
+                    <scr:Expression>it.Item1.PortName != it.Item2</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="StringProperty">
+                      <Value>Cannot update COM port while connected to a commutator. Disconnect and try to import settings again.</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p1:LogWarning" />
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="1" To="4" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="4" To="6" Label="Source1" />
+                  <Edge From="5" To="12" Label="Source1" />
+                  <Edge From="6" To="9" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="8" To="9" Label="Source2" />
+                  <Edge From="9" To="10" Label="Source1" />
+                  <Edge From="9" To="14" Label="Source1" />
+                  <Edge From="10" To="11" Label="Source1" />
+                  <Edge From="11" To="12" Label="Source2" />
+                  <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="14" To="15" Label="Source1" />
+                  <Edge From="15" To="17" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source2" />
+                  <Edge From="17" To="18" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Hardware</Selector>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>UpdateDataDisplaySettings</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Display</Selector>
+                  </Expression>
+                  <Expression xsi:type="MulticastSubject">
+                    <Name>DataDisplay</Name>
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Miniscope</Selector>
-            </Expression>
-            <Expression xsi:type="MulticastSubject">
-              <Name>Miniscope</Name>
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Commutator</Selector>
-            </Expression>
-            <Expression xsi:type="MulticastSubject">
-              <Name>Commutator</Name>
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Display</Selector>
-            </Expression>
-            <Expression xsi:type="MulticastSubject">
-              <Name>DataDisplay</Name>
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>File</Selector>
-            </Expression>
-            <Expression xsi:type="MulticastSubject">
-              <Name>File</Name>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>UpdateFileSettings</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>File</Selector>
+                  </Expression>
+                  <Expression xsi:type="rx:Condition">
+                    <Name>IsNotRecording</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>File</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>RecordButton</Selector>
+                        </Expression>
+                        <Expression xsi:type="BitwiseNot" />
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="MulticastSubject">
+                    <Name>File</Name>
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                  <Expression xsi:type="rx:Condition">
+                    <Name>IsRecording</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>File</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>RecordButton</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="StringProperty">
+                      <Value>Cannot update file settings while recording data. Stop recording and try to import settings again.</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>MiniscopeLog</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p1:LogWarning" />
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="1" To="5" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="6" To="8" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source2" />
+                  <Edge From="8" To="9" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
             <Expression xsi:type="scr:ExpressionCondition">
               <scr:Expression>it.Exception != null</scr:Expression>
@@ -867,24 +1256,17 @@
             <Edge From="1" To="2" Label="Source2" />
             <Edge From="2" To="3" Label="Source1" />
             <Edge From="3" To="4" Label="Source1" />
-            <Edge From="3" To="18" Label="Source1" />
+            <Edge From="3" To="11" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
             <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
+            <Edge From="6" To="8" Label="Source1" />
             <Edge From="6" To="9" Label="Source1" />
-            <Edge From="6" To="14" Label="Source1" />
-            <Edge From="6" To="16" Label="Source1" />
-            <Edge From="7" To="8" Label="Source1" />
-            <Edge From="9" To="10" Label="Source1" />
-            <Edge From="9" To="12" Label="Source1" />
-            <Edge From="10" To="11" Label="Source1" />
-            <Edge From="12" To="13" Label="Source1" />
+            <Edge From="6" To="10" Label="Source1" />
+            <Edge From="11" To="12" Label="Source1" />
+            <Edge From="12" To="14" Label="Source1" />
+            <Edge From="13" To="14" Label="Source2" />
             <Edge From="14" To="15" Label="Source1" />
-            <Edge From="16" To="17" Label="Source1" />
-            <Edge From="18" To="19" Label="Source1" />
-            <Edge From="19" To="21" Label="Source1" />
-            <Edge From="20" To="21" Label="Source2" />
-            <Edge From="21" To="22" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -897,6 +1279,18 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:DistinctUntilChanged" />
+            </Expression>
+            <Expression xsi:type="rx:PublishSubject">
+              <Name>GenerateHardwareSettings</Name>
+            </Expression>
+            <Expression xsi:type="rx:PublishSubject">
+              <Name>GenerateMiniscopeConfiguration</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>GenerateMiniscopeConfiguration</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>GenerateHardwareSettings</Name>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>Miniscope</Name>
@@ -961,24 +1355,26 @@
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
-            <Edge From="1" To="6" Label="Source1" />
-            <Edge From="1" To="15" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
             <Edge From="2" To="3" Label="Source1" />
-            <Edge From="3" To="6" Label="Source2" />
-            <Edge From="4" To="5" Label="Source1" />
-            <Edge From="5" To="6" Label="Source3" />
+            <Edge From="3" To="19" Label="Source1" />
+            <Edge From="4" To="18" Label="Source1" />
+            <Edge From="5" To="10" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="6" To="14" Label="Source1" />
-            <Edge From="7" To="14" Label="Source2" />
+            <Edge From="7" To="10" Label="Source2" />
             <Edge From="8" To="9" Label="Source1" />
-            <Edge From="9" To="14" Label="Source3" />
+            <Edge From="9" To="10" Label="Source3" />
             <Edge From="10" To="11" Label="Source1" />
-            <Edge From="11" To="14" Label="Source4" />
+            <Edge From="11" To="18" Label="Source2" />
             <Edge From="12" To="13" Label="Source1" />
-            <Edge From="13" To="14" Label="Source5" />
-            <Edge From="14" To="15" Label="Source2" />
-            <Edge From="15" To="17" Label="Source1" />
-            <Edge From="16" To="17" Label="Source2" />
+            <Edge From="13" To="18" Label="Source3" />
+            <Edge From="14" To="15" Label="Source1" />
+            <Edge From="15" To="18" Label="Source4" />
+            <Edge From="16" To="17" Label="Source1" />
+            <Edge From="17" To="18" Label="Source5" />
+            <Edge From="18" To="19" Label="Source2" />
+            <Edge From="19" To="21" Label="Source1" />
+            <Edge From="20" To="21" Label="Source2" />
           </Edges>
         </Workflow>
       </Expression>
@@ -1412,7 +1808,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="IntProperty">
-                            <Value>3600</Value>
+                            <Value>5</Value>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="MulticastSubject">
@@ -2683,7 +3079,7 @@
                                 <Property Name="Capacity" />
                               </Expression>
                               <Expression xsi:type="p1:CircularBufferBuilder">
-                                <p1:Capacity>0</p1:Capacity>
+                                <p1:Capacity>100</p1:Capacity>
                                 <p1:ValueSelector>X,Y,Z,W</p1:ValueSelector>
                               </Expression>
                               <Expression xsi:type="SubscribeSubject">
@@ -2783,7 +3179,7 @@
                                 <Property Name="Capacity" />
                               </Expression>
                               <Expression xsi:type="p1:CircularBufferBuilder">
-                                <p1:Capacity>0</p1:Capacity>
+                                <p1:Capacity>100</p1:Capacity>
                                 <p1:ValueSelector>Item1,Item2</p1:ValueSelector>
                               </Expression>
                               <Expression xsi:type="SubscribeSubject">
@@ -2877,7 +3273,7 @@
                                 <Property Name="Capacity" />
                               </Expression>
                               <Expression xsi:type="p1:CircularBufferBuilder">
-                                <p1:Capacity>0</p1:Capacity>
+                                <p1:Capacity>100</p1:Capacity>
                                 <p1:ValueSelector>Yaw,Pitch,Roll</p1:ValueSelector>
                               </Expression>
                               <Expression xsi:type="SubscribeSubject">
@@ -3384,6 +3780,36 @@
                     </Workflow>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
+                    <Name>Status</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>CameraIndex</Selector>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>CameraIndex</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>MiniscopeLog</Name>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="LogProperty.bonsai">
+                          <DueTime>PT0S</DueTime>
+                          <Format>Camera Index: {0}</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
                     <Name>Commutator</Name>
                   </Expression>
                   <Expression xsi:type="MemberSelector">
@@ -3509,13 +3935,15 @@
                   <Edge From="8" To="9" Label="Source1" />
                   <Edge From="10" To="11" Label="Source1" />
                   <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="12" To="15" Label="Source1" />
-                  <Edge From="12" To="17" Label="Source1" />
-                  <Edge From="12" To="19" Label="Source1" />
                   <Edge From="13" To="14" Label="Source1" />
                   <Edge From="15" To="16" Label="Source1" />
-                  <Edge From="17" To="18" Label="Source1" />
-                  <Edge From="19" To="20" Label="Source1" />
+                  <Edge From="15" To="18" Label="Source1" />
+                  <Edge From="15" To="20" Label="Source1" />
+                  <Edge From="15" To="22" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source1" />
+                  <Edge From="18" To="19" Label="Source1" />
+                  <Edge From="20" To="21" Label="Source1" />
+                  <Edge From="22" To="23" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -3806,7 +4234,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:GenerateRecordingFileNames">
-                <p1:FileName />
+                <p1:FileName>../data/run_</p1:FileName>
                 <p1:Suffix>FileCount</p1:Suffix>
               </Combinator>
             </Expression>
@@ -4495,17 +4923,118 @@
                       <rx:Count>1</rx:Count>
                     </Combinator>
                   </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>Miniscope</Name>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:WithLatestFrom" />
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>Item2</Selector>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p1:SerializeToYaml" />
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>SerializeConfiguration</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:ConfigurationRequest">
+                            <p1:RequestType>None</p1:RequestType>
+                            <p1:ConfigFilePath />
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>GenerateHardwareSettings</Name>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>GenerateMiniscopeConfiguration</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>GenerateMiniscopeConfiguration</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>GenerateHardwareSettings</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Miniscope</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Miniscope" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Commutator</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Commutator" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:HardwareSettings" />
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Hardware" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Status</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Camera" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>DataDisplay</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Display" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>File</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="File" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:MiniscopeConfiguration" />
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:WithLatestFrom" />
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Item2</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:SerializeToYaml" />
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="19" Label="Source1" />
+                        <Edge From="4" To="18" Label="Source1" />
+                        <Edge From="5" To="10" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
+                        <Edge From="7" To="10" Label="Source2" />
+                        <Edge From="8" To="9" Label="Source1" />
+                        <Edge From="9" To="10" Label="Source3" />
+                        <Edge From="10" To="11" Label="Source1" />
+                        <Edge From="11" To="18" Label="Source2" />
+                        <Edge From="12" To="13" Label="Source1" />
+                        <Edge From="13" To="18" Label="Source3" />
+                        <Edge From="14" To="15" Label="Source1" />
+                        <Edge From="15" To="18" Label="Source4" />
+                        <Edge From="16" To="17" Label="Source1" />
+                        <Edge From="17" To="18" Label="Source5" />
+                        <Edge From="18" To="19" Label="Source2" />
+                        <Edge From="19" To="20" Label="Source1" />
+                        <Edge From="20" To="21" Label="Source1" />
+                        <Edge From="21" To="22" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
                   <Expression xsi:type="ExternalizedMapping">
                     <Property Name="Path" DisplayName="ConfigFileName" />
@@ -4568,12 +5097,9 @@
                   <Edge From="40" To="41" Label="Source1" />
                   <Edge From="41" To="42" Label="Source1" />
                   <Edge From="42" To="43" Label="Source1" />
-                  <Edge From="45" To="47" Label="Source1" />
-                  <Edge From="46" To="47" Label="Source2" />
-                  <Edge From="47" To="48" Label="Source1" />
-                  <Edge From="48" To="49" Label="Source1" />
-                  <Edge From="49" To="51" Label="Source1" />
-                  <Edge From="50" To="51" Label="Source2" />
+                  <Edge From="45" To="46" Label="Source1" />
+                  <Edge From="46" To="48" Label="Source1" />
+                  <Edge From="47" To="48" Label="Source2" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -4698,7 +5224,7 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:FileSettings">
                       <p1:RecordButton>false</p1:RecordButton>
-                      <p1:RecordingMode>Segmented</p1:RecordingMode>
+                      <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
                       <p1:FileName>../data/run_</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>
@@ -5007,7 +5533,7 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:FileSettings">
                       <p1:RecordButton>false</p1:RecordButton>
-                      <p1:RecordingMode>Segmented</p1:RecordingMode>
+                      <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
                       <p1:FileName>../data/run_</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>
@@ -5205,7 +5731,7 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:FileSettings">
                       <p1:RecordButton>false</p1:RecordButton>
-                      <p1:RecordingMode>Segmented</p1:RecordingMode>
+                      <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
                       <p1:FileName>../data/run_</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>

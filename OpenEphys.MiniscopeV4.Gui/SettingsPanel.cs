@@ -9,6 +9,8 @@ using System.Numerics;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace OpenEphys.MiniscopeV4.Gui;
 
@@ -71,6 +73,9 @@ public class SettingsPanel
             var portNames = SerialPort.GetPortNames();
             bool wasAcquiring = false;
 
+            Task<string> exportFileTask = null;
+            Task<string> importFileTask = null;
+
             // NB: Expect these to be BehaviorSubjects, so we can take the first value immediately.
             MiniscopeLog log = null;
             var logSubscription = logSource.Take(1).Subscribe(value => log = value);
@@ -98,6 +103,7 @@ public class SettingsPanel
                 bool commutatorAutoConnect = hardwareSettings.Commutator.AutoConnect;
 
                 ConfigurationRequestType requestType = ConfigurationRequestType.None;
+                string configFilePath = string.Empty;
 
                 bool validPort = !string.IsNullOrEmpty(portName) && portNames.Contains(portName);
                 if (AcquisitionStatus && !wasAcquiring && commutatorAutoConnect && !commutatorConnected)
@@ -181,16 +187,60 @@ public class SettingsPanel
                         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + avail - exportButtonWidth - buttonGap - importButtonWidth);
                         if (ImGui.Button(exportButtonString, new Vector2(exportButtonWidth, 0f)))
                         {
-                            requestType = ConfigurationRequestType.ManualSave;
+                            exportFileTask = FileDialogHelpers.RunDialogTask(
+                                () => new SaveFileDialog
+                                {
+                                    Filter = "YAML files (*.yml;*.yaml)|*.yml;*.yaml|All Files|*.*",
+                                    Title = "Choose where to save the configuration.",
+                                    AddExtension = true,
+                                    DefaultExt = "yml",
+                                    FileName = "config.yml",
+                                    OverwritePrompt = true,
+                                },
+                                dlg => ((SaveFileDialog)dlg).FileName);
                         }
                         Tooltip.Describe("Export the current settings to a configuration file.");
+
+                        if (exportFileTask != null && exportFileTask.IsCompleted)
+                        {
+                            var result = exportFileTask.Result;
+
+                            if (!string.IsNullOrEmpty(result))
+                            {
+                                requestType = ConfigurationRequestType.ManualSave;
+                                configFilePath = result;
+                            }
+
+                            exportFileTask = null;
+                        }
 
                         ImGui.SameLine(0, ImGui.GetStyle().ItemSpacing.X);
                         if (ImGui.Button(importButtonString, new Vector2(importButtonWidth, 0f)))
                         {
-                            requestType = ConfigurationRequestType.ManualLoad;
+                            importFileTask = FileDialogHelpers.RunDialogTask(
+                               () => new OpenFileDialog
+                               {
+                                   Filter = "YAML files (*.yml;*.yaml)|*.yml;*.yaml|All Files|*.*",
+                                   Title = "Choose a configuration to load.",
+                                   CheckFileExists = true,
+                                   Multiselect = false,
+                               },
+                               dlg => ((OpenFileDialog)dlg).FileName);
                         }
                         Tooltip.Describe("Import settings from a previously exported configuration file.");
+
+                        if (importFileTask != null && importFileTask.IsCompleted)
+                        {
+                            var result = importFileTask.Result;
+
+                            if (!string.IsNullOrEmpty(result))
+                            {
+                                requestType = ConfigurationRequestType.ManualLoad;
+                                configFilePath = result;
+                            }
+
+                            importFileTask = null;
+                        }
 
                         ImGui.Spacing();
                         ImGui.Separator();
@@ -449,7 +499,7 @@ public class SettingsPanel
                 var updatedConfigurationRequest = new ConfigurationRequest
                 {
                     RequestType = requestType,
-                    ConfigFilePath = ""
+                    ConfigFilePath = configFilePath
                 };
 
                 observer.OnNext(Tuple.Create(layout, updatedHardwareSettings, updatedConfigurationRequest));
