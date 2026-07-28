@@ -1,7 +1,9 @@
 using Bonsai;
 using Hexa.NET.ImGui;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -17,7 +19,26 @@ namespace OpenEphys.MiniscopeV4.Gui;
 [Description("Renders the full-width console log docked at the bottom of the GUI.")]
 public class ConsolePanel
 {
-    static int RenderLogLines(LogEntry[] entries, bool showInfo, bool showWarnings, bool showErrors, bool showPropertyChanges)
+    static bool IsVisible(LogLevel level, bool showInfo, bool showWarnings, bool showErrors, bool showPropertyChanges) =>
+        level switch
+        {
+            LogLevel.Warning => showWarnings,
+            LogLevel.Error => showErrors,
+            LogLevel.PropertyChanged => showPropertyChanges,
+            LogLevel.Info => showInfo,
+            _ => true,
+        };
+
+    static string FormatSelectedEntries(LogEntry[] entries, HashSet<int> selectedIndices) =>
+        string.Join("\n", selectedIndices.OrderBy(i => i).Select(i => entries[i].ToString()));
+
+    static string FormatAllEntries(LogEntry[] entries, bool showInfo, bool showWarnings, bool showErrors, bool showPropertyChanges) =>
+        string.Join("\n", entries
+            .Where(e => IsVisible(e.Level, showInfo, showWarnings, showErrors, showPropertyChanges))
+            .Select(e => e.ToString()));
+
+    static int RenderLogLines(LogEntry[] entries, bool showInfo, bool showWarnings, bool showErrors, bool showPropertyChanges,
+        HashSet<int> selectedIndices, ref int lastClickedIndex)
     {
         int rendered = 0;
 
@@ -25,21 +46,67 @@ public class ConsolePanel
         {
             var entry = entries[i];
 
-            bool visible = entry.Level switch
-            {
-                LogLevel.Warning => showWarnings,
-                LogLevel.Error => showErrors,
-                LogLevel.PropertyChanged => showPropertyChanges,
-                LogLevel.Info => showInfo,
-                _ => true,
-            };
-
-            if (!visible)
+            if (!IsVisible(entry.Level, showInfo, showWarnings, showErrors, showPropertyChanges))
                 continue;
 
             rendered++;
 
-            var text = $"[{entry.Timestamp:HH:mm:ss}] {entry.Message}";
+            ImGui.PushID(i);
+
+            var text = entry.SimpleString();
+            Vector2 textSize = ImGui.CalcTextSize(text);
+
+            bool isSelected = selectedIndices.Contains(i);
+            if (ImGui.Selectable("##sel", isSelected, ImGuiSelectableFlags.AllowOverlap, new Vector2(0, textSize.Y)))
+            {
+                bool ctrl = ImGui.GetIO().KeyCtrl;
+                bool shift = ImGui.GetIO().KeyShift;
+
+                if (shift && lastClickedIndex >= 0)
+                {
+                    selectedIndices.Clear();
+                    int lo = Math.Min(lastClickedIndex, i);
+                    int hi = Math.Max(lastClickedIndex, i);
+                    for (int j = lo; j <= hi; j++)
+                    {
+                        if (IsVisible(entries[j].Level, showInfo, showWarnings, showErrors, showPropertyChanges))
+                            selectedIndices.Add(j);
+                    }
+                }
+                else if (ctrl)
+                {
+                    if (!selectedIndices.Add(i))
+                        selectedIndices.Remove(i);
+                    lastClickedIndex = i;
+                }
+                else
+                {
+                    selectedIndices.Clear();
+                    selectedIndices.Add(i);
+                    lastClickedIndex = i;
+                }
+            }
+
+            if (ImGui.BeginPopupContextItem("##ctx"))
+            {
+                if (!selectedIndices.Contains(i))
+                {
+                    selectedIndices.Clear();
+                    selectedIndices.Add(i);
+                    lastClickedIndex = i;
+                }
+
+                if (ImGui.MenuItem("Copy Selected"))
+                    ImGui.SetClipboardText(FormatSelectedEntries(entries, selectedIndices));
+                if (ImGui.MenuItem("Copy All"))
+                    ImGui.SetClipboardText(FormatAllEntries(entries, showInfo, showWarnings, showErrors, showPropertyChanges));
+
+                ImGui.EndPopup();
+            }
+
+            ImGui.PopID();
+
+            ImGui.SameLine(0, 0);
 
             switch (entry.Level)
             {
@@ -85,6 +152,9 @@ public class ConsolePanel
             bool showWarnings = true;
             bool showErrors = true;
             bool showPropertyChanges = true;
+
+            var selectedIndices = new HashSet<int>();
+            int lastClickedIndex = -1;
 
             // NB: Expect this to be a BehaviorSubject, so we can take the first value immediately.
             MiniscopeLog log = null;
@@ -204,16 +274,28 @@ public class ConsolePanel
                                 ImGui.Dummy(new Vector2(1f, sepHeight));
 
                                 ImGui.SameLine();
-                                ImGui.Checkbox("Info##console_filter_info", ref showInfo);
+                                if (ImGui.Checkbox("Info##console_filter_info", ref showInfo) && !showInfo)
+                                {
+                                    selectedIndices.RemoveWhere(i => logCache[i].Level == LogLevel.Info);
+                                }
                                 Tooltip.Describe("Show or hide informational messages.");
                                 ImGui.SameLine();
-                                ImGui.Checkbox("Warnings##console_filter_warning", ref showWarnings);
+                                if (ImGui.Checkbox("Warnings##console_filter_warning", ref showWarnings) && !showWarnings)
+                                {
+                                    selectedIndices.RemoveWhere(i => logCache[i].Level == LogLevel.Warning);
+                                }
                                 Tooltip.Describe("Show or hide warning messages.");
                                 ImGui.SameLine();
-                                ImGui.Checkbox("Errors##console_filter_error", ref showErrors);
+                                if (ImGui.Checkbox("Errors##console_filter_error", ref showErrors) && !showErrors)
+                                {
+                                    selectedIndices.RemoveWhere(i => logCache[i].Level == LogLevel.Error);
+                                }
                                 Tooltip.Describe("Show or hide error messages.");
                                 ImGui.SameLine();
-                                ImGui.Checkbox("Property Changes##console_filter_property", ref showPropertyChanges);
+                                if (ImGui.Checkbox("Property Changes##console_filter_property", ref showPropertyChanges) && !showPropertyChanges)
+                                {
+                                    selectedIndices.RemoveWhere(i => logCache[i].Level == LogLevel.PropertyChanged);
+                                }
                                 Tooltip.Describe("Show or hide messages logged when hardware settings change.");
                             }
 
@@ -221,7 +303,11 @@ public class ConsolePanel
 
                             ImGui.SameLine(rowWidth - clearWidth);
                             if (ImGui.Button("Clear##console_clear"))
+                            {
                                 log.Clear();
+                                selectedIndices.Clear();
+                                lastClickedIndex = -1;
+                            }
                             Tooltip.Describe("Remove all messages from the console.");
 
                             ImGui.Separator();
@@ -234,7 +320,7 @@ public class ConsolePanel
                                 }
                                 else
                                 {
-                                    int visibleCount = RenderLogLines(logCache, showInfo, showWarnings, showErrors, showPropertyChanges);
+                                    int visibleCount = RenderLogLines(logCache, showInfo, showWarnings, showErrors, showPropertyChanges, selectedIndices, ref lastClickedIndex);
                                     if (visibleCount == 0)
                                     {
                                         ImGui.TextDisabled("No messages match the current filter.");
@@ -244,6 +330,12 @@ public class ConsolePanel
                                         ImGui.SetScrollHereY(1f);
                                         scrollVersion = logVersion;
                                     }
+                                }
+
+                                if (ImGui.IsWindowFocused(ImGuiFocusedFlags.ChildWindows) && ImGui.GetIO().KeyCtrl &&
+                                    ImGui.IsKeyPressed(ImGuiKey.C) && selectedIndices.Count > 0)
+                                {
+                                    ImGui.SetClipboardText(FormatSelectedEntries(logCache, selectedIndices));
                                 }
                             }
 
