@@ -215,7 +215,7 @@
       "type": "object",
       "properties": {
         "BufferSize": {
-          "description": "The rolling buffer size, in samples, used by the time series plots.",
+          "description": "The buffer size, in samples, used by the time series plots.",
           "type": "integer",
           "default": 100
         },
