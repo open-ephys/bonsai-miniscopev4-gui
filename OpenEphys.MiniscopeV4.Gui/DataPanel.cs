@@ -384,8 +384,8 @@ public class DataPanel
 
                                         if (Tooltip.Begin(allowWhenDisabled: true))
                                         {
-                                            Tooltip.AddLine("Save a snapshot of the current image to the data folder.");
-                                            Tooltip.AddKeyboardShortcut("S", "take a snapshot at any time");
+                                            Tooltip.AddLine("Save a snapshot of the current image to the data path.");
+                                            Tooltip.AddKeyboardShortcut("S");
 
                                             if (!AcquisitionStatus)
                                                 Tooltip.Note("Unavailable while acquisition is stopped.");
@@ -443,7 +443,7 @@ public class DataPanel
                                         int backgroundFramesMin = 2, backgroundFramesMax = 1000;
                                         if (ImGui.InputInt("##background_frames", ref backgroundFrames))
                                             backgroundFrames = Math.Max(backgroundFramesMin, Math.Min(backgroundFramesMax, backgroundFrames));
-                                        Tooltip.Describe($"Number of frames averaged to form the baseline (F) for the dF/F calculation [{backgroundFramesMin} - {backgroundFramesMax}].");
+                                        Tooltip.Describe($"Number of frames averaged to form the baseline for the dF/F calculation [{backgroundFramesMin} - {backgroundFramesMax}].");
                                         ImGui.Spacing();
 
                                         ImGui.TextUnformatted("Background threshold:");
@@ -483,7 +483,7 @@ public class DataPanel
                                         if (Tooltip.Begin(allowWhenDisabled: true))
                                         {
                                             Tooltip.AddLine("Clear the accumulated projection and start building it again from the current frame.");
-                                            Tooltip.AddKeyboardShortcut("R", "reset the max projection accumulation");
+                                            Tooltip.AddKeyboardShortcut("R");
                                             Tooltip.End();
                                         }
 
@@ -559,7 +559,7 @@ public class DataPanel
                                         {
                                             Tooltip.AddLine("Overlay the live image on the reference image to align the current field of view with a previous one.");
                                             if (fileMissing)
-                                                Tooltip.Note("Choose a valid reference image first.");
+                                                Tooltip.Note("Unavailable until a valid reference image is chosen.");
                                             Tooltip.End();
                                         }
 
@@ -870,12 +870,12 @@ public class DataPanel
             if (imageExpanded)
             {
                 Tooltip.AddLine("Restore the side panels and signal plots.");
-                Tooltip.AddKeyboardShortcut("E", "restore all other controls");
+                Tooltip.AddKeyboardShortcut("E");
             }
             else
             {
                 Tooltip.AddLine("Expand the image to fill the window, hiding the side panels and signal plots.");
-                Tooltip.AddKeyboardShortcut("E", "expand the image");
+                Tooltip.AddKeyboardShortcut("E");
             }
             Tooltip.End();
         }
@@ -916,7 +916,7 @@ public class DataPanel
         {
             Tooltip.AddLine("Number of most recent samples shown in the scrolling plots.");
             if (AcquisitionStatus)
-                Tooltip.Note("Cannot be changed while acquiring data.");
+                Tooltip.Note("Unavailable while acquiring.");
             Tooltip.End();
         }
 

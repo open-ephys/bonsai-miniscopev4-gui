@@ -80,7 +80,7 @@ public class StatusBar
                     {
                         Tooltip.AddLine("Index of the Miniscope to acquire from, in the order the cameras are detected (0 is the first camera).");
                         if (isConnected)
-                            Tooltip.Note("Cannot be changed while acquiring.");
+                            Tooltip.Note("Unavailable while acquiring.");
                         Tooltip.End();
                     }
 
@@ -164,9 +164,9 @@ public class StatusBar
                         Tooltip.AddLine(paused
                             ? "Resume updating the live display and plots. Acquisition and recording are unaffected."
                             : "Freeze the live display and plots without stopping acquisition or recording.");
-                        Tooltip.AddKeyboardShortcut("Spacebar", "pause or resume the display");
+                        Tooltip.AddKeyboardShortcut("Spacebar");
                         if (!isConnected)
-                            Tooltip.Note("Available only while acquiring.");
+                            Tooltip.Note("Unavailable while acquisition is stopped.");
                         Tooltip.End();
                     }
 

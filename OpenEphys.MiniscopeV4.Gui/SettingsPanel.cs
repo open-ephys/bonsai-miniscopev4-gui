@@ -209,7 +209,7 @@ public class SettingsPanel
                             ImGui.SetNextItemWidth(-1f);
                             double focusMin = -100, focusMax = 100;
                             ImGui.SliderScalar("##focus", ImGuiDataType.Double, &focus, &focusMin, &focusMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
-                            Tooltip.Slider($"Adjust the focal plane of the Miniscope's electrowetting lens ({focusMin} - {focusMax}).");
+                            Tooltip.Slider($"Adjust the focal plane of the Miniscope's electrowetting lens [{focusMin} - {focusMax}].");
 
                             ImGui.AlignTextToFramePadding();
                             ImGui.Text("LED Brightness: ");
@@ -217,7 +217,7 @@ public class SettingsPanel
                             ImGui.SetNextItemWidth(-1f);
                             double brightnessMin = 0, brightnessMax = 100;
                             ImGui.SliderScalar("##ledbrightness", ImGuiDataType.Double, &ledBrightness, &brightnessMin, &brightnessMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
-                            Tooltip.Slider("Set the excitation LED brightness, as a percentage of maximum (0 - 100%).");
+                            Tooltip.Slider("Set the excitation LED brightness, as a percentage of maximum [0 - 100].");
 
                             if (ImGui.BeginTable("##row2", 2, ImGuiTableFlags.SizingStretchSame))
                             {
@@ -232,7 +232,7 @@ public class SettingsPanel
                                     if (Enum.TryParse<FrameRateV4>(FrameRateValues[frameRateIndex], out var result))
                                         frameRate = result;
                                 }
-                                Tooltip.Describe("Select the acquisition frame rate, in frames per second (Hz).");
+                                Tooltip.Describe("Select the acquisition frame rate, in frames per second.");
 
                                 ImGui.TableNextColumn();
                                 ImGui.AlignTextToFramePadding();
@@ -259,7 +259,7 @@ public class SettingsPanel
                             {
                                 ledRespectsDigitalIn = DigitalInValues[digitalInIndex];
                             }
-                            Tooltip.Describe("Gate the excitation LED with a digital input. The LED turns on only while the selected input is high. Set to None to keep the LED always on.");
+                            Tooltip.Describe("Gate the excitation LED with a digital input: it turns on only while the selected input is high. Set to None to keep it always on.");
 
                             ImGui.Spacing();
                             ImGui.Separator();
@@ -328,7 +328,7 @@ public class SettingsPanel
                             {
                                 Tooltip.AddLine("Select the serial (COM) port the commutator is connected to.");
                                 if (commutatorConnected)
-                                    Tooltip.Note("Disconnect the commutator to change the port.");
+                                    Tooltip.Note("Unavailable while the commutator is connected.");
                                 Tooltip.End();
                             }
 
@@ -341,7 +341,7 @@ public class SettingsPanel
                             {
                                 Tooltip.AddLine("Rescan the system for available serial (COM) ports.");
                                 if (commutatorConnected)
-                                    Tooltip.Note("Disconnect the commutator to rescan.");
+                                    Tooltip.Note("Unavailable while the commutator is connected.");
                                 Tooltip.End();
                             }
 
@@ -385,7 +385,7 @@ public class SettingsPanel
                                 {
                                     Tooltip.AddLine("Enable the commutator motor so it counteracts cable twist as the animal rotates.");
                                     if (!commutatorConnected)
-                                        Tooltip.Note("Connect the commutator to change this.");
+                                        Tooltip.Note("Unavailable while the commutator is disconnected.");
                                     Tooltip.End();
                                 }
 
@@ -395,7 +395,7 @@ public class SettingsPanel
                                 {
                                     Tooltip.AddLine("Turn on the commutator's indicator LED.");
                                     if (!commutatorConnected)
-                                        Tooltip.Note("Connect the commutator to change this.");
+                                        Tooltip.Note("Unavailable while the commutator is disconnected.");
                                     Tooltip.End();
                                 }
 
