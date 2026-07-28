@@ -12,16 +12,16 @@ using System.Reactive.Linq;
 namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
-/// Represents an operator that creates a rolling buffer object which can be used for
+/// Represents an operator that creates a circular buffer object which can be used for
 /// drawing one or multiple series.
 /// </summary>
-[Description("Creates a rolling buffer object which can be used for drawing one or multiple series.")]
+[Description("Creates a circular buffer object which can be used for drawing one or multiple series.")]
 public class CircularBufferBuilder : SingleArgumentExpressionBuilder
 {
     /// <summary>
-    /// Gets or sets the capacity of the rolling buffer.
+    /// Gets or sets the capacity of the circular buffer.
     /// </summary>
-    [Description("The capacity of the rolling buffer.")]
+    [Description("The capacity of the circular buffer.")]
     public int Capacity { get; set; }
 
     /// <summary>
