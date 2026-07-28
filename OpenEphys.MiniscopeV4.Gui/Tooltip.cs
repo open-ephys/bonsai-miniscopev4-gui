@@ -49,14 +49,12 @@ internal static class Tooltip
     }
 
     /// <summary>
-    /// Add a line to an existing <see cref="Tooltip"/> that prints the keyboard combination to 
-    /// perform a specific action.
+    /// Add a line to an existing <see cref="Tooltip"/> naming the keyboard shortcut for the control's action.
     /// </summary>
-    /// <param name="keyCombination">String defining the complete key combination (i.e., <c>"Ctrl + R"</c>).</param>
-    /// <param name="action">String defining the action that the keyboard shortcut will perform.</param>
-    public static void AddKeyboardShortcut(string keyCombination, string action)
+    /// <param name="keyCombination">String defining the complete key combination (i.e., <c>"Ctrl+R"</c>).</param>
+    public static void AddKeyboardShortcut(string keyCombination)
     {
-        ImGui.TextDisabled($"Press ({keyCombination}) on the keyboard to {action}.");
+        ImGui.TextDisabled($"Shortcut: {keyCombination}");
     }
 
     /// <summary>Ends a tooltip opened with <see cref="Begin"/>.</summary>

@@ -138,8 +138,8 @@ public class FilePanel
                     ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
                     if (Tooltip.Begin())
                     {
-                        Tooltip.AddLine("Folder and filename template used to save all data.");
-                        Tooltip.AddLine("The selected suffix (if any) is inserted after the template and before the extension.");
+                        Tooltip.AddLine("The data path used to save all files: a folder plus a base filename.");
+                        Tooltip.AddLine("The selected suffix (if any) is inserted after the base filename and before the extension.");
                         Tooltip.AddLine($"Video files get '{GenerateRecordingFileNames.ImageExtension}', data files get '{GenerateRecordingFileNames.CsvExtension}', logs get '{GenerateRecordingFileNames.LogExtension}', configuration files get '{GenerateRecordingFileNames.ConfigExtension}' appended automatically.");
                         Tooltip.End();
                     }
@@ -151,7 +151,7 @@ public class FilePanel
                             saveDialogTask = CreateSaveFileDialogTask(fileName);
                         }
                     }
-                    Tooltip.Describe("Browse for a folder and filename template to save data to.");
+                    Tooltip.Describe("Specify a save location and base filename for all data.");
 
                     if (saveDialogTask != null && saveDialogTask.IsCompleted)
                     {
@@ -203,8 +203,7 @@ public class FilePanel
                         if (Tooltip.Begin())
                         {
                             Tooltip.AddLine("Encode saved video with compression to reduce file size, at the cost of higher CPU usage during recording.");
-                            Tooltip.AddLine("When compression is disabled, videos are saved using the 'Y800' codec.");
-                            Tooltip.AddLine("When compression is enabled, videos are saved using the 'MJPG' codec.");
+                            Tooltip.AddLine("Videos are saved using the 'Y800' codec when disabled, or the 'MJPG' codec when enabled.");
                             Tooltip.End();
                         }
 
@@ -332,8 +331,8 @@ public class FilePanel
                             }
                             if (Tooltip.Begin(allowWhenDisabled: true))
                             {
-                                Tooltip.AddLine("Digital input line that triggers recording: recording runs while this input is high.");
-                                if (recordButton) Tooltip.Note("Disarm to change the trigger input.");
+                                Tooltip.AddLine("Digital input that triggers recording: recording runs only while it is high.");
+                                if (recordButton) Tooltip.Note("Unavailable while armed.");
                                 Tooltip.End();
                             }
                             if (recordButton) ImGui.EndDisabled();
@@ -350,7 +349,7 @@ public class FilePanel
                         Vector2 recordButtonSize = new(-1f, ImGui.GetFrameHeight() * 2);
                         if (!recordButtonActive) ImGui.BeginDisabled();
 
-                        string recordLabel = "", tooltipLine = "", shortcutAction = "";
+                        string recordLabel = "", tooltipLine = "";
 
                         if (recordingMode == RecordingMode.Manual || recordingMode == RecordingMode.Segmented)
                         {
@@ -358,13 +357,11 @@ public class FilePanel
                             {
                                 recordLabel = "Stop Recording" + RecordButtonLabelText;
                                 tooltipLine = "Stop the current recording.";
-                                shortcutAction = "stop recording";
                             }
                             else
                             {
                                 recordLabel = "Record" + RecordButtonLabelText;
                                 tooltipLine = "Start recording to the data path.";
-                                shortcutAction = "start recording";
                             }
                         }
                         else if (recordingMode == RecordingMode.Trigger)
@@ -373,13 +370,11 @@ public class FilePanel
                             {
                                 recordLabel = "Disarm" + RecordButtonLabelText;
                                 tooltipLine = "Disarm recording.";
-                                shortcutAction = "disarm recording";
                             }
                             else
                             {
                                 recordLabel = "Arm Recording" + RecordButtonLabelText;
                                 tooltipLine = "Arm recording so the selected digital input can control it.";
-                                shortcutAction = "arm recording";
                             }
                         }
 
@@ -391,9 +386,9 @@ public class FilePanel
                         if (Tooltip.Begin(allowWhenDisabled: true))
                         {
                             Tooltip.AddLine(tooltipLine);
-                            Tooltip.AddKeyboardShortcut("Ctrl + R", shortcutAction);
+                            Tooltip.AddKeyboardShortcut("Ctrl+R");
                             if (!recordButtonActive)
-                                Tooltip.Note("Start acquisition before recording.");
+                                Tooltip.Note("Unavailable while acquisition is stopped.");
                             Tooltip.End();
                         }
 
@@ -437,7 +432,7 @@ public class FilePanel
         {
             Tooltip.AddLine(description);
             if (recording)
-                Tooltip.Note("Cannot change the recording mode while recording.");
+                Tooltip.Note("Unavailable while recording.");
             Tooltip.End();
         }
     }
