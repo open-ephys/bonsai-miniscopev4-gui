@@ -134,6 +134,8 @@ public class FilePanel
                     const string browseLabel = "Browse";
                     var (selectWidth, browseWidth, inputWidth) = CalculateFileNameInputWidth(selectLabel, browseLabel);
 
+                    if (recordButton) ImGui.BeginDisabled();
+
                     ImGui.SetNextItemWidth(inputWidth);
                     ImGui.InputText("##filename", ref fileName, bufSize, ImGuiInputTextFlags.ElideLeft);
                     if (Tooltip.Begin())
@@ -141,6 +143,7 @@ public class FilePanel
                         Tooltip.AddLine("The data path used to save all files: a folder plus a base filename.");
                         Tooltip.AddLine("The selected suffix (if any) is inserted after the base filename and before the extension.");
                         Tooltip.AddLine($"Video files get '{GenerateRecordingFileNames.ImageExtension}', data files get '{GenerateRecordingFileNames.CsvExtension}', logs get '{GenerateRecordingFileNames.LogExtension}', configuration files get '{GenerateRecordingFileNames.ConfigExtension}' appended automatically.");
+                        AddRecordingTooltipNote();
                         Tooltip.End();
                     }
                     ImGui.SameLine();
@@ -151,7 +154,7 @@ public class FilePanel
                             saveDialogTask = CreateSaveFileDialogTask(fileName);
                         }
                     }
-                    Tooltip.Describe("Specify a save location and base filename for all data.");
+                    RecordModeTooltip("Specify a save location and base filename for all data.", recordButton);
 
                     if (saveDialogTask != null && saveDialogTask.IsCompleted)
                     {
@@ -174,7 +177,7 @@ public class FilePanel
                         if (Directory.Exists(dir))
                             System.Diagnostics.Process.Start("explorer.exe", dir);
                     }
-                    Tooltip.Describe("Open the data folder in File Explorer to browse for previously saved data files.");
+                    RecordModeTooltip("Open the data folder in File Explorer to browse for previously saved data files.", recordButton);
 
                     if (ImGui.BeginTable("##writer_parameters", 2, ImGuiTableFlags.SizingStretchSame))
                     {
@@ -194,6 +197,7 @@ public class FilePanel
                             Tooltip.AddLine("- None leaves the name as-is.");
                             Tooltip.AddLine("- FileCount adds an incrementing number.");
                             Tooltip.AddLine("- Timestamp adds the recording's date and time.");
+                            AddRecordingTooltipNote();
                             Tooltip.End();
                         }
 
@@ -204,6 +208,7 @@ public class FilePanel
                         {
                             Tooltip.AddLine("Encode saved video with compression to reduce file size, at the cost of higher CPU usage during recording.");
                             Tooltip.AddLine("Videos are saved using the 'Y800' codec when disabled, or the 'MJPG' codec when enabled.");
+                            AddRecordingTooltipNote();
                             Tooltip.End();
                         }
 
@@ -212,7 +217,6 @@ public class FilePanel
 
                     ImGui.Separator();
 
-                    if (recordButton) ImGui.BeginDisabled();
                     ImGui.AlignTextToFramePadding();
                     ImGui.Text("Mode: ");
                     ImGui.SameLine();
@@ -432,10 +436,12 @@ public class FilePanel
         {
             Tooltip.AddLine(description);
             if (recording)
-                Tooltip.Note("Unavailable while recording.");
+                AddRecordingTooltipNote();
             Tooltip.End();
         }
     }
+
+    static void AddRecordingTooltipNote() => Tooltip.Note("Unavailable while recording.");
 
     static Task<string> CreateSaveFileDialogTask(string fileName) => FileDialogHelpers.RunDialogTask(() => new SaveFileDialog
     {
