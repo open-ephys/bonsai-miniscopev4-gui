@@ -35,7 +35,17 @@ public enum LogLevel
 /// <param name="FrameNumber">The frame number associated with the message.</param>
 /// <param name="Level">The severity of the message.</param>
 /// <param name="Message">The message text.</param>
-public readonly record struct LogEntry(DateTime Timestamp, int FrameNumber, LogLevel Level, string Message);
+public readonly record struct LogEntry(DateTime Timestamp, int FrameNumber, LogLevel Level, string Message)
+{
+    /// <summary>
+    /// Gets a simple string with the timestamp and the message in the <see cref="LogEntry"/>.
+    /// </summary>
+    /// <returns>String in the format <c>[{Timestamp:HH:mm:ss}] {Message}</c></returns>
+    public readonly string SimpleString() => $"[{Timestamp:HH:mm:ss}] {Message}";
+
+    /// <inheritdoc/>
+    public override readonly string ToString() => $"[{Timestamp:HH:mm:ss}] [{Level}] [Frame {FrameNumber}] {Message}";
+}
 
 /// <summary>
 /// A thread-safe queue that accumulates console messages (errors, written file paths, and other notable
