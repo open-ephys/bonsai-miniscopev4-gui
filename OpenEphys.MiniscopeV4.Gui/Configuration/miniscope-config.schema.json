@@ -41,7 +41,7 @@
       "title": "SegmentMode",
       "description": "How a segmented recording is split into files and when it stops.",
       "type": "string",
-      "enum": [ "SingleFile", "TotalDuration", "AutoRestart" ]
+      "enum": [ "SingleFile", "MultipleFiles", "AutoRestart" ]
     },
     "Scalar": {
       "title": "Scalar",

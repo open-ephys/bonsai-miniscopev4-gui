@@ -78,7 +78,9 @@ public class StatusBar
                     ImGui.InputInt("##statusbar_index", ref cameraIndex, 0, 0);
                     if (Tooltip.Begin(allowWhenDisabled: true))
                     {
-                        Tooltip.AddLine("Index of the Miniscope to acquire from, in the order the cameras are detected (0 is the first camera).");
+                        Tooltip.AddLine(
+                            "Index of the Miniscope to acquire from, in the order\n" +
+                            "the cameras are detected (0 is the first camera).");
                         if (isConnected)
                             Tooltip.Note("Unavailable while acquiring.");
                         Tooltip.End();
