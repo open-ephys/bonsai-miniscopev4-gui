@@ -1,7 +1,9 @@
 using Bonsai;
 using Hexa.NET.ImGui;
+using Newtonsoft.Json.Linq;
 using OpenEphys.Miniscope;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO.Ports;
 using System.Linq;
@@ -9,6 +11,7 @@ using System.Numerics;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -70,11 +73,26 @@ public class SettingsPanel
     {
         return Observable.Create<Tuple<GuiLayout, HardwareSettings, ConfigurationRequest>>(observer =>
         {
-            var portNames = SerialPort.GetPortNames();
+            List<string> portNames = new();
+            List<string> pendingPortNames = null;
+            bool initialScanStarted = false;
             bool wasAcquiring = false;
 
             Task<string> exportFileTask = null;
             Task<string> importFileTask = null;
+            List<Task<Tuple<string, bool>>> querySerialPorts = new();
+
+            void StartPortScan()
+            {
+                if (querySerialPorts.Count > 0) return;
+
+                pendingPortNames = SerialPort.GetPortNames().ToList();
+
+                foreach (var port in pendingPortNames)
+                {
+                    querySerialPorts.Add(QuerySerialPort(port));
+                }
+            }
 
             // NB: Expect these to be BehaviorSubjects, so we can take the first value immediately.
             MiniscopeLog log = null;
@@ -89,6 +107,12 @@ public class SettingsPanel
             {
                 var (layout, hardwareSettings) = value;
                 bool imageExpanded = layout.ImageExpanded;
+
+                if (!initialScanStarted)
+                {
+                    initialScanStarted = true;
+                    StartPortScan();
+                }
 
                 double ledBrightness = hardwareSettings.Miniscope.LedBrightness;
                 double focus = hardwareSettings.Miniscope.Focus;
@@ -338,17 +362,41 @@ public class SettingsPanel
                             ImGui.SameLine();
 
                             var style = ImGui.GetStyle();
-                            float refreshButtonWidth = ImGui.CalcTextSize("Refresh").X + style.FramePadding.X * 2;
+                            float refreshButtonWidth = ImGui.CalcTextSize("Searching").X + style.FramePadding.X * 2;
                             float comboWidth = ImGui.GetContentRegionAvail().X - refreshButtonWidth - style.ItemSpacing.X;
                             ImGui.SetNextItemWidth(comboWidth);
 
-                            if (commutatorConnected)
-                                ImGui.BeginDisabled();
-
-                            int portIndex = Array.IndexOf(portNames, portName);
-                            if (portIndex < 0)
+                            for (int i = querySerialPorts.Count - 1; i >= 0; i--)
                             {
-                                if (portNames.Length > 0)
+                                var task = querySerialPorts[i];
+                                if (!task.IsCompleted)
+                                    continue;
+
+                                if (task.Status == TaskStatus.RanToCompletion)
+                                {
+                                    var result = task.Result;
+                                    if (!result.Item2)
+                                    {
+                                        pendingPortNames.Remove(result.Item1);
+                                    }
+                                }
+
+                                querySerialPorts.RemoveAt(i);
+                            }
+
+                            bool searching = querySerialPorts.Count > 0;
+
+                            if (pendingPortNames != null && !searching)
+                            {
+                                portNames = pendingPortNames;
+                                portNames.Sort();
+                                pendingPortNames = null;
+                            }
+
+                            int portIndex = portNames.IndexOf(portName);
+                            if (!searching && portIndex < 0)
+                            {
+                                if (portNames.Count > 0)
                                 {
                                     portIndex = 0;
                                     portName = portNames[0];
@@ -359,9 +407,11 @@ public class SettingsPanel
                                 }
                             }
 
-                            if (ImGui.BeginCombo("##comport", portIndex >= 0 ? portNames[portIndex] : "No COM port detected"))
+                            if (commutatorConnected || searching) ImGui.BeginDisabled();
+
+                            if (ImGui.BeginCombo("##comport", portIndex >= 0 ? portNames[portIndex] : "No commutator found"))
                             {
-                                for (int i = 0; i < portNames.Length; i++)
+                                for (int i = 0; i < portNames.Count; i++)
                                 {
                                     bool isSelected = (i == portIndex);
                                     if (ImGui.Selectable(portNames[i], isSelected))
@@ -376,33 +426,36 @@ public class SettingsPanel
                             }
                             if (Tooltip.Begin(allowWhenDisabled: true))
                             {
-                                Tooltip.AddLine("Select the serial (COM) port the commutator is connected to.");
+                                Tooltip.AddLine("Select a commutator from the list of connected commutators.");
                                 if (commutatorConnected)
-                                    Tooltip.Note("Unavailable while the commutator is connected.");
+                                    Tooltip.Note("Unavailable while a commutator is connected.");
+                                if (searching)
+                                    Tooltip.Note("Unavailable while searching for connected commutators.");
                                 Tooltip.End();
                             }
 
                             ImGui.SameLine();
-                            if (ImGui.Button("Refresh##comrefresh"))
+                            if (ImGui.Button(searching ? "Searching##comrefresh" : "Refresh##comrefresh"))
                             {
-                                portNames = SerialPort.GetPortNames();
+                                StartPortScan();
                             }
                             if (Tooltip.Begin(allowWhenDisabled: true))
                             {
-                                Tooltip.AddLine("Rescan the system for available serial (COM) ports.");
+                                Tooltip.AddLine("Search for connected commutators.");
                                 if (commutatorConnected)
                                     Tooltip.Note("Unavailable while the commutator is connected.");
+                                if (searching)
+                                    Tooltip.Note("Unavailable while searching for connected commutators.");
                                 Tooltip.End();
                             }
 
-                            if (commutatorConnected)
-                                ImGui.EndDisabled();
+                            if (searching || commutatorConnected) ImGui.EndDisabled();
 
                             if (ImGui.BeginTable("##commutator_connect", 2, ImGuiTableFlags.SizingStretchSame))
                             {
                                 ImGui.TableNextColumn();
                                 ImGui.Checkbox("Auto Connect##commutator_autoconnect", ref commutatorAutoConnect);
-                                Tooltip.Describe("Automatically connect the commutator when acquisition starts, provided a valid COM port is selected.");
+                                Tooltip.Describe("Automatically connect the commutator when acquisition starts, if a commutator is selected.");
 
                                 ImGui.TableNextColumn();
                                 using (Palette.PushButtonColors(
@@ -417,7 +470,7 @@ public class SettingsPanel
                                 }
                                 Tooltip.Describe(commutatorConnected
                                     ? "Disconnect from the commutator."
-                                    : "Connect to the commutator on the selected COM port.");
+                                    : "Connect to the selected commutator.");
 
                                 ImGui.EndTable();
                             }
@@ -508,6 +561,47 @@ public class SettingsPanel
             observer.OnCompleted);
 
             return new CompositeDisposable(logSubscription, source.SubscribeSafe(sourceObserver));
+        });
+    }
+
+    static Task<Tuple<string, bool>> QuerySerialPort(string portName)
+    {
+        return Task.Run(() =>
+        {
+            bool result = false;
+            Thread t = new(() =>
+            {
+                using var sp = new SerialPort(portName)
+                {
+                    ReadTimeout = 1000,
+                };
+                result = false;
+
+                try
+                {
+                    sp.Open();
+                    sp.Write("{print: true}");
+
+                    string buffer = sp.ReadLine();
+
+                    if (!string.IsNullOrEmpty(buffer))
+                    {
+                        var json = JObject.Parse(buffer);
+
+                        if (json.TryGetValue("firmware", out var firmware)
+                            && json.TryGetValue("enable", out var enable)
+                            && json.TryGetValue("led", out var enableLed))
+                        {
+                            result = true;
+                        }
+                    }
+                }
+                catch (Exception) { }
+            });
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+            t.Join();
+            return Tuple.Create(portName, result);
         });
     }
 }
