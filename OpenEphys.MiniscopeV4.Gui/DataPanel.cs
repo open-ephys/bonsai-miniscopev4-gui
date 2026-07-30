@@ -170,7 +170,6 @@ public class DataPanel
     static readonly Vector2 fillAvailable = new(-1, -1);
     static readonly ImPlotFlags plotFlags = ImPlotFlags.NoMenus | ImPlotFlags.NoInputs | ImPlotFlags.NoTitle | ImPlotFlags.NoLegend;
     static readonly string[] digitalInLabels = new string[] { MiniscopeDaqDigitalIn.DigitalIn0.ToString(), MiniscopeDaqDigitalIn.DigitalIn1.ToString() };
-    static readonly string[] histogramAxisTickLabels = new string[] { "0%", "20%", "40%", "60%", "80%", "100%" };
 
     static readonly PlotLegend quaternionLegend = new(
         "quaternion",
@@ -805,12 +804,9 @@ public class DataPanel
                                                 if (ImPlot.BeginPlot("##histogram", fillAvailable, plotFlags))
                                                 {
                                                     double minValue = 0, maxValue = byte.MaxValue, axisOffset = 5;
-                                                    int numLabels = histogramAxisTickLabels.Length;
-
 
                                                     ImPlot.SetupAxes("", "", flagsX, flagsY);
                                                     ImPlot.SetupAxisLimits(ImAxis.X1, minValue - axisOffset, maxValue + axisOffset, ImPlotCond.Always);
-                                                    ImPlot.SetupAxisTicks(ImAxis.X1, minValue, maxValue, numLabels, histogramAxisTickLabels, false);
 
                                                     fixed (float* binPtr = bins)
                                                     {
