@@ -175,13 +175,18 @@ public class FilePanel
                     }
 
                     ImGui.SameLine();
+
+                    if (recordButton) ImGui.EndDisabled();
+
                     if (ImGui.Button($"{browseLabel}##open_folder_button", new Vector2(browseWidth, 0)))
                     {
                         var dir = FileDialogHelpers.GetDirectory(fileName);
                         if (Directory.Exists(dir))
                             System.Diagnostics.Process.Start("explorer.exe", dir);
                     }
-                    RecordModeTooltip("Open the data folder in File Explorer to browse for previously saved data files.", recordButton, unavailableWhile);
+                    Tooltip.Describe("Open the data folder in File Explorer to browse for previously saved data files.");
+
+                    if (recordButton) ImGui.BeginDisabled();
 
                     if (ImGui.BeginTable("##writer_parameters", 2, ImGuiTableFlags.SizingStretchSame))
                     {
