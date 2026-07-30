@@ -223,7 +223,9 @@ public class SettingsPanel
                                 },
                                 dlg => ((SaveFileDialog)dlg).FileName);
                         }
-                        Tooltip.Describe("Export the current settings to a configuration file.");
+                        Tooltip.Describe(
+                            "Export all current settings to a configuration file (saved as\n" +
+                            $"a *{GenerateRecordingFileNames.ConfigExtension} file).");
 
                         if (exportFileTask != null && exportFileTask.IsCompleted)
                         {
@@ -251,7 +253,7 @@ public class SettingsPanel
                                },
                                dlg => ((OpenFileDialog)dlg).FileName);
                         }
-                        Tooltip.Describe("Import settings from a previously exported configuration file.");
+                        Tooltip.Describe($"Import all settings from an existing *{GenerateRecordingFileNames.ConfigExtension} configuration file.");
 
                         if (importFileTask != null && importFileTask.IsCompleted)
                         {
@@ -273,7 +275,12 @@ public class SettingsPanel
                         ImGui.BeginChild("##settings_content", new Vector2(-1f, -layout.RecordingSectionHeight), ImGuiChildFlags.None);
 
                         ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-                        if (ImGui.CollapsingHeader("Miniscope##miniscope_header"))
+                        bool open = ImGui.CollapsingHeader("Miniscope##miniscope_header");
+                        Tooltip.Describe(
+                            "Click to show or hide Miniscope settings. All settings are\n" +
+                            "saved in a configuration file when recording starts. Any changes\n" +
+                            "to these settings are recorded in the log for tracking.");
+                        if (open)
                         {
                             ImGui.BeginChild("##miniscope_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
 
@@ -283,7 +290,11 @@ public class SettingsPanel
                             ImGui.SetNextItemWidth(-1f);
                             double focusMin = -100, focusMax = 100;
                             ImGui.SliderScalar("##focus", ImGuiDataType.Double, &focus, &focusMin, &focusMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
-                            Tooltip.Slider($"Adjust the focal plane of the Miniscope's electrowetting lens [{focusMin} - {focusMax}].");
+                            Tooltip.Slider(
+                                "Adjust the focus of the electrowetting lens (EWL) around its\n" +
+                                $"nominal focal plane ({focusMin}% to {focusMax}%).\n" +
+                                "Note that the relationship between this percentage and the resulting\n" +
+                                "focal plane adjustment is non-linear.");
 
                             ImGui.AlignTextToFramePadding();
                             ImGui.Text("LED Brightness: ");
@@ -291,7 +302,9 @@ public class SettingsPanel
                             ImGui.SetNextItemWidth(-1f);
                             double brightnessMin = 0, brightnessMax = 100;
                             ImGui.SliderScalar("##ledbrightness", ImGuiDataType.Double, &ledBrightness, &brightnessMin, &brightnessMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
-                            Tooltip.Slider("Set the excitation LED brightness, as a percentage of maximum [0 - 100].");
+                            Tooltip.Slider(
+                                "Set the excitation LED level as a percentage of the maximum current [0% to 100%].\n" +
+                                "Note that the relationship between the excitation level and radiance is non-linear.");
 
                             if (ImGui.BeginTable("##row2", 2, ImGuiTableFlags.SizingStretchSame))
                             {
@@ -306,7 +319,7 @@ public class SettingsPanel
                                     if (Enum.TryParse<FrameRateV4>(FrameRateValues[frameRateIndex], out var result))
                                         frameRate = result;
                                 }
-                                Tooltip.Describe("Select the acquisition frame rate, in frames per second.");
+                                Tooltip.Describe("Select the number of frames the Miniscope acquires per second.");
 
                                 ImGui.TableNextColumn();
                                 ImGui.AlignTextToFramePadding();
@@ -333,7 +346,10 @@ public class SettingsPanel
                             {
                                 ledRespectsDigitalIn = DigitalInValues[digitalInIndex];
                             }
-                            Tooltip.Describe("Gate the excitation LED with a digital input: it turns on only while the selected input is high. Set to None to keep it always on.");
+                            Tooltip.Describe(
+                                "Select whether or not to gate the excitation LED with a digital input.\n" +
+                                "The LED turns on only while the selected digital input is high.\n" +
+                                "If set to None, the LED will be on continuously.");
 
                             ImGui.Spacing();
                             ImGui.Separator();
@@ -353,12 +369,18 @@ public class SettingsPanel
                             ImGui.EndChild();
                         }
 
-                        if (ImGui.CollapsingHeader("Commutator##commutator_header"))
+                        open = ImGui.CollapsingHeader("Commutator##commutator_header");
+                        Tooltip.Describe(
+                            "Click to show or hide Commutator settings. The commutator refers to a\n" +
+                            "torque-free commutator that enables tangle-free connection between\n" +
+                            "a stationary data acquisition device and the Miniscope on a freely-\n" +
+                            "moving animal. This device is not required to operate the Miniscope.");
+                        if (open)
                         {
                             ImGui.BeginChild("##commutator_group", new Vector2(0f, 0f), ImGuiChildFlags.Borders | ImGuiChildFlags.AutoResizeY);
 
                             ImGui.AlignTextToFramePadding();
-                            ImGui.Text("COM Port: ");
+                            ImGui.Text("Commutator: ");
                             ImGui.SameLine();
 
                             var style = ImGui.GetStyle();
@@ -426,7 +448,9 @@ public class SettingsPanel
                             }
                             if (Tooltip.Begin(allowWhenDisabled: true))
                             {
-                                Tooltip.AddLine("Select a commutator from the list of connected commutators.");
+                                Tooltip.AddLine(
+                                    "Select the commutator's COM port, which is the serial connection Windows assigns\n" +
+                                    "to the USB cable linking it to this computer (e.g., COM1).");
                                 if (commutatorConnected)
                                     Tooltip.Note("Unavailable while a commutator is connected.");
                                 if (searching)

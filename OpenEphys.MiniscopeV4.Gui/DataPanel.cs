@@ -347,7 +347,9 @@ public class DataPanel
 
                             if (ImGui.BeginTabBar("##ImageTabBar", ImGuiTabBarFlags.NoCloseWithMiddleMouseButton | ImGuiTabBarFlags.DrawSelectedOverline))
                             {
-                                if (ImGui.BeginTabItem("Image##Image"))
+                                bool imageTabOpen = ImGui.BeginTabItem("Image##Image");
+                                Tooltip.Describe("View the raw image and data frame information.");
+                                if (imageTabOpen)
                                 {
                                     activeTab = ImageTab.Raw;
                                     RenderImageArea("##image_area_raw", imageAreaSize, displaySize, ActiveImage);
@@ -403,7 +405,9 @@ public class DataPanel
                                     ImGui.EndTabItem();
                                 }
 
-                                if (ImGui.BeginTabItem("Saturation##Saturation"))
+                                bool saturationTabOpen = ImGui.BeginTabItem("Saturation##Saturation");
+                                Tooltip.Describe("View which pixels are saturated in the image.");
+                                if (saturationTabOpen)
                                 {
                                     activeTab = ImageTab.Saturation;
                                     RenderImageArea("##image_area_saturation", imageAreaSize, displaySize, ActiveImage);
@@ -413,7 +417,7 @@ public class DataPanel
                                         ImGui.TextUnformatted("Threshold:");
                                         ImGui.SetNextItemWidth(-1f);
                                         ImGui.SliderInt("##saturation_threshold", ref satThreshold, byte.MinValue, byte.MaxValue - 1, ImGuiSliderFlags.AlwaysClamp);
-                                        Tooltip.Slider($"Pixels above this intensity value [{byte.MinValue} - {byte.MaxValue - 1}] are highlighted as saturated.");
+                                        Tooltip.Slider($"Pixels above this intensity value [{byte.MinValue} to {byte.MaxValue - 1}] are highlighted as saturated.");
                                         ImGui.Spacing();
 
                                         ImGui.TextUnformatted("Color:");
@@ -431,7 +435,11 @@ public class DataPanel
                                     ImGui.EndTabItem();
                                 }
 
-                                if (ImGui.BeginTabItem("dF/F##dFF"))
+                                bool dffTabOpen = ImGui.BeginTabItem("dF/F##dFF");
+                                Tooltip.Describe(
+                                    "View a naive, causal dF/F (delta-F over F)\n" +
+                                    "calculated over the sequence of images.");
+                                if (dffTabOpen)
                                 {
                                     activeTab = ImageTab.Dff;
                                     RenderImageArea("##image_area_dff", imageAreaSize, displaySize, ActiveImage);
@@ -443,21 +451,27 @@ public class DataPanel
                                         int backgroundFramesMin = 2, backgroundFramesMax = 1000;
                                         if (ImGui.InputInt("##background_frames", ref backgroundFrames))
                                             backgroundFrames = Math.Max(backgroundFramesMin, Math.Min(backgroundFramesMax, backgroundFrames));
-                                        Tooltip.Describe($"Number of frames averaged to form the baseline for the dF/F calculation [{backgroundFramesMin} - {backgroundFramesMax}].");
+                                        Tooltip.Describe(
+                                            $"Number of previous frames averaged to determine the background\n" +
+                                            $"fluorescence used in the dF/F calculation [{backgroundFramesMin} to {backgroundFramesMax} frames].");
                                         ImGui.Spacing();
 
                                         ImGui.TextUnformatted("Background threshold:");
                                         ImGui.SetNextItemWidth(-1f);
                                         double bgThreshMin = 0, bgThreshMax = 255;
                                         ImGui.SliderScalar("##background_threshold", ImGuiDataType.Double, &backgroundThreshold, &bgThreshMin, &bgThreshMax, "%.1f", ImGuiSliderFlags.AlwaysClamp);
-                                        Tooltip.Slider($"Minimum baseline intensity [{bgThreshMin} - {bgThreshMax}] for a pixel to be included in the dF/F image.");
+                                        Tooltip.Slider(
+                                            $"Minimum background intensity [{bgThreshMin} to {bgThreshMax}] required to calculate dF/F for a pixel.");
                                         ImGui.Spacing();
 
                                         ImGui.TextUnformatted("Sigma (px):");
                                         ImGui.SetNextItemWidth(-1f);
                                         if (ImGui.InputInt("##sigma", ref sigma))
                                             sigma = Math.Max(0, sigma);
-                                        Tooltip.Describe("Standard deviation, in pixels, of the Gaussian blur applied before computing dF/F. Set to 0 to disable blurring.");
+                                        Tooltip.Describe(
+                                            "Standard deviation, in pixels, of the Gaussian blur applied before computing dF/F.\n" +
+                                            "Approximates the spatial extent of a typical region of interest (i.e., a cell body),\n" +
+                                            "to help smooth out pixel-level noise. Set to 0 to disable blurring.");
 
                                         if (RenderExpandCollapseButton(imageAreaHeight, layout.ImageExpanded))
                                             layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
@@ -467,7 +481,11 @@ public class DataPanel
                                     ImGui.EndTabItem();
                                 }
 
-                                if (ImGui.BeginTabItem("Max Projection##MaxProjection"))
+                                bool maxProjectionTabOpen = ImGui.BeginTabItem("Max Projection##MaxProjection");
+                                Tooltip.Describe(
+                                    "View the accumulated maximum projection intensity from the images.\n" +
+                                    "Maximum projection intensity is continuously accumulated until manually reset.");
+                                if (maxProjectionTabOpen)
                                 {
                                     activeTab = ImageTab.MaxProjection;
                                     RenderImageArea("##image_area_maxprojection", imageAreaSize, displaySize, ActiveImage);
@@ -482,7 +500,9 @@ public class DataPanel
 
                                         if (Tooltip.Begin(allowWhenDisabled: true))
                                         {
-                                            Tooltip.AddLine("Clear the accumulated projection and start building it again from the current frame.");
+                                            Tooltip.AddLine(
+                                                "Clear the accumulated projection and start building\n" +
+                                                "it again from the current frame.");
                                             Tooltip.AddKeyboardShortcut("R");
                                             Tooltip.End();
                                         }
@@ -495,7 +515,11 @@ public class DataPanel
                                     ImGui.EndTabItem();
                                 }
 
-                                if (ImGui.BeginTabItem("Reference Image##reference_image"))
+                                bool referenceImageTabOpen = ImGui.BeginTabItem("Reference Image##reference_image");
+                                Tooltip.Describe(
+                                    "View the live image overlaid on a static reference image\n" +
+                                    "(e.g., a previous screenshot) to help align the current field of view.");
+                                if (referenceImageTabOpen)
                                 {
                                     activeTab = ImageTab.Overlay;
                                     bool showImage = !string.IsNullOrEmpty(overlayReferencePath) || applyOverlay;
@@ -641,7 +665,10 @@ public class DataPanel
 
                                     static Vector2 CalculateChildHeight() => new(-1f, Math.Max(minimumPlotHeight, ImGui.GetContentRegionAvail().Y));
 
-                                    if (ImGui.BeginTabItem("Euler Angles"))
+                                    bool eulerTabOpen = ImGui.BeginTabItem("Euler Angles");
+                                    Tooltip.Describe("View the Euler angles, which are displayed as Yaw, Pitch, and Roll,\n" +
+                                        "as defined by the Tait-Bryan formalism.");
+                                    if (eulerTabOpen)
                                     {
                                         var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
                                         if (ImGui.BeginChild("##euler_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
@@ -693,7 +720,10 @@ public class DataPanel
                                         ImGui.EndTabItem();
                                     }
 
-                                    if (ImGui.BeginTabItem("Quaternion"))
+                                    bool quaternionTabOpen = ImGui.BeginTabItem("Quaternion");
+                                    Tooltip.Describe("View the raw quaternion data reported by the Miniscope, which can\n" +
+                                        "automatically rotate an attached commutator if one is connected.");
+                                    if (quaternionTabOpen)
                                     {
                                         var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
                                         if (ImGui.BeginChild("##quat_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
@@ -745,13 +775,14 @@ public class DataPanel
                                         ImGui.EndTabItem();
                                     }
 
-                                    if (ImGui.BeginTabItem("Histogram"))
+                                    bool histogramTabOpen = ImGui.BeginTabItem("Histogram");
+                                    Tooltip.Describe(
+                                        "View a normalized distribution of pixel intensity across the image.\n" +
+                                        "The histogram indicates the relative distribution of pixels\n" +
+                                        "but does not show the number of pixels at any given intensity.");
+                                    if (histogramTabOpen)
                                     {
-                                        if (ImageHistogram == null)
-                                        {
-                                            ImGui.Text("No data to display");
-                                        }
-                                        else
+                                        if (ImageHistogram != null)
                                         {
                                             const int binCount = 256;
 
@@ -914,7 +945,7 @@ public class DataPanel
         }
         if (Tooltip.Begin(allowWhenDisabled: true))
         {
-            Tooltip.AddLine("Number of most recent samples shown in the scrolling plots.");
+            Tooltip.AddLine("Number of most recent samples shown in the time-series plots.");
             if (AcquisitionStatus)
                 Tooltip.Note("Unavailable while acquiring.");
             Tooltip.End();
