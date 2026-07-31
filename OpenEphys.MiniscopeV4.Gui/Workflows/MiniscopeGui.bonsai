@@ -3498,7 +3498,7 @@
                     <Name>ImageTab</Name>
                   </Expression>
                   <Expression xsi:type="GroupWorkflow">
-                    <Name>Save Screenshot</Name>
+                    <Name>Capture Current Image</Name>
                     <Workflow>
                       <Nodes>
                         <Expression xsi:type="SubscribeSubject">
@@ -3566,7 +3566,7 @@
                           </PropertyMappings>
                         </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p1:SaveScreenshot" />
+                          <Combinator xsi:type="p1:CaptureCurrentImage" />
                         </Expression>
                       </Nodes>
                       <Edges>

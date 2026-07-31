@@ -297,8 +297,9 @@ public class DataPanel
 
                     bool textInputActive = ImGui.GetIO().WantTextInput;
                     bool screenshotButtonActive = AcquisitionStatus && !string.IsNullOrEmpty(DataPath);
+                    bool fileMissing = string.IsNullOrEmpty(overlayReferencePath) || !File.Exists(overlayReferencePath);
 
-                    if (screenshotButtonActive && !textInputActive && ImGui.IsKeyPressed(ImGuiKey.S))
+                    if (screenshotButtonActive && !textInputActive && ImGui.IsKeyPressed(ImGuiKey.C))
                         SetScreenshotCapture(true);
 
                     if (!textInputActive && ImGui.IsKeyPressed(ImGuiKey.R))
@@ -306,6 +307,9 @@ public class DataPanel
 
                     if (!textInputActive && ImGui.IsKeyPressed(ImGuiKey.E))
                         layout = layout with { ImageExpandedRequested = !layout.ImageExpanded };
+
+                    if (!fileMissing && !textInputActive && ImGui.IsKeyPressed(ImGuiKey.O))
+                        applyOverlay = !applyOverlay;
 
                     bool expanded = layout.ImageExpanded;
                     if (!expanded)
@@ -378,7 +382,7 @@ public class DataPanel
 
                                         if (!screenshotButtonActive) ImGui.BeginDisabled();
 
-                                        if (ImGui.Button("Take Screenshot (S)##overlay_screenshot", new Vector2(-1f, ButtonHeight)))
+                                        if (ImGui.Button("Capture Current Image (C)##overlay_screenshot", new Vector2(-1f, ButtonHeight)))
                                             SetScreenshotCapture(true);
 
                                         if (!screenshotButtonActive) ImGui.EndDisabled();
@@ -386,7 +390,7 @@ public class DataPanel
                                         if (Tooltip.Begin(allowWhenDisabled: true))
                                         {
                                             Tooltip.AddLine("Save a snapshot of the current image to the data path.");
-                                            Tooltip.AddKeyboardShortcut("S");
+                                            Tooltip.AddKeyboardShortcut("C");
 
                                             if (!AcquisitionStatus)
                                                 Tooltip.Note("Unavailable while acquisition is stopped.");
@@ -517,7 +521,7 @@ public class DataPanel
                                 bool referenceImageTabOpen = ImGui.BeginTabItem("Reference Image##reference_image");
                                 Tooltip.Describe(
                                     "View the live image overlaid on a static reference image\n" +
-                                    "(e.g., a previous screenshot) to help align the current field of view.");
+                                    "(e.g., a previous captured image) to help align the current field of view.");
                                 if (referenceImageTabOpen)
                                 {
                                     activeTab = ImageTab.Overlay;
@@ -549,12 +553,12 @@ public class DataPanel
                                                     CheckFileExists = true,
                                                     Multiselect = false,
                                                     InitialDirectory = FileDialogHelpers.GetDirectory(DataPath),
-                                                    Title = "Choose a screenshot to load.",
+                                                    Title = "Choose a captured image to load.",
                                                 },
                                                 (dlg) => (dlg as OpenFileDialog).FileName);
                                             }
                                         }
-                                        Tooltip.Describe("Choose a reference image (e.g., a previous screenshot) to overlay on the live view.");
+                                        Tooltip.Describe("Choose a reference image (e.g., a previous captured image) to overlay on the live view.");
 
                                         if (overlayDialogTask != null && overlayDialogTask.IsCompleted)
                                         {
@@ -571,16 +575,15 @@ public class DataPanel
                                             if (Directory.Exists(dir))
                                                 System.Diagnostics.Process.Start("explorer.exe", dir);
                                         }
-                                        Tooltip.Describe("Open the data folder in File Explorer to browse for previous screenshots.");
-
-                                        bool fileMissing = string.IsNullOrEmpty(overlayReferencePath) || !File.Exists(overlayReferencePath);
+                                        Tooltip.Describe("Open the data folder in File Explorer to browse for previous captured images.");
 
                                         if (fileMissing) ImGui.BeginDisabled();
 
-                                        ImGui.Checkbox("Apply Live Overlay", ref applyOverlay);
+                                        ImGui.Checkbox("Apply Live Overlay (O)", ref applyOverlay);
                                         if (Tooltip.Begin(allowWhenDisabled: true))
                                         {
                                             Tooltip.AddLine("Overlay the live image on the reference image to align the current field of view with a previous one.");
+                                            Tooltip.AddKeyboardShortcut("O");
                                             if (fileMissing)
                                                 Tooltip.Note("Unavailable until a valid reference image is chosen.");
                                             Tooltip.End();

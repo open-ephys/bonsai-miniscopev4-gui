@@ -169,19 +169,19 @@ public class OverlayReference
         }
         catch (Exception ex)
         {
-            log.Warning($"Could not load reference image '{path}': {ex.Message}");
+            log.Error($"Could not load reference image '{path}': {ex.Message}");
             return null;
         }
 
         if (loaded == null)
         {
-            log.Warning($"Could not load reference image '{path}'.");
+            log.Error($"Could not load reference image '{path}'.");
             return null;
         }
 
         if (loaded.Width != frame.Width || loaded.Height != frame.Height)
         {
-            log.Warning($"Reference image '{path}' is the wrong size. Expected [{frame.Width}x{frame.Height}], but got {loaded.Width}x{loaded.Height}.");
+            log.Error($"Reference image '{path}' is the wrong size. Expected [{frame.Width}x{frame.Height}], but got {loaded.Width}x{loaded.Height}.");
             loaded.Dispose();
             return null;
         }

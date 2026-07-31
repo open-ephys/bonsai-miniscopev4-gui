@@ -10,14 +10,14 @@ using System.Xml.Serialization;
 namespace OpenEphys.MiniscopeV4.Gui;
 
 /// <summary>
-/// Saves the current frame to an image file when a screenshot is requested, forwarding the frame
+/// Captures the current image and saves to an image file when requested, forwarding the frame
 /// unchanged. When an explicit folder is set the frame is saved there with a timestamped name;
 /// otherwise a clone of the frame is captured and a save dialog prompts for a destination.
 /// </summary>
-[Description("Saves the current frame to an image file when a screenshot is requested.")]
+[Description("Captures the current image and saves to an image file when requested.")]
 [Combinator]
 [WorkflowElementCategory(ElementCategory.Sink)]
-public class SaveScreenshot
+public class CaptureCurrentImage
 {
     /// <summary>
     /// Gets or sets the data path where all data is saved.
@@ -48,7 +48,7 @@ public class SaveScreenshot
             return source.Subscribe(
                 frame =>
                 {
-                    SaveScreenshotImage(frame.Image, frame.FrameNumber, DataPath, log);
+                    CaptureImage(frame.Image, frame.FrameNumber, DataPath, log);
 
                     observer.OnNext(frame);
                 },
@@ -57,19 +57,19 @@ public class SaveScreenshot
         });
     }
 
-    static void SaveScreenshotImage(IplImage image, int frameNumber, string folder, MiniscopeLog log)
+    static void CaptureImage(IplImage image, int frameNumber, string folder, MiniscopeLog log)
     {
         try
         {
             var directory = FileDialogHelpers.GetDirectory(folder);
             Directory.CreateDirectory(directory);
-            var path = Path.Combine(directory, TimestampedName($"frame_{frameNumber}"));
+            var path = folder + TimestampedName($"frame_{frameNumber}");
             CV.SaveImage(path, image);
-            log.Info($"Saved screenshot to {path}");
+            log.Info($"Saved image to {path}");
         }
         catch (Exception ex)
         {
-            log.Error($"Could not save screenshot: {ex.Message}");
+            log.Error($"Could not save image: {ex.Message}");
         }
     }
 
