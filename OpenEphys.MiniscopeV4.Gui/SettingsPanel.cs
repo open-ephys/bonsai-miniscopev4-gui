@@ -32,7 +32,14 @@ public class SettingsPanel
     /// <summary>
     /// Gets or sets the acquisition status of the GUI.
     /// </summary>
+    [Browsable(false)]
     public bool AcquisitionStatus { get; set; }
+
+    /// <summary>
+    /// Gets or sets the recording status of the GUI.
+    /// </summary>
+    [Browsable(false)]
+    public bool RecordingStatus { get; set; }
 
     static float ExpandedWidth => 375f * UiScale.Current;
     static float CollapsedWidth => 36f * UiScale.Current;
@@ -314,12 +321,21 @@ public class SettingsPanel
                                 ImGui.SameLine();
                                 ImGui.SetNextItemWidth(-1f);
                                 int frameRateIndex = Array.IndexOf(FrameRateValues, frameRate.ToString());
+
+                                if (RecordingStatus) ImGui.BeginDisabled();
                                 if (ImGui.Combo("##framerate", ref frameRateIndex, FrameRateValues, FrameRateValues.Length))
                                 {
                                     if (Enum.TryParse<FrameRateV4>(FrameRateValues[frameRateIndex], out var result))
                                         frameRate = result;
                                 }
-                                Tooltip.Describe("Select the number of frames the Miniscope acquires per second.");
+                                if (Tooltip.Begin())
+                                {
+                                    Tooltip.AddLine("Select the number of frames the Miniscope acquires per second.");
+                                    if (RecordingStatus)
+                                        Tooltip.Note("Unavailable while recording.");
+                                    Tooltip.End();
+                                }
+                                if (RecordingStatus) ImGui.EndDisabled();
 
                                 ImGui.TableNextColumn();
                                 ImGui.AlignTextToFramePadding();
