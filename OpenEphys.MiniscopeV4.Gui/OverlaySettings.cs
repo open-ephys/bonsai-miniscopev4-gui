@@ -6,7 +6,7 @@ namespace OpenEphys.MiniscopeV4.Gui;
 partial class OverlaySettings : IEquatable<OverlaySettings>
 {
     /// <summary>
-    /// Raised when the user clicks the Screenshot button.
+    /// Raised when the user clicks the Capture Current Image button.
     /// </summary>
     [YamlIgnore]
     public bool Capture { get; set; }
