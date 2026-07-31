@@ -137,12 +137,14 @@ public class SettingsPanel
                 string configFilePath = string.Empty;
 
                 bool validPort = !string.IsNullOrEmpty(portName) && portNames.Contains(portName);
+                bool commutatorsFound = portNames.Count > 0;
+
                 if (AcquisitionStatus && !wasAcquiring && commutatorAutoConnect && !commutatorConnected)
                 {
                     if (validPort)
                         commutatorConnected = true;
 
-                    else
+                    else if (commutatorsFound)
                     {
                         log.Warning($"{nameof(hardwareSettings.Commutator.AutoConnect)} is enabled but no commutator was connected; the selected COM port '{portName}' is not valid.");
                     }
@@ -434,7 +436,7 @@ public class SettingsPanel
                             int portIndex = portNames.IndexOf(portName);
                             if (!searching && portIndex < 0)
                             {
-                                if (portNames.Count > 0)
+                                if (commutatorsFound)
                                 {
                                     portIndex = 0;
                                     portName = portNames[0];
@@ -447,7 +449,7 @@ public class SettingsPanel
 
                             if (commutatorConnected || searching) ImGui.BeginDisabled();
 
-                            if (ImGui.BeginCombo("##comport", portIndex >= 0 ? portNames[portIndex] : "No commutator found"))
+                            if (ImGui.BeginCombo("##comport", commutatorsFound ? portNames[portIndex] : "No commutator found"))
                             {
                                 for (int i = 0; i < portNames.Count; i++)
                                 {
@@ -491,11 +493,22 @@ public class SettingsPanel
 
                             if (searching || commutatorConnected) ImGui.EndDisabled();
 
+                            if (!commutatorsFound) ImGui.BeginDisabled();
+
                             if (ImGui.BeginTable("##commutator_connect", 2, ImGuiTableFlags.SizingStretchSame))
                             {
                                 ImGui.TableNextColumn();
                                 ImGui.Checkbox("Auto Connect##commutator_autoconnect", ref commutatorAutoConnect);
-                                Tooltip.Describe("Automatically connect the commutator when acquisition starts, if a commutator is selected.");
+
+                                if (Tooltip.Begin())
+                                {
+                                    Tooltip.AddLine("Automatically connect the commutator when acquisition starts, if a commutator is selected.");
+
+                                    if (!commutatorsFound)
+                                        Tooltip.Note("Unavailable while no commutators are found.");
+
+                                    Tooltip.End();
+                                }
 
                                 ImGui.TableNextColumn();
                                 using (Palette.PushButtonColors(
@@ -508,17 +521,26 @@ public class SettingsPanel
                                         commutatorConnected = !commutatorConnected;
                                     }
                                 }
-                                Tooltip.Describe(commutatorConnected
-                                    ? "Disconnect from the commutator."
-                                    : "Connect to the selected commutator.");
+                                if (Tooltip.Begin())
+                                {
+                                    Tooltip.AddLine(commutatorConnected
+                                        ? "Disconnect from the commutator."
+                                        : "Connect to the selected commutator.");
+
+                                    if (!commutatorsFound)
+                                        Tooltip.Note("Unavailable while no commutators are found.");
+
+                                    Tooltip.End();
+                                }
 
                                 ImGui.EndTable();
                             }
 
+                            if (!commutatorsFound) ImGui.EndDisabled();
+
                             ImGui.Separator();
 
-                            if (!commutatorConnected)
-                                ImGui.BeginDisabled();
+                            if (!commutatorConnected) ImGui.BeginDisabled();
 
                             if (ImGui.BeginTable("##commutator_checkboxes", 2, ImGuiTableFlags.SizingStretchSame))
                             {
