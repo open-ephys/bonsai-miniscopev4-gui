@@ -13,7 +13,6 @@ Hardware:
     EnableLed: true
     AutoConnect: true
 Display:
-  BufferSize: 100
   Saturation:
     Threshold: 160
     Color:

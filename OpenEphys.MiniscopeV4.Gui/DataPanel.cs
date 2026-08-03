@@ -5,6 +5,7 @@ using Hexa.NET.ImPlot;
 using OpenCV.Net;
 using OpenEphys.Miniscope;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -102,11 +103,25 @@ public class DataPanel
     public bool AcquisitionStatus { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the data display is paused.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public bool Paused { get; set; }
+
+    /// <summary>
     /// Gets or sets the average frame rate, in Hz, used to display the acquisition frame rate.
     /// </summary>
     [XmlIgnore]
     [Browsable(false)]
     public double AverageFrameRate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the selected <see cref="FrameRateV4"/>.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public FrameRateV4 SelectedFrameRate { get; set; }
 
     /// <summary>
     /// Gets or sets the frame number of the current frame.
@@ -195,6 +210,75 @@ public class DataPanel
     const double DigitalAmplitude = 0.8;
     const double DigitalAxisMargin = 0.1;
 
+    static readonly double[] TimebasePresetsSeconds = { 1, 2, 3, 4, 5, 10, 20, 30, 40, 48, 60, 80, 120 };
+
+    static int GetNumberOfSamples(FrameRateV4 frameRate, double seconds) => (int)(seconds * ConvertFrameRateV4ToFps(frameRate) ?? 0);
+
+    static IEnumerable<double> ClippedTimebasePresets(FrameRateV4 frameRate, int bufferCapacity) =>
+        TimebasePresetsSeconds.Where(seconds => GetNumberOfSamples(frameRate, seconds) <= bufferCapacity);
+
+    static string FormatTimebase(double seconds) => $"{seconds:0} s";
+
+    static double? ConvertFrameRateV4ToFps(FrameRateV4 frameRate) => double.TryParse(frameRate.ToString().Substring(3, 2), out double result) ? result : null;
+
+    static (double xMin, double xMax)? GetXAxisLimits(double timebase, FrameRateV4 frameRate, bool scrollable, ref bool wasScrollable, ref double lastTimebase, int bufferSamples)
+    {
+        var numSamples = GetNumberOfSamples(frameRate, timebase);
+
+        if (!scrollable)
+        {
+            wasScrollable = false;
+            lastTimebase = timebase;
+            return (0, Math.Max(0, numSamples - 1));
+        }
+
+        if (timebase != lastTimebase)
+            wasScrollable = false;
+        lastTimebase = timebase;
+
+        if (wasScrollable)
+            return null;
+
+        wasScrollable = true;
+        double xMax = Math.Max(0, bufferSamples - 1);
+        double xMin = Math.Max(0, bufferSamples - numSamples);
+        return (xMin, xMax);
+    }
+
+    static void TimebaseControl(FrameRateV4 frameRate, int bufferCapacity, ref double selectedTimebase)
+    {
+        var options = ClippedTimebasePresets(frameRate, bufferCapacity).ToArray();
+        if (options.Length == 0)
+            options = new[] { TimebasePresetsSeconds[0] };
+        if (Array.IndexOf(options, selectedTimebase) < 0)
+            selectedTimebase = options[options.Length - 1];
+
+        ImGui.AlignTextToFramePadding();
+        ImGui.Text("Timebase: ");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(70f * UiScale.Current);
+        if (ImGui.BeginCombo("##timebase", FormatTimebase(selectedTimebase)))
+        {
+            foreach (var option in options)
+            {
+                bool selected = option == selectedTimebase;
+                if (ImGui.Selectable(FormatTimebase(option), selected))
+                    selectedTimebase = option;
+                if (selected)
+                    ImGui.SetItemDefaultFocus();
+            }
+
+            ImGui.EndCombo();
+        }
+        if (Tooltip.Begin())
+        {
+            Tooltip.AddLine("The timebase controls the length of data shown in the time-series plots.");
+            Tooltip.AddLine("When the display is paused, time-series data can be scrolled by clicking-and-\n" +
+                "dragging, and zoomed in or out by using the mouse wheel.");
+            Tooltip.End();
+        }
+    }
+
     static Vector4 GridLineColor => new(0.5f, 0.5f, 0.5f, 0.35f);
 
     static Vector4 GridLabelColor()
@@ -262,6 +346,12 @@ public class DataPanel
         {
             Task<string> overlayDialogTask = null;
             const nuint pathBufSize = 1024;
+            double eulerTimebase = 0;
+            double quaternionTimebase = 0;
+            bool eulerWasScrollable = false;
+            bool quaternionWasScrollable = false;
+            double eulerLastTimebase = -1;
+            double quaternionLastTimebase = -1;
 
             var sourceObserver = Observer.Create<Tuple<GuiLayout, DataDisplaySettings>>(
                 value =>
@@ -667,6 +757,14 @@ public class DataPanel
 
                                     static Vector2 CalculateChildHeight() => new(-1f, Math.Max(minimumPlotHeight, ImGui.GetContentRegionAvail().Y));
 
+                                    bool scrollable = Paused || !AcquisitionStatus;
+                                    var frameRate = SelectedFrameRate;
+                                    ImPlotAxisFlags xAxisFlags = scrollable ? (axisFlags & ~ImPlotAxisFlags.AutoFit) : (axisFlags | ImPlotAxisFlags.Lock);
+                                    ImPlotAxisFlags yAxisFlags = axisFlags | ImPlotAxisFlags.Lock | ImPlotAxisFlags.NoHighlight;
+                                    ImPlotFlags signalPlotFlags = scrollable
+                                        ? (plotFlags & ~ImPlotFlags.NoInputs) | ImPlotFlags.NoMouseText
+                                        : plotFlags | ImPlotFlags.NoMouseText;
+
                                     bool eulerTabOpen = ImGui.BeginTabItem("Euler Angles");
                                     Tooltip.Describe("View the Euler angles, which are displayed as Yaw, Pitch, and Roll,\n" +
                                         "as defined by the Tait-Bryan formalism.");
@@ -675,7 +773,8 @@ public class DataPanel
                                         var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
                                         if (ImGui.BeginChild("##euler_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
                                         {
-                                            PlotBufferSizeControl(ref bufferSize);
+                                            TimebaseControl(frameRate, bufferSize, ref eulerTimebase);
+                                            ImGui.SameLine();
                                             eulerAngleLegend.DrawSameLine();
                                             digitalInLegend.DrawSameLine();
                                         }
@@ -686,30 +785,42 @@ public class DataPanel
                                         {
                                             if (ImPlot.BeginSubplots("##euler_subplots", 2, 1, fillAvailable, signalSubplotFlags, subplotRowRatios, null))
                                             {
-                                                if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, plotFlags))
+                                                var numSamples = GetNumberOfSamples(frameRate, eulerTimebase);
+                                                var existingSamples = EulerAnglesSeries?.Count ?? 0;
+                                                var eulerXAxisLimits = GetXAxisLimits(eulerTimebase, frameRate, scrollable, ref eulerWasScrollable, ref eulerLastTimebase, existingSamples);
+
+                                                if (ImPlot.BeginPlot("##euler_angles_series", fillAvailable, signalPlotFlags))
                                                 {
-                                                    const double eulerAxisMin = -185.0, eulerAxisMax = 365.0;
+                                                    const double eulerYAxisMin = -185.0, eulerYAxisMax = 365.0;
 
-                                                    ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                    ImPlot.SetupAxesLimits(0, bufferSize - 1, eulerAxisMin, eulerAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxes("", "", xAxisFlags, yAxisFlags);
+                                                    if (scrollable)
+                                                        ImPlot.SetupAxisLimitsConstraints(ImAxis.X1, 0, Math.Max(0, existingSamples - 1));
+                                                    if (eulerXAxisLimits is (double eulerXAxisMin, double eulerXAxisMax))
+                                                        ImPlot.SetupAxisLimits(ImAxis.X1, eulerXAxisMin, eulerXAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, eulerYAxisMin, eulerYAxisMax, ImPlotCond.Always);
 
-                                                    double eulerGridStep = ChooseGridStep(eulerAxisMax - eulerAxisMin, ImPlot.GetPlotSize().Y, eulerGridStepCandidates, MinGridPixelSpacing * UiScale.Current);
-                                                    DrawPlotGrid(eulerAxisMin, eulerAxisMax, eulerGridStep, FormatDegreeLabel);
+                                                    double eulerGridStep = ChooseGridStep(eulerYAxisMax - eulerYAxisMin, ImPlot.GetPlotSize().Y, eulerGridStepCandidates, MinGridPixelSpacing * UiScale.Current);
+                                                    DrawPlotGrid(eulerYAxisMin, eulerYAxisMax, eulerGridStep, FormatDegreeLabel);
 
                                                     if (EulerAnglesSeries != null)
                                                     {
-                                                        PlotCircularPlotPointSeries(EulerAnglesSeries, eulerAngleLegend, bufferSize);
+                                                        PlotCircularPlotPointSeries(EulerAnglesSeries, eulerAngleLegend, scrollable, numSamples, bufferSize);
                                                     }
 
                                                     ImPlot.EndPlot();
                                                 }
 
-                                                if (ImPlot.BeginPlot("##euler_digital_series", fillAvailable, plotFlags))
+                                                if (ImPlot.BeginPlot("##euler_digital_series", fillAvailable, signalPlotFlags))
                                                 {
-                                                    ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                    ImPlot.SetupAxesLimits(0, bufferSize - 1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxes("", "", xAxisFlags, yAxisFlags);
+                                                    if (scrollable)
+                                                        ImPlot.SetupAxisLimitsConstraints(ImAxis.X1, 0, Math.Max(0, existingSamples - 1));
+                                                    if (eulerXAxisLimits is (double eulerDigitalXAxisMin, double eulerDigitalXAxisMax))
+                                                        ImPlot.SetupAxisLimits(ImAxis.X1, eulerDigitalXAxisMin, eulerDigitalXAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
 
-                                                    PlotDigitalInSeries(bufferSize);
+                                                    PlotDigitalInSeries(DigitalInSeries, digitalInLegend, digitalInLabels, scrollable, numSamples, bufferSize);
 
                                                     ImPlot.EndPlot();
                                                 }
@@ -730,8 +841,8 @@ public class DataPanel
                                         var controlsHeight = ImGui.GetFrameHeight() + ImGui.GetStyle().ScrollbarSize;
                                         if (ImGui.BeginChild("##quat_controls", new Vector2(0f, controlsHeight), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
                                         {
-                                            PlotBufferSizeControl(ref bufferSize);
-
+                                            TimebaseControl(frameRate, bufferSize, ref quaternionTimebase);
+                                            ImGui.SameLine();
                                             quaternionLegend.DrawSameLine();
                                             digitalInLegend.DrawSameLine();
                                         }
@@ -742,30 +853,42 @@ public class DataPanel
                                         {
                                             if (ImPlot.BeginSubplots("##quaternion_subplots", 2, 1, fillAvailable, signalSubplotFlags, subplotRowRatios, null))
                                             {
-                                                if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, plotFlags))
+                                                var numSamples = GetNumberOfSamples(frameRate, quaternionTimebase);
+                                                var existingSamples = QuaternionSeries?.Count ?? 0;
+                                                var quaternionXAxisLimits = GetXAxisLimits(quaternionTimebase, frameRate, scrollable, ref quaternionWasScrollable, ref quaternionLastTimebase, existingSamples);
+
+                                                if (ImPlot.BeginPlot("##quaternion_series", fillAvailable, signalPlotFlags))
                                                 {
                                                     const double quaternionAxisMin = -1.05, quaternionAxisMax = 1.05;
                                                     const double quaternionGridStep = 0.5;
 
-                                                    ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                    ImPlot.SetupAxesLimits(0, bufferSize - 1, quaternionAxisMin, quaternionAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxes("", "", xAxisFlags, yAxisFlags);
+                                                    if (scrollable)
+                                                        ImPlot.SetupAxisLimitsConstraints(ImAxis.X1, 0, Math.Max(0, existingSamples - 1));
+                                                    if (quaternionXAxisLimits is (double quaternionXAxisMin, double quaternionXAxisMax))
+                                                        ImPlot.SetupAxisLimits(ImAxis.X1, quaternionXAxisMin, quaternionXAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, quaternionAxisMin, quaternionAxisMax, ImPlotCond.Always);
 
                                                     DrawPlotGrid(quaternionAxisMin, quaternionAxisMax, quaternionGridStep, null);
 
                                                     if (QuaternionSeries != null)
                                                     {
-                                                        PlotCircularPlotPointSeries(QuaternionSeries, quaternionLegend, bufferSize);
+                                                        PlotCircularPlotPointSeries(QuaternionSeries, quaternionLegend, scrollable, numSamples, bufferSize);
                                                     }
 
                                                     ImPlot.EndPlot();
                                                 }
 
-                                                if (ImPlot.BeginPlot("##quaternion_digital_series", fillAvailable, plotFlags))
+                                                if (ImPlot.BeginPlot("##quaternion_digital_series", fillAvailable, signalPlotFlags))
                                                 {
-                                                    ImPlot.SetupAxes("", "", axisFlags, axisFlags);
-                                                    ImPlot.SetupAxesLimits(0, bufferSize - 1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxes("", "", xAxisFlags, yAxisFlags);
+                                                    if (scrollable)
+                                                        ImPlot.SetupAxisLimitsConstraints(ImAxis.X1, 0, Math.Max(0, existingSamples - 1));
+                                                    if (quaternionXAxisLimits is (double quaternionDigitalXAxisMin, double quaternionDigitalXAxisMax))
+                                                        ImPlot.SetupAxisLimits(ImAxis.X1, quaternionDigitalXAxisMin, quaternionDigitalXAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, digitalAxisLimitsMin, digitalAxisLimitsMax, ImPlotCond.Always);
 
-                                                    PlotDigitalInSeries(bufferSize);
+                                                    PlotDigitalInSeries(DigitalInSeries, digitalInLegend, digitalInLabels, scrollable, numSamples, bufferSize);
 
                                                     ImPlot.EndPlot();
                                                 }
@@ -929,43 +1052,63 @@ public class DataPanel
         return new Vector2(displayWidth, displayHeight);
     }
 
-    void PlotBufferSizeControl(ref int bufferSize)
+    readonly struct PlotWindow
     {
-        if (AcquisitionStatus) ImGui.BeginDisabled();
+        readonly bool scrollable;
+        readonly int samplesToPlot;
+        readonly int bufferCapacity;
+        readonly int count;
+        readonly int windowStart;
+        readonly int startPhase;
 
-        var bufferInputWidth = 60f * UiScale.Current;
-        ImGui.AlignTextToFramePadding();
-        ImGui.Text("Buffer Size: ");
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(bufferInputWidth);
-        if (ImGui.InputInt("##statusbar_buffersize", ref bufferSize, 0, 0))
+        public int DrawCount { get; }
+
+        public PlotWindow(int start, int end, int count, bool scrollable, int samplesToPlot, int bufferCapacity)
         {
-            bufferSize = Math.Max(2, bufferSize);
-        }
-        if (Tooltip.Begin(allowWhenDisabled: true))
-        {
-            Tooltip.AddLine("Number of most recent samples shown in the time-series plots.");
-            if (AcquisitionStatus)
-                Tooltip.Note("Unavailable while acquiring.");
-            Tooltip.End();
+            this.scrollable = scrollable;
+            this.samplesToPlot = samplesToPlot;
+            this.bufferCapacity = bufferCapacity;
+            this.count = count;
+            DrawCount = scrollable ? count : Math.Min(count, samplesToPlot);
+            windowStart = scrollable ? start : (((end - DrawCount) % bufferCapacity) + bufferCapacity) % bufferCapacity;
+            startPhase = scrollable ? 0 : windowStart % Math.Max(1, samplesToPlot);
         }
 
-        if (AcquisitionStatus) ImGui.EndDisabled();
+        int ChronologicalRank(int t) => scrollable ? t : (t - startPhase + samplesToPlot) % samplesToPlot;
+
+        public int PhysicalSlot(int t) => (windowStart + ChronologicalRank(t)) % bufferCapacity;
+
+        public double MarkerX => scrollable ? count : (DrawCount == 0 ? 0 : (DrawCount - 1 + startPhase) % samplesToPlot);
     }
 
-    static unsafe void PlotCircularPlotPointSeries<T>(CircularPlotPointSeries<T> buffer, PlotLegend legend, int bufferSize)
+    static unsafe void PlotCircularPlotPointSeries<T>(CircularPlotPointSeries<T> buffer, PlotLegend legend, bool scrollable, int samplesToPlot, int bufferCapacity)
     {
+        if (buffer == null)
+            return;
+
+        var window = new PlotWindow(buffer.Start, buffer.End, buffer.Count, scrollable, samplesToPlot, bufferCapacity);
+
         for (int i = 0; i < buffer.Series.Length; i++)
         {
             if (!legend.IsVisible(i))
                 continue;
 
             var line = buffer.Series[i];
+
+            nint remappedGetter(nint data, int t, nint pointPtr)
+            {
+                int physicalSlot = window.PhysicalSlot(t);
+                nint result = line.Getter(data, physicalSlot, pointPtr);
+                var point = (ImPlotPoint*)pointPtr;
+                point->X = t;
+                return result;
+            }
+
             ImPlot.SetNextLineStyle(legend.ColorOf(i));
-            ImPlot.PlotLineG(line.Name, line.Getter, null, buffer.Count);
+            ImPlot.PlotLineG(line.Name, remappedGetter, null, window.DrawCount);
         }
 
-        PlotVerticalLine((float)(buffer.Count < bufferSize ? buffer.End - 1 : buffer.End), Palette.Yellow);
+        PlotVerticalLine((float)window.MarkerX, Palette.Yellow);
     }
 
     static unsafe void PlotVerticalLine(float end, Vector4 color)
@@ -979,24 +1122,22 @@ public class DataPanel
         }
     }
 
-    unsafe void PlotDigitalInSeries(int bufferSize)
+    static unsafe void PlotDigitalInSeries<T>(CircularPlotPointSeries<T> buffer, PlotLegend legend, string[] labels, bool scrollable, int samplesToPlot, int bufferCapacity)
     {
-        if (DigitalInSeries == null)
+        if (buffer == null)
             return;
 
-        int sampleCount = DigitalInSeries.Count;
-        if (sampleCount < 1)
-            return;
+        var window = new PlotWindow(buffer.Start, buffer.End, buffer.Count, scrollable, samplesToPlot, bufferCapacity);
+        int drawCount = window.DrawCount;
+        int stepCount = drawCount > 1 ? 2 * drawCount - 1 : 1;
 
-        int stepCount = sampleCount > 1 ? 2 * sampleCount - 1 : 1;
-
-        for (int i = 0; i < DigitalInSeries.Series.Length; i++)
+        for (int i = 0; i < buffer.Series.Length; i++)
         {
-            if (!digitalInLegend.IsVisible(i))
+            if (!legend.IsVisible(i))
                 continue;
 
-            var line = DigitalInSeries.Series[i];
-            var color = digitalInLegend.ColorOf(i);
+            var line = buffer.Series[i];
+            var color = legend.ColorOf(i);
 
             double baseline = i;
 
@@ -1004,24 +1145,24 @@ public class DataPanel
             {
                 if ((idx & 1) == 0)
                 {
-                    int r = idx / 2;
-                    nint result = line.Getter(data, r, pointPtr);
+                    int t = idx / 2;
+                    int physicalSlot = window.PhysicalSlot(t);
+                    nint result = line.Getter(data, physicalSlot, pointPtr);
                     var point = (ImPlotPoint*)pointPtr;
+                    point->X = t;
                     point->Y = baseline + point->Y * DigitalAmplitude;
                     return result;
                 }
                 else
                 {
-                    int r = (idx - 1) / 2;
-                    int rNext = r + 1;
-                    nint result = line.Getter(data, r, pointPtr);
+                    int t = (idx - 1) / 2;
+                    int tNext = t + 1;
+                    int physicalSlot = window.PhysicalSlot(t);
+                    nint result = line.Getter(data, physicalSlot, pointPtr);
                     var point = (ImPlotPoint*)pointPtr;
                     double heldY = baseline + point->Y * DigitalAmplitude;
 
-                    ImPlotPoint nextPoint;
-                    line.Getter(data, rNext, (nint)(&nextPoint));
-
-                    point->X = nextPoint.X;
+                    point->X = tNext;
                     point->Y = heldY;
                     return result;
                 }
@@ -1029,20 +1170,22 @@ public class DataPanel
 
             nint baselineGetter(nint data, int idx, nint pointPtr)
             {
-                int r = (idx & 1) == 0 ? idx / 2 : (idx - 1) / 2 + 1;
-                nint result = line.Getter(data, r, pointPtr);
+                int t = (idx & 1) == 0 ? idx / 2 : (idx - 1) / 2 + 1;
+                int physicalSlot = window.PhysicalSlot(t);
+                nint result = line.Getter(data, physicalSlot, pointPtr);
                 var point = (ImPlotPoint*)pointPtr;
+                point->X = t;
                 point->Y = baseline;
                 return result;
             }
 
             ImPlot.SetNextFillStyle(color);
-            ImPlot.PlotShadedG(digitalInLabels[i] + "##fill", valueGetter, null, baselineGetter, null, stepCount);
+            ImPlot.PlotShadedG(labels[i] + "##fill", valueGetter, null, baselineGetter, null, stepCount);
 
             ImPlot.SetNextLineStyle(color);
-            ImPlot.PlotLineG(digitalInLabels[i] + "##line", valueGetter, null, stepCount);
+            ImPlot.PlotLineG(labels[i] + "##line", valueGetter, null, stepCount);
         }
 
-        PlotVerticalLine((float)(DigitalInSeries.Count < bufferSize ? DigitalInSeries.End - 1 : DigitalInSeries.End), Palette.Yellow);
+        PlotVerticalLine((float)window.MarkerX, Palette.Yellow);
     }
 }
