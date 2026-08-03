@@ -137,19 +137,6 @@ public class SettingsPanel
                 string configFilePath = string.Empty;
 
                 bool validPort = !string.IsNullOrEmpty(portName) && portNames.Contains(portName);
-                bool commutatorsFound = portNames.Count > 0;
-
-                if (AcquisitionStatus && !wasAcquiring && commutatorAutoConnect && !commutatorConnected)
-                {
-                    if (validPort)
-                        commutatorConnected = true;
-
-                    else if (commutatorsFound)
-                    {
-                        log.Warning($"{nameof(hardwareSettings.Commutator.AutoConnect)} is enabled but no commutator was connected; the selected COM port '{portName}' is not valid.");
-                    }
-                }
-                wasAcquiring = AcquisitionStatus;
 
                 if (imageExpanded)
                 {
@@ -432,6 +419,20 @@ public class SettingsPanel
                                 portNames.Sort();
                                 pendingPortNames = null;
                             }
+
+                            bool commutatorsFound = portNames.Count > 0;
+
+                            if (AcquisitionStatus && !wasAcquiring && commutatorAutoConnect && !commutatorConnected)
+                            {
+                                if (validPort)
+                                    commutatorConnected = true;
+
+                                else if (commutatorsFound)
+                                {
+                                    log.Warning($"{nameof(hardwareSettings.Commutator.AutoConnect)} is enabled but no commutator was connected; the selected COM port '{portName}' is not valid.");
+                                }
+                            }
+                            wasAcquiring = AcquisitionStatus;
 
                             int portIndex = portNames.IndexOf(portName);
                             if (!searching && portIndex < 0)

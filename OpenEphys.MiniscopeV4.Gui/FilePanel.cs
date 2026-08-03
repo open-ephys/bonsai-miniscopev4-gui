@@ -91,6 +91,22 @@ public class FilePanel
 
                 bool recordButtonActive = AcquisitionStatus;
 
+                if (saveDialogTask != null && saveDialogTask.IsCompleted)
+                {
+                    var result = saveDialogTask.Result;
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        fileName = Path.ChangeExtension(result, null);
+                    }
+                    saveDialogTask = null;
+
+                    if (shouldStartRecordingWhenCompleted && !string.IsNullOrEmpty(fileName))
+                    {
+                        recordButton = true;
+                        shouldStartRecordingWhenCompleted = false;
+                    }
+                }
+
                 void RecordButtonPressed()
                 {
                     if (string.IsNullOrEmpty(fileName))
@@ -157,22 +173,6 @@ public class FilePanel
                         "Specify a save location and base filename for all data\n" +
                         " produced during acquisition (e.g., video, IMU, console log).",
                         recordButton, unavailableWhile);
-
-                    if (saveDialogTask != null && saveDialogTask.IsCompleted)
-                    {
-                        var result = saveDialogTask.Result;
-                        if (!string.IsNullOrEmpty(result))
-                        {
-                            fileName = Path.ChangeExtension(result, null);
-                        }
-                        saveDialogTask = null;
-
-                        if (shouldStartRecordingWhenCompleted && !string.IsNullOrEmpty(fileName))
-                        {
-                            recordButton = true;
-                            shouldStartRecordingWhenCompleted = false;
-                        }
-                    }
 
                     ImGui.SameLine();
 
