@@ -130,8 +130,10 @@ public class CircularBufferBuilder : SingleArgumentExpressionBuilder
         return Observable.Defer(() =>
         {
             var buffer = new CircularBuffer<TSource>(Capacity);
-            var getters = Array.ConvertAll(valueGetters, getter => CreatePlotPointGetter(buffer, getter.Key, getter.Value));
-            var series = new CircularPlotPointSeries<TSource>(buffer, getters);
+            NamedPlotPointGetter[] CreateGetters(CircularBuffer<TSource> target) =>
+                Array.ConvertAll(valueGetters, getter => CreatePlotPointGetter(target, getter.Key, getter.Value));
+            var getters = CreateGetters(buffer);
+            var series = new CircularPlotPointSeries<TSource>(buffer, getters, CreateGetters);
             return source.Select(value =>
             {
                 buffer.Push(value);
@@ -145,8 +147,10 @@ public class CircularBufferBuilder : SingleArgumentExpressionBuilder
         return Observable.Defer(() =>
         {
             var buffer = new CircularBuffer<TSource>(Capacity);
-            var getters = Array.ConvertAll(valueGetters, getter => CreatePlotPointGetter(buffer, getter.Key, getter.Value));
-            var series = new CircularPlotPointSeries<TSource>(buffer, getters);
+            NamedPlotPointGetter[] CreateGetters(CircularBuffer<TSource> target) =>
+                Array.ConvertAll(valueGetters, getter => CreatePlotPointGetter(target, getter.Key, getter.Value));
+            var getters = CreateGetters(buffer);
+            var series = new CircularPlotPointSeries<TSource>(buffer, getters, CreateGetters);
             return source.Select(value =>
             {
                 buffer.Push(value);
@@ -160,8 +164,10 @@ public class CircularBufferBuilder : SingleArgumentExpressionBuilder
         return Observable.Defer(() =>
         {
             var buffer = new CircularBuffer<TSource>(Capacity);
-            var getters = Array.ConvertAll(valueGetters, getter => CreatePlotPointGetter(buffer, getter.Key, indexGetter, getter.Value));
-            var series = new CircularPlotPointSeries<TSource>(buffer, getters);
+            NamedPlotPointGetter[] CreateGetters(CircularBuffer<TSource> target) =>
+                Array.ConvertAll(valueGetters, getter => CreatePlotPointGetter(target, getter.Key, indexGetter, getter.Value));
+            var getters = CreateGetters(buffer);
+            var series = new CircularPlotPointSeries<TSource>(buffer, getters, CreateGetters);
             return source.Select(value =>
             {
                 buffer.Push(value);
@@ -175,8 +181,10 @@ public class CircularBufferBuilder : SingleArgumentExpressionBuilder
         return Observable.Defer(() =>
         {
             var buffer = new CircularBuffer<TSource>(Capacity);
-            var getters = Array.ConvertAll(valueGetters, getter => CreatePlotPointGetter(buffer, getter.Key, indexGetter, getter.Value));
-            var series = new CircularPlotPointSeries<TSource>(buffer, getters);
+            NamedPlotPointGetter[] CreateGetters(CircularBuffer<TSource> target) =>
+                Array.ConvertAll(valueGetters, getter => CreatePlotPointGetter(target, getter.Key, indexGetter, getter.Value));
+            var getters = CreateGetters(buffer);
+            var series = new CircularPlotPointSeries<TSource>(buffer, getters, CreateGetters);
             return source.Select(value =>
             {
                 buffer.Push(value);

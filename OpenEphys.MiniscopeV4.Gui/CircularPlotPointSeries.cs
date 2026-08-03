@@ -14,11 +14,25 @@ public class CircularPlotPointSeries<TSource> : IPlotPointGetter, IPlotPointGett
 {
     private readonly CircularBuffer<TSource> storage;
     private readonly NamedPlotPointGetter[] series;
+    private readonly Func<CircularBuffer<TSource>, NamedPlotPointGetter[]> createGetters;
 
-    internal CircularPlotPointSeries(CircularBuffer<TSource> buffer, NamedPlotPointGetter[] getters)
+    internal CircularPlotPointSeries(
+        CircularBuffer<TSource> buffer,
+        NamedPlotPointGetter[] getters,
+        Func<CircularBuffer<TSource>, NamedPlotPointGetter[]> getterFactory)
     {
         storage = buffer;
         series = getters;
+        createGetters = getterFactory;
+    }
+
+    internal CircularPlotPointSeries<TSource> Clone()
+    {
+        var storage = this.storage.Clone();
+        var createGetters = this.createGetters;
+        var series = createGetters(storage);
+        var clone = new CircularPlotPointSeries<TSource>(storage, series, createGetters);
+        return clone;
     }
 
     /// <inheritdoc/>

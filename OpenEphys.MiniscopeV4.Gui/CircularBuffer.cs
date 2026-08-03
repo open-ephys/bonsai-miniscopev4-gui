@@ -13,6 +13,22 @@ class CircularBuffer<T> : IReadOnlyCollection<T>
         buffer = new T[capacity];
     }
 
+    CircularBuffer(CircularBuffer<T> other)
+        : this(other.buffer.Length)
+    {
+        for (int i = 0; i < other.count; i++)
+            buffer[i] = other.buffer[i];
+        start = other.start;
+        end = other.end;
+        count = other.count;
+    }
+
+    internal CircularBuffer<T> Clone()
+    {
+        var clone = new CircularBuffer<T>(this);
+        return clone;
+    }
+
     private int start;
     private int end;
     private int count;

@@ -5,13 +5,13 @@ namespace OpenEphys.MiniscopeV4.Gui;
 
 partial class DataDisplaySettings : IEquatable<DataDisplaySettings>
 {
-    const int DefaultBufferSize = 1200;
+    const int DefaultBufferSize = 1800;
 
     /// <summary>
     /// The buffer size, in samples, used by the time series plots.
     /// </summary>
     [YamlIgnore]
-    public int BufferSize { get; set; } = DefaultBufferSize;
+    public int BufferSize => DefaultBufferSize;
 
     /// <inheritdoc/>
     public bool Equals(DataDisplaySettings other) =>

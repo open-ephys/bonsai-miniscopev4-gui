@@ -1817,7 +1817,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="IntProperty">
-                            <Value>7</Value>
+                            <Value>3600</Value>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="MulticastSubject">
@@ -2317,8 +2317,8 @@
                                     <Expression xsi:type="Combinator">
                                       <Combinator xsi:type="cv:SolidColor">
                                         <cv:Size>
-                                          <cv:Width>640</cv:Width>
-                                          <cv:Height>480</cv:Height>
+                                          <cv:Width>608</cv:Width>
+                                          <cv:Height>608</cv:Height>
                                         </cv:Size>
                                         <cv:Depth>U8</cv:Depth>
                                         <cv:Channels>3</cv:Channels>
@@ -3058,26 +3058,6 @@
                               <Expression xsi:type="SubscribeSubject">
                                 <Name>Frame</Name>
                               </Expression>
-                              <Expression xsi:type="rx:Condition">
-                                <Name>Not Paused</Name>
-                                <Workflow>
-                                  <Nodes>
-                                    <Expression xsi:type="SubscribeSubject">
-                                      <Name>Status</Name>
-                                    </Expression>
-                                    <Expression xsi:type="MemberSelector">
-                                      <Selector>Paused</Selector>
-                                    </Expression>
-                                    <Expression xsi:type="BitwiseNot" />
-                                    <Expression xsi:type="WorkflowOutput" />
-                                  </Nodes>
-                                  <Edges>
-                                    <Edge From="0" To="1" Label="Source1" />
-                                    <Edge From="1" To="2" Label="Source1" />
-                                    <Edge From="2" To="3" Label="Source1" />
-                                  </Edges>
-                                </Workflow>
-                              </Expression>
                               <Expression xsi:type="Combinator">
                                 <Combinator xsi:type="p1:ObserveOnControl" />
                               </Expression>
@@ -3088,8 +3068,160 @@
                                 <Property Name="Capacity" />
                               </Expression>
                               <Expression xsi:type="p1:CircularBufferBuilder">
-                                <p1:Capacity>100</p1:Capacity>
+                                <p1:Capacity>1800</p1:Capacity>
                                 <p1:ValueSelector>X,Y,Z,W</p1:ValueSelector>
+                              </Expression>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Status</Name>
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>IsConnected</Selector>
+                              </Expression>
+                              <Expression xsi:type="rx:Condition">
+                                <Workflow>
+                                  <Nodes>
+                                    <Expression xsi:type="WorkflowInput">
+                                      <Name>Source1</Name>
+                                    </Expression>
+                                    <Expression xsi:type="BitwiseNot" />
+                                    <Expression xsi:type="WorkflowOutput" />
+                                  </Nodes>
+                                  <Edges>
+                                    <Edge From="0" To="1" Label="Source1" />
+                                    <Edge From="1" To="2" Label="Source1" />
+                                  </Edges>
+                                </Workflow>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="rx:TakeUntil" />
+                              </Expression>
+                              <Expression xsi:type="WorkflowOutput" />
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                              <Edge From="1" To="2" Label="Source1" />
+                              <Edge From="2" To="4" Label="Source1" />
+                              <Edge From="3" To="4" Label="Source2" />
+                              <Edge From="4" To="8" Label="Source1" />
+                              <Edge From="5" To="6" Label="Source1" />
+                              <Edge From="6" To="7" Label="Source1" />
+                              <Edge From="7" To="8" Label="Source2" />
+                              <Edge From="8" To="9" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
+                        <Expression xsi:type="imviz:LatestOnNewFrame">
+                          <Name>DisplayTick</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="QuaternionSeries" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="rx:SelectMany">
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Frame</Name>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p1:ObserveOnControl" />
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>DigitalIn</Selector>
+                              </Expression>
+                              <Expression xsi:type="HasFlag">
+                                <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
+                                  <Value>DigitalIn0</Value>
+                                </Operand>
+                              </Expression>
+                              <Expression xsi:type="HasFlag">
+                                <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
+                                  <Value>DigitalIn1</Value>
+                                </Operand>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="rx:Zip" />
+                              </Expression>
+                              <Expression xsi:type="ExternalizedMapping">
+                                <Property Name="Capacity" />
+                              </Expression>
+                              <Expression xsi:type="p1:CircularBufferBuilder">
+                                <p1:Capacity>1800</p1:Capacity>
+                                <p1:ValueSelector>Item1,Item2</p1:ValueSelector>
+                              </Expression>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Status</Name>
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>IsConnected</Selector>
+                              </Expression>
+                              <Expression xsi:type="rx:Condition">
+                                <Workflow>
+                                  <Nodes>
+                                    <Expression xsi:type="WorkflowInput">
+                                      <Name>Source1</Name>
+                                    </Expression>
+                                    <Expression xsi:type="BitwiseNot" />
+                                    <Expression xsi:type="WorkflowOutput" />
+                                  </Nodes>
+                                  <Edges>
+                                    <Edge From="0" To="1" Label="Source1" />
+                                    <Edge From="1" To="2" Label="Source1" />
+                                  </Edges>
+                                </Workflow>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="rx:TakeUntil" />
+                              </Expression>
+                              <Expression xsi:type="WorkflowOutput" />
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                              <Edge From="1" To="2" Label="Source1" />
+                              <Edge From="2" To="3" Label="Source1" />
+                              <Edge From="2" To="4" Label="Source1" />
+                              <Edge From="3" To="5" Label="Source1" />
+                              <Edge From="4" To="5" Label="Source2" />
+                              <Edge From="5" To="7" Label="Source1" />
+                              <Edge From="6" To="7" Label="Source2" />
+                              <Edge From="7" To="11" Label="Source1" />
+                              <Edge From="8" To="9" Label="Source1" />
+                              <Edge From="9" To="10" Label="Source1" />
+                              <Edge From="10" To="11" Label="Source2" />
+                              <Edge From="11" To="12" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
+                        <Expression xsi:type="imviz:LatestOnNewFrame">
+                          <Name>DisplayTick</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DigitalInSeries" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="rx:SelectMany">
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Frame</Name>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p1:ObserveOnControl" />
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>Quaternion</Selector>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p2:QuaternionToEuler" />
+                              </Expression>
+                              <Expression xsi:type="ExternalizedMapping">
+                                <Property Name="Capacity" />
+                              </Expression>
+                              <Expression xsi:type="p1:CircularBufferBuilder">
+                                <p1:Capacity>1800</p1:Capacity>
+                                <p1:ValueSelector>Yaw,Pitch,Roll</p1:ValueSelector>
                               </Expression>
                               <Expression xsi:type="SubscribeSubject">
                                 <Name>Status</Name>
@@ -3128,201 +3260,6 @@
                               <Edge From="7" To="8" Label="Source1" />
                               <Edge From="8" To="9" Label="Source2" />
                               <Edge From="9" To="10" Label="Source1" />
-                            </Edges>
-                          </Workflow>
-                        </Expression>
-                        <Expression xsi:type="imviz:LatestOnNewFrame">
-                          <Name>DisplayTick</Name>
-                        </Expression>
-                        <Expression xsi:type="PropertyMapping">
-                          <PropertyMappings>
-                            <Property Name="QuaternionSeries" />
-                          </PropertyMappings>
-                        </Expression>
-                        <Expression xsi:type="rx:SelectMany">
-                          <Workflow>
-                            <Nodes>
-                              <Expression xsi:type="SubscribeSubject">
-                                <Name>Frame</Name>
-                              </Expression>
-                              <Expression xsi:type="rx:Condition">
-                                <Name>Not Paused</Name>
-                                <Workflow>
-                                  <Nodes>
-                                    <Expression xsi:type="SubscribeSubject">
-                                      <Name>Status</Name>
-                                    </Expression>
-                                    <Expression xsi:type="MemberSelector">
-                                      <Selector>Paused</Selector>
-                                    </Expression>
-                                    <Expression xsi:type="BitwiseNot" />
-                                    <Expression xsi:type="WorkflowOutput" />
-                                  </Nodes>
-                                  <Edges>
-                                    <Edge From="0" To="1" Label="Source1" />
-                                    <Edge From="1" To="2" Label="Source1" />
-                                    <Edge From="2" To="3" Label="Source1" />
-                                  </Edges>
-                                </Workflow>
-                              </Expression>
-                              <Expression xsi:type="Combinator">
-                                <Combinator xsi:type="p1:ObserveOnControl" />
-                              </Expression>
-                              <Expression xsi:type="MemberSelector">
-                                <Selector>DigitalIn</Selector>
-                              </Expression>
-                              <Expression xsi:type="HasFlag">
-                                <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
-                                  <Value>DigitalIn0</Value>
-                                </Operand>
-                              </Expression>
-                              <Expression xsi:type="HasFlag">
-                                <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
-                                  <Value>DigitalIn1</Value>
-                                </Operand>
-                              </Expression>
-                              <Expression xsi:type="Combinator">
-                                <Combinator xsi:type="rx:Zip" />
-                              </Expression>
-                              <Expression xsi:type="ExternalizedMapping">
-                                <Property Name="Capacity" />
-                              </Expression>
-                              <Expression xsi:type="p1:CircularBufferBuilder">
-                                <p1:Capacity>100</p1:Capacity>
-                                <p1:ValueSelector>Item1,Item2</p1:ValueSelector>
-                              </Expression>
-                              <Expression xsi:type="SubscribeSubject">
-                                <Name>Status</Name>
-                              </Expression>
-                              <Expression xsi:type="MemberSelector">
-                                <Selector>IsConnected</Selector>
-                              </Expression>
-                              <Expression xsi:type="rx:Condition">
-                                <Workflow>
-                                  <Nodes>
-                                    <Expression xsi:type="WorkflowInput">
-                                      <Name>Source1</Name>
-                                    </Expression>
-                                    <Expression xsi:type="BitwiseNot" />
-                                    <Expression xsi:type="WorkflowOutput" />
-                                  </Nodes>
-                                  <Edges>
-                                    <Edge From="0" To="1" Label="Source1" />
-                                    <Edge From="1" To="2" Label="Source1" />
-                                  </Edges>
-                                </Workflow>
-                              </Expression>
-                              <Expression xsi:type="Combinator">
-                                <Combinator xsi:type="rx:TakeUntil" />
-                              </Expression>
-                              <Expression xsi:type="WorkflowOutput" />
-                            </Nodes>
-                            <Edges>
-                              <Edge From="0" To="1" Label="Source1" />
-                              <Edge From="1" To="2" Label="Source1" />
-                              <Edge From="2" To="3" Label="Source1" />
-                              <Edge From="3" To="4" Label="Source1" />
-                              <Edge From="3" To="5" Label="Source1" />
-                              <Edge From="4" To="6" Label="Source1" />
-                              <Edge From="5" To="6" Label="Source2" />
-                              <Edge From="6" To="8" Label="Source1" />
-                              <Edge From="7" To="8" Label="Source2" />
-                              <Edge From="8" To="12" Label="Source1" />
-                              <Edge From="9" To="10" Label="Source1" />
-                              <Edge From="10" To="11" Label="Source1" />
-                              <Edge From="11" To="12" Label="Source2" />
-                              <Edge From="12" To="13" Label="Source1" />
-                            </Edges>
-                          </Workflow>
-                        </Expression>
-                        <Expression xsi:type="imviz:LatestOnNewFrame">
-                          <Name>DisplayTick</Name>
-                        </Expression>
-                        <Expression xsi:type="PropertyMapping">
-                          <PropertyMappings>
-                            <Property Name="DigitalInSeries" />
-                          </PropertyMappings>
-                        </Expression>
-                        <Expression xsi:type="rx:SelectMany">
-                          <Workflow>
-                            <Nodes>
-                              <Expression xsi:type="SubscribeSubject">
-                                <Name>Frame</Name>
-                              </Expression>
-                              <Expression xsi:type="rx:Condition">
-                                <Name>Not Paused</Name>
-                                <Workflow>
-                                  <Nodes>
-                                    <Expression xsi:type="SubscribeSubject">
-                                      <Name>Status</Name>
-                                    </Expression>
-                                    <Expression xsi:type="MemberSelector">
-                                      <Selector>Paused</Selector>
-                                    </Expression>
-                                    <Expression xsi:type="BitwiseNot" />
-                                    <Expression xsi:type="WorkflowOutput" />
-                                  </Nodes>
-                                  <Edges>
-                                    <Edge From="0" To="1" Label="Source1" />
-                                    <Edge From="1" To="2" Label="Source1" />
-                                    <Edge From="2" To="3" Label="Source1" />
-                                  </Edges>
-                                </Workflow>
-                              </Expression>
-                              <Expression xsi:type="Combinator">
-                                <Combinator xsi:type="p1:ObserveOnControl" />
-                              </Expression>
-                              <Expression xsi:type="MemberSelector">
-                                <Selector>Quaternion</Selector>
-                              </Expression>
-                              <Expression xsi:type="Combinator">
-                                <Combinator xsi:type="p2:QuaternionToEuler" />
-                              </Expression>
-                              <Expression xsi:type="ExternalizedMapping">
-                                <Property Name="Capacity" />
-                              </Expression>
-                              <Expression xsi:type="p1:CircularBufferBuilder">
-                                <p1:Capacity>100</p1:Capacity>
-                                <p1:ValueSelector>Yaw,Pitch,Roll</p1:ValueSelector>
-                              </Expression>
-                              <Expression xsi:type="SubscribeSubject">
-                                <Name>Status</Name>
-                              </Expression>
-                              <Expression xsi:type="MemberSelector">
-                                <Selector>IsConnected</Selector>
-                              </Expression>
-                              <Expression xsi:type="rx:Condition">
-                                <Workflow>
-                                  <Nodes>
-                                    <Expression xsi:type="WorkflowInput">
-                                      <Name>Source1</Name>
-                                    </Expression>
-                                    <Expression xsi:type="BitwiseNot" />
-                                    <Expression xsi:type="WorkflowOutput" />
-                                  </Nodes>
-                                  <Edges>
-                                    <Edge From="0" To="1" Label="Source1" />
-                                    <Edge From="1" To="2" Label="Source1" />
-                                  </Edges>
-                                </Workflow>
-                              </Expression>
-                              <Expression xsi:type="Combinator">
-                                <Combinator xsi:type="rx:TakeUntil" />
-                              </Expression>
-                              <Expression xsi:type="WorkflowOutput" />
-                            </Nodes>
-                            <Edges>
-                              <Edge From="0" To="1" Label="Source1" />
-                              <Edge From="1" To="2" Label="Source1" />
-                              <Edge From="2" To="3" Label="Source1" />
-                              <Edge From="3" To="4" Label="Source1" />
-                              <Edge From="4" To="6" Label="Source1" />
-                              <Edge From="5" To="6" Label="Source2" />
-                              <Edge From="6" To="10" Label="Source1" />
-                              <Edge From="7" To="8" Label="Source1" />
-                              <Edge From="8" To="9" Label="Source1" />
-                              <Edge From="9" To="10" Label="Source2" />
-                              <Edge From="10" To="11" Label="Source1" />
                             </Edges>
                           </Workflow>
                         </Expression>
@@ -3407,8 +3344,8 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p1:DataPanel">
-                            <p1:ImageHeight>480</p1:ImageHeight>
-                            <p1:ImageWidth>640</p1:ImageWidth>
+                            <p1:ImageHeight>608</p1:ImageHeight>
+                            <p1:ImageWidth>608</p1:ImageWidth>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="WorkflowOutput" />
@@ -4271,7 +4208,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:GenerateRecordingFileNames">
-                <p1:FileName>../data/run_</p1:FileName>
+                <p1:FileName />
                 <p1:Suffix>FileCount</p1:Suffix>
               </Combinator>
             </Expression>
@@ -5261,12 +5198,12 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:FileSettings">
                       <p1:RecordButton>false</p1:RecordButton>
-                      <p1:RecordingMode>Segmented</p1:RecordingMode>
+                      <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName>../data/run_</p1:FileName>
+                      <p1:FileName />
                       <p1:Suffix>FileCount</p1:Suffix>
-                      <p1:RecordingDuration>3</p1:RecordingDuration>
-                      <p1:TotalDuration>7</p1:TotalDuration>
+                      <p1:RecordingDuration>600</p1:RecordingDuration>
+                      <p1:TotalDuration>3600</p1:TotalDuration>
                       <p1:SegmentMode>MultipleFiles</p1:SegmentMode>
                       <p1:TriggerInput>DigitalIn0</p1:TriggerInput>
                     </Combinator>
@@ -5570,12 +5507,12 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:FileSettings">
                       <p1:RecordButton>false</p1:RecordButton>
-                      <p1:RecordingMode>Segmented</p1:RecordingMode>
+                      <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName>../data/run_</p1:FileName>
+                      <p1:FileName />
                       <p1:Suffix>FileCount</p1:Suffix>
-                      <p1:RecordingDuration>3</p1:RecordingDuration>
-                      <p1:TotalDuration>7</p1:TotalDuration>
+                      <p1:RecordingDuration>600</p1:RecordingDuration>
+                      <p1:TotalDuration>3600</p1:TotalDuration>
                       <p1:SegmentMode>MultipleFiles</p1:SegmentMode>
                       <p1:TriggerInput>DigitalIn0</p1:TriggerInput>
                     </Combinator>
@@ -5768,12 +5705,12 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:FileSettings">
                       <p1:RecordButton>false</p1:RecordButton>
-                      <p1:RecordingMode>Segmented</p1:RecordingMode>
+                      <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName>../data/run_</p1:FileName>
+                      <p1:FileName />
                       <p1:Suffix>FileCount</p1:Suffix>
-                      <p1:RecordingDuration>3</p1:RecordingDuration>
-                      <p1:TotalDuration>7</p1:TotalDuration>
+                      <p1:RecordingDuration>600</p1:RecordingDuration>
+                      <p1:TotalDuration>3600</p1:TotalDuration>
                       <p1:SegmentMode>MultipleFiles</p1:SegmentMode>
                       <p1:TriggerInput>DigitalIn0</p1:TriggerInput>
                     </Combinator>
