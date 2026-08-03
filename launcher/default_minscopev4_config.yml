@@ -13,7 +13,6 @@ Hardware:
     EnableLed: true
     AutoConnect: true
 Display:
-  BufferSize: 100
   Saturation:
     Threshold: 160
     Color:
@@ -25,7 +24,6 @@ Display:
     BackgroundFrames: 100
     BackgroundThreshold: 92
     Sigma: 3
-  MaxProjection: {}
   Overlay:
     ApplyOverlay: false
     ReferencePath: ''
@@ -39,6 +37,7 @@ Display:
       Val1: 0
       Val2: 0
       Val3: 0
+  MaxProjection: {}
 File:
   RecordingMode: Manual
   CompressVideo: false
@@ -46,5 +45,5 @@ File:
   Suffix: FileCount
   RecordingDuration: 600
   TotalDuration: 3600
-  SegmentMode: SingleFile
+  SegmentMode: MultipleFiles
   TriggerInput: DigitalIn0

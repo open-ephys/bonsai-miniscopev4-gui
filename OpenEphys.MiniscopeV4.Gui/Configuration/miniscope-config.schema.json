@@ -214,11 +214,6 @@
       "description": "Data panel display settings.",
       "type": "object",
       "properties": {
-        "BufferSize": {
-          "description": "The buffer size, in samples, used by the time series plots.",
-          "type": "integer",
-          "default": 100
-        },
         "Saturation": {
           "description": "The saturation overlay settings.",
           "allOf": [ { "$ref": "#/$defs/SaturationSettings" } ],
