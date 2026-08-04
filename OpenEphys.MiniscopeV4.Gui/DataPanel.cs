@@ -1205,7 +1205,9 @@ public class DataPanel
             }
 
             ImPlot.SetNextLineStyle(color);
-            ImPlot.PlotLineG(line.Name, remappedGetter, null, window.DrawCount);
+            ImPlotPointGetter remappedGetterDelegate = remappedGetter;
+            ImPlot.PlotLineG(line.Name, remappedGetterDelegate, null, window.DrawCount);
+            GC.KeepAlive(remappedGetterDelegate);
 
             if (extendedCount > 0)
             {
@@ -1220,7 +1222,9 @@ public class DataPanel
                 }
 
                 ImPlot.SetNextLineStyle(color);
-                ImPlot.PlotLineG(line.Name + "##ext", extendedGetter, null, extendedCount + 1);
+                ImPlotPointGetter extendedGetterDelegate = extendedGetter;
+                ImPlot.PlotLineG(line.Name + "##ext", extendedGetterDelegate, null, extendedCount + 1);
+                GC.KeepAlive(extendedGetterDelegate);
             }
         }
 
@@ -1296,11 +1300,17 @@ public class DataPanel
                 return result;
             }
 
+            ImPlotPointGetter valueGetterDelegate = valueGetter;
+            ImPlotPointGetter baselineGetterDelegate = baselineGetter;
+
             ImPlot.SetNextFillStyle(color);
-            ImPlot.PlotShadedG(labels[i] + "##fill", valueGetter, null, baselineGetter, null, stepCount);
+            ImPlot.PlotShadedG(labels[i] + "##fill", valueGetterDelegate, null, baselineGetterDelegate, null, stepCount);
 
             ImPlot.SetNextLineStyle(color);
-            ImPlot.PlotLineG(labels[i] + "##line", valueGetter, null, stepCount);
+            ImPlot.PlotLineG(labels[i] + "##line", valueGetterDelegate, null, stepCount);
+            
+            GC.KeepAlive(valueGetterDelegate);
+            GC.KeepAlive(baselineGetterDelegate);
 
             if (extendedStepCount > 0)
             {
@@ -1329,11 +1339,17 @@ public class DataPanel
                     return result;
                 }
 
+                ImPlotPointGetter extValueGetterDelegate = extValueGetter;
+                ImPlotPointGetter extBaselineGetterDelegate = extBaselineGetter;
+
                 ImPlot.SetNextFillStyle(color);
-                ImPlot.PlotShadedG(labels[i] + "##fill_ext", extValueGetter, null, extBaselineGetter, null, extendedStepCount);
+                ImPlot.PlotShadedG(labels[i] + "##fill_ext", extValueGetterDelegate, null, extBaselineGetterDelegate, null, extendedStepCount);
 
                 ImPlot.SetNextLineStyle(color);
-                ImPlot.PlotLineG(labels[i] + "##line_ext", extValueGetter, null, extendedStepCount);
+                ImPlot.PlotLineG(labels[i] + "##line_ext", extValueGetterDelegate, null, extendedStepCount);
+
+                GC.KeepAlive(extValueGetterDelegate);
+                GC.KeepAlive(extBaselineGetterDelegate);
             }
         }
 
