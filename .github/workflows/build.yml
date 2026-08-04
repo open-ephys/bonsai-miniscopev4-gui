@@ -1,0 +1,17 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  build_and_publish:
+    # TODO: switch back to @main once open-ephys/github-actions#new-release-check
+    # (empty-release-list guard for check-semver) is merged upstream.
+    uses: open-ephys/github-actions/.github/workflows/build_dotnet_publish_nuget.yml@new-release-check
+    secrets:
+      NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}

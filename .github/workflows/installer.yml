@@ -1,0 +1,65 @@
+name: Installer
+
+on:
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "release") {
+            $version = "${{ github.event.release.tag_name }}" -replace '^v', ''
+          } else {
+            $prefix = (Select-String -Path Directory.Build.props -Pattern '(?<=VersionPrefix>).*(?=</VersionPrefix>)').Matches.Value
+            $version = "$prefix-pr${{ github.event.pull_request.number }}"
+          }
+          Write-Host "Version: $version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      # NB: keep the launcher's bootstrap manifest pointed at the
+      # package version actually being released, even if launcher/.bonsai/Bonsai.config
+      # wasn't bumped by hand before tagging.
+      - name: Pin launcher package version
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $configPath = "launcher\.bonsai\Bonsai.config"
+          (Get-Content $configPath) `
+            -replace '(<Package id="OpenEphys\.MiniscopeV4\.Gui" version=")[^"]*(")', "`${1}$version`${2}" `
+            -replace '(location="Packages/OpenEphys\.MiniscopeV4\.Gui\.)[^/]*(/lib/net472/OpenEphys\.MiniscopeV4\.Gui\.dll")', "`${1}$version`${2}" |
+            Set-Content $configPath
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          & iscc "/DAppVersion=$version" installer\MiniscopeGui.iss
+
+      - name: Upload installer artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniscopeGui-Setup
+          path: artifacts/MiniscopeGui-Setup-*.exe
+
+      - name: Attach installer to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" artifacts/MiniscopeGui-Setup-*.exe

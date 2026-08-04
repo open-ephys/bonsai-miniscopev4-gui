@@ -1,14 +1,15 @@
 #Requires -Version 5.0
 param(
     [string]$ConfigPath  = $null,
-    [switch]$BootstrapOnly
+    [switch]$BootstrapOnly,
+    [string]$BonsaiDir   = $null
 )
 
 $ErrorActionPreference  = "Stop"
 $ProgressPreference     = "SilentlyContinue"
 
 $ScriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$BonsaiDir  = Join-Path $ScriptDir ".bonsai"
+if (-not $BonsaiDir) { $BonsaiDir = Join-Path $ScriptDir ".bonsai" }
 $BonsaiExe  = Join-Path $BonsaiDir "Bonsai.exe"
 
 if (-not (Test-Path $BonsaiExe)) {
