@@ -5,7 +5,7 @@ namespace OpenEphys.MiniscopeV4.Gui;
 
 partial class DataDisplaySettings : IEquatable<DataDisplaySettings>
 {
-    const int DefaultBufferSize = 1800;
+    internal static readonly int DefaultBufferSize = 1800;
 
     /// <summary>
     /// The buffer size, in samples, used by the time series plots.
