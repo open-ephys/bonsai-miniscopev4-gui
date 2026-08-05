@@ -114,9 +114,9 @@
           "default": true
         },
         "AutoConnect": {
-          "description": "Whether to automatically connect the commutator when acquisition starts.",
+          "description": "Whether to automatically connect the commutator when acquisition starts, and stop acquisition if the commutator fails.",
           "type": "boolean",
-          "default": true
+          "default": false
         }
       }
     },

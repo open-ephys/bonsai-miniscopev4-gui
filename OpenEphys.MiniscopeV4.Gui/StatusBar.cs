@@ -35,6 +35,13 @@ public class StatusBar
     public bool AutomaticRestartTriggered { get; set; }
 
     /// <summary>
+    /// Gets or sets the commutator settings used to control the commutator serial port.
+    /// </summary>
+    [XmlIgnore]
+    [Browsable(false)]
+    public CommutatorSettings CommutatorSettings { get; set; } = new();
+
+    /// <summary>
     /// Renders the status bar controls and returns an updated <see cref="CameraStatus"/> alongside each source value.
     /// </summary>
     /// <param name="source">A sequence of values tied to the render tick of DearImGui.</param>
@@ -90,20 +97,37 @@ public class StatusBar
                         ImGui.EndDisabled();
 
                     ImGui.SameLine();
+                    bool disableAcquisitionButton = !isConnected
+                        && CommutatorSettings.AutoConnect
+                        && string.IsNullOrEmpty(CommutatorSettings.PortName);
                     var acqButtonSize = new Vector2(140f * UiScale.Current, 0f);
                     using (Palette.PushButtonColors(
                         isConnected ? Palette.Red : Palette.Green,
                         isConnected ? Palette.RedHovered : Palette.GreenHovered,
                         isConnected ? Palette.RedActive : Palette.GreenActive))
                     {
+                        if (disableAcquisitionButton) ImGui.BeginDisabled();
                         if (ImGui.Button(isConnected ? "Stop Acquisition##statusbar_btn" : "Start Acquisition##statusbar_btn", acqButtonSize))
                         {
                             isConnected = !isConnected;
                         }
+                        if (disableAcquisitionButton) ImGui.EndDisabled();
                     }
-                    Tooltip.Describe(isConnected
+
+                    if (Tooltip.Begin(allowWhenDisabled: true))
+                    {
+                        Tooltip.AddLine(isConnected
                         ? "Stop acquiring frames from the Miniscope."
                         : "Start acquiring frames from the Miniscope at the selected index.");
+
+                        if (disableAcquisitionButton)
+                        {
+                            Tooltip.Note(
+                                "Unavailable while Auto Connect is selected but no commutators are\n" +
+                                "found. Connect a commutator or uncheck Auto Connect to start acquisition.");
+                        }
+                        Tooltip.End();
+                    }
 
                     ImGui.TableNextColumn();
 

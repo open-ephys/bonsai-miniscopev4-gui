@@ -434,6 +434,14 @@ public class DataPanel
                     var activeTab = ImageTab.None;
                     bool resetMaxProjection = false;
 
+                    if (overlayDialogTask != null && overlayDialogTask.IsCompleted)
+                    {
+                        var chosen = overlayDialogTask.Result;
+                        if (!string.IsNullOrEmpty(chosen))
+                            overlayReferencePath = chosen;
+                        overlayDialogTask = null;
+                    }
+
                     if (!AcquisitionStatus && !ActiveImage.TexID.IsNull)
                     {
                         ActiveImage = default;
@@ -721,14 +729,6 @@ public class DataPanel
                                             }
                                         }
                                         Tooltip.Describe("Choose a reference image (e.g., a previous captured image) to overlay on the live view.");
-
-                                        if (overlayDialogTask != null && overlayDialogTask.IsCompleted)
-                                        {
-                                            var chosen = overlayDialogTask.Result;
-                                            if (!string.IsNullOrEmpty(chosen))
-                                                overlayReferencePath = chosen;
-                                            overlayDialogTask = null;
-                                        }
 
                                         ImGui.SameLine();
                                         if (ImGui.Button($"{browseLabel}##browse_screenshots", new Vector2(browseWidth, 0)))

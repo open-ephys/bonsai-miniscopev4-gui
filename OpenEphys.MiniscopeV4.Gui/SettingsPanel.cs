@@ -136,7 +136,80 @@ public class SettingsPanel
                 ConfigurationRequestType requestType = ConfigurationRequestType.None;
                 string configFilePath = string.Empty;
 
-                bool validPort = !string.IsNullOrEmpty(portName) && portNames.Contains(portName);
+                if (exportFileTask != null && exportFileTask.IsCompleted)
+                {
+                    var result = exportFileTask.Result;
+
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        requestType = ConfigurationRequestType.ManualSave;
+                        configFilePath = result;
+                    }
+
+                    exportFileTask = null;
+                }
+
+                if (importFileTask != null && importFileTask.IsCompleted)
+                {
+                    var result = importFileTask.Result;
+
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        requestType = ConfigurationRequestType.ManualLoad;
+                        configFilePath = result;
+                    }
+
+                    importFileTask = null;
+                }
+
+                for (int i = querySerialPorts.Count - 1; i >= 0; i--)
+                {
+                    var task = querySerialPorts[i];
+                    if (!task.IsCompleted)
+                        continue;
+
+                    if (task.Status == TaskStatus.RanToCompletion)
+                    {
+                        var result = task.Result;
+                        if (!result.Item2)
+                        {
+                            pendingPortNames.Remove(result.Item1);
+                        }
+                    }
+
+                    querySerialPorts.RemoveAt(i);
+                }
+
+                bool searching = querySerialPorts.Count > 0;
+
+                if (pendingPortNames != null && !searching)
+                {
+                    portNames = pendingPortNames;
+                    portNames.Sort();
+                    pendingPortNames = null;
+                }
+
+                bool commutatorsFound = portNames.Count > 0;
+
+                if (AcquisitionStatus && !wasAcquiring && commutatorAutoConnect && !commutatorConnected)
+                {
+                    commutatorConnected = true;
+                }
+                wasAcquiring = AcquisitionStatus;
+
+                int portIndex = portNames.IndexOf(portName);
+                if (!searching && portIndex < 0)
+                {
+                    if (commutatorsFound)
+                    {
+                        portIndex = 0;
+                        portName = portNames[0];
+                    }
+                    else if (!string.IsNullOrEmpty(portName))
+                    {
+                        portName = "";
+                    }
+                }
 
                 if (imageExpanded)
                 {
@@ -223,19 +296,6 @@ public class SettingsPanel
                             "Export all current settings to a configuration file (saved as\n" +
                             $"a *{GenerateRecordingFileNames.ConfigExtension} file).");
 
-                        if (exportFileTask != null && exportFileTask.IsCompleted)
-                        {
-                            var result = exportFileTask.Result;
-
-                            if (!string.IsNullOrEmpty(result))
-                            {
-                                requestType = ConfigurationRequestType.ManualSave;
-                                configFilePath = result;
-                            }
-
-                            exportFileTask = null;
-                        }
-
                         ImGui.SameLine(0, ImGui.GetStyle().ItemSpacing.X);
                         if (ImGui.Button(importButtonString, new Vector2(importButtonWidth, 0f)))
                         {
@@ -250,19 +310,6 @@ public class SettingsPanel
                                dlg => ((OpenFileDialog)dlg).FileName);
                         }
                         Tooltip.Describe($"Import all settings from an existing *{GenerateRecordingFileNames.ConfigExtension} configuration file.");
-
-                        if (importFileTask != null && importFileTask.IsCompleted)
-                        {
-                            var result = importFileTask.Result;
-
-                            if (!string.IsNullOrEmpty(result))
-                            {
-                                requestType = ConfigurationRequestType.ManualLoad;
-                                configFilePath = result;
-                            }
-
-                            importFileTask = null;
-                        }
 
                         ImGui.Spacing();
                         ImGui.Separator();
@@ -393,64 +440,9 @@ public class SettingsPanel
                             float comboWidth = ImGui.GetContentRegionAvail().X - refreshButtonWidth - style.ItemSpacing.X;
                             ImGui.SetNextItemWidth(comboWidth);
 
-                            for (int i = querySerialPorts.Count - 1; i >= 0; i--)
-                            {
-                                var task = querySerialPorts[i];
-                                if (!task.IsCompleted)
-                                    continue;
-
-                                if (task.Status == TaskStatus.RanToCompletion)
-                                {
-                                    var result = task.Result;
-                                    if (!result.Item2)
-                                    {
-                                        pendingPortNames.Remove(result.Item1);
-                                    }
-                                }
-
-                                querySerialPorts.RemoveAt(i);
-                            }
-
-                            bool searching = querySerialPorts.Count > 0;
-
-                            if (pendingPortNames != null && !searching)
-                            {
-                                portNames = pendingPortNames;
-                                portNames.Sort();
-                                pendingPortNames = null;
-                            }
-
-                            bool commutatorsFound = portNames.Count > 0;
-
-                            if (AcquisitionStatus && !wasAcquiring && commutatorAutoConnect && !commutatorConnected)
-                            {
-                                if (validPort)
-                                    commutatorConnected = true;
-
-                                else if (commutatorsFound)
-                                {
-                                    log.Warning($"{nameof(hardwareSettings.Commutator.AutoConnect)} is enabled but no commutator was connected; the selected COM port '{portName}' is not valid.");
-                                }
-                            }
-                            wasAcquiring = AcquisitionStatus;
-
-                            int portIndex = portNames.IndexOf(portName);
-                            if (!searching && portIndex < 0)
-                            {
-                                if (commutatorsFound)
-                                {
-                                    portIndex = 0;
-                                    portName = portNames[0];
-                                }
-                                else if (!string.IsNullOrEmpty(portName))
-                                {
-                                    portName = "";
-                                }
-                            }
-
                             if (commutatorConnected || searching) ImGui.BeginDisabled();
 
-                            if (ImGui.BeginCombo("##comport", commutatorsFound ? portNames[portIndex] : "No commutator found"))
+                            if (ImGui.BeginCombo("##comport", commutatorsFound && portIndex >= 0 ? portNames[portIndex] : "No commutator found"))
                             {
                                 for (int i = 0; i < portNames.Count; i++)
                                 {
@@ -494,8 +486,6 @@ public class SettingsPanel
 
                             if (searching || commutatorConnected) ImGui.EndDisabled();
 
-                            if (!commutatorsFound) ImGui.BeginDisabled();
-
                             if (ImGui.BeginTable("##commutator_connect", 2, ImGuiTableFlags.SizingStretchSame))
                             {
                                 ImGui.TableNextColumn();
@@ -503,26 +493,33 @@ public class SettingsPanel
 
                                 if (Tooltip.Begin())
                                 {
-                                    Tooltip.AddLine("Automatically connect the commutator when acquisition starts, if a commutator is selected.");
-
-                                    if (!commutatorsFound)
-                                        Tooltip.Note("Unavailable while no commutators are found.");
-
+                                    Tooltip.AddLine(
+                                        "Connect the selected commutator automatically when acquisition starts.\n" +
+                                        "While this is enabled the commutator is required for acquisition:\n" +
+                                        "acquisition cannot be started if no commutator is available, and any\n" +
+                                        "commutator error stops acquisition.\n");
                                     Tooltip.End();
                                 }
 
                                 ImGui.TableNextColumn();
+                                bool commutatorConnectButtonDisabled = (!commutatorsFound && !commutatorConnected) || searching
+                                    || (commutatorAutoConnect && AcquisitionStatus && commutatorConnected);
                                 using (Palette.PushButtonColors(
                                     commutatorConnected ? Palette.Red : Palette.Green,
                                     commutatorConnected ? Palette.RedHovered : Palette.GreenHovered,
                                     commutatorConnected ? Palette.RedActive : Palette.GreenActive))
                                 {
+
+                                    if (commutatorConnectButtonDisabled) ImGui.BeginDisabled();
+
                                     if (ImGui.Button(commutatorConnected ? "Disconnect##combutton" : "Connect##combutton", new Vector2(-1f, 0f)))
                                     {
                                         commutatorConnected = !commutatorConnected;
                                     }
+
+                                    if (commutatorConnectButtonDisabled) ImGui.EndDisabled();
                                 }
-                                if (Tooltip.Begin())
+                                if (Tooltip.Begin(allowWhenDisabled: true))
                                 {
                                     Tooltip.AddLine(commutatorConnected
                                         ? "Disconnect from the commutator."
@@ -531,13 +528,20 @@ public class SettingsPanel
                                     if (!commutatorsFound)
                                         Tooltip.Note("Unavailable while no commutators are found.");
 
+                                    if (searching)
+                                        Tooltip.Note("Unavailable while searching for connected commutators.");
+
+                                    if (commutatorAutoConnect && AcquisitionStatus && commutatorConnected)
+                                        Tooltip.Note(
+                                            "Unavailable while acquiring and Auto Connect is true, as the commutator\n" +
+                                            "is required for acquisition. Uncheck Auto Connect to disconnect without stopping\n" +
+                                            "acquisition.");
+
                                     Tooltip.End();
                                 }
 
                                 ImGui.EndTable();
                             }
-
-                            if (!commutatorsFound) ImGui.EndDisabled();
 
                             ImGui.Separator();
 

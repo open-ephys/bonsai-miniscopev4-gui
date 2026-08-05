@@ -61,9 +61,9 @@
               <Combinator xsi:type="p1:CommutatorSettings">
                 <p1:IsConnected>false</p1:IsConnected>
                 <p1:PortName />
-                <p1:Enable>false</p1:Enable>
-                <p1:EnableLed>false</p1:EnableLed>
-                <p1:AutoConnect>true</p1:AutoConnect>
+                <p1:Enable>true</p1:Enable>
+                <p1:EnableLed>true</p1:EnableLed>
+                <p1:AutoConnect>false</p1:AutoConnect>
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
@@ -352,7 +352,7 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p2:UclaMiniscopeV4">
                       <p2:Index>0</p2:Index>
-                      <p2:LedBrightness>0</p2:LedBrightness>
+                      <p2:LedBrightness>0.1</p2:LedBrightness>
                       <p2:Focus>0</p2:Focus>
                       <p2:SensorGain>Low</p2:SensorGain>
                       <p2:FramesPerSecond>Fps30</p2:FramesPerSecond>
@@ -1059,7 +1059,7 @@
                             <p1:PortName />
                             <p1:Enable>true</p1:Enable>
                             <p1:EnableLed>true</p1:EnableLed>
-                            <p1:AutoConnect>true</p1:AutoConnect>
+                            <p1:AutoConnect>false</p1:AutoConnect>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="MulticastSubject">
@@ -1461,6 +1461,14 @@
                       <Property Name="AutomaticRestartTriggered" />
                     </PropertyMappings>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Commutator</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="CommutatorSettings" />
+                    </PropertyMappings>
+                  </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:StatusBar" />
                   </Expression>
@@ -1487,17 +1495,19 @@
                   <Edge From="2" To="3" Label="Source1" />
                   <Edge From="3" To="5" Label="Source1" />
                   <Edge From="4" To="5" Label="Source2" />
-                  <Edge From="5" To="10" Label="Source1" />
+                  <Edge From="5" To="12" Label="Source1" />
                   <Edge From="6" To="7" Label="Source1" />
-                  <Edge From="7" To="10" Label="Source2" />
+                  <Edge From="7" To="12" Label="Source2" />
                   <Edge From="8" To="9" Label="Source1" />
-                  <Edge From="9" To="10" Label="Source3" />
+                  <Edge From="9" To="12" Label="Source3" />
                   <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="10" To="13" Label="Source1" />
-                  <Edge From="11" To="12" Label="Source1" />
+                  <Edge From="11" To="12" Label="Source4" />
+                  <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="12" To="15" Label="Source1" />
                   <Edge From="13" To="14" Label="Source1" />
-                  <Edge From="14" To="15" Label="Source1" />
                   <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source1" />
+                  <Edge From="17" To="18" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -2285,7 +2295,7 @@
                                     </Expression>
                                     <Expression xsi:type="Combinator">
                                       <Combinator xsi:type="cv:Threshold">
-                                        <cv:ThresholdValue>160</cv:ThresholdValue>
+                                        <cv:ThresholdValue>245</cv:ThresholdValue>
                                         <cv:MaxValue>255</cv:MaxValue>
                                         <cv:ThresholdType>Binary</cv:ThresholdType>
                                       </Combinator>
@@ -2337,7 +2347,7 @@
                                     </Expression>
                                     <Expression xsi:type="Combinator">
                                       <Combinator xsi:type="cv:Threshold">
-                                        <cv:ThresholdValue>160</cv:ThresholdValue>
+                                        <cv:ThresholdValue>245</cv:ThresholdValue>
                                         <cv:MaxValue>255</cv:MaxValue>
                                         <cv:ThresholdType>ToZeroInv</cv:ThresholdType>
                                       </Combinator>
@@ -4200,7 +4210,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:GenerateRecordingFileNames">
-                <p1:FileName />
+                <p1:FileName>../data/run_</p1:FileName>
                 <p1:Suffix>FileCount</p1:Suffix>
               </Combinator>
             </Expression>
@@ -5192,7 +5202,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName />
+                      <p1:FileName>../data/run_</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -5501,7 +5511,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName />
+                      <p1:FileName>../data/run_</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -5699,7 +5709,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName />
+                      <p1:FileName>../data/run_</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -6007,68 +6017,141 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:LogError" />
                   </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="BooleanProperty">
-                      <Value>false</Value>
-                    </Combinator>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>DisconnectCommutator</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="BooleanProperty">
+                            <Value>false</Value>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="rx:PublishSubject">
+                          <Name>Disconnected</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Disconnected</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="IsConnected" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Commutator</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>PortName</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="PortName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Enable</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Enable" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>EnableLed</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="EnableLed" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>AutoConnect</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="AutoConnect" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:CommutatorSettings">
+                            <p1:IsConnected>false</p1:IsConnected>
+                            <p1:PortName>COM1</p1:PortName>
+                            <p1:Enable>false</p1:Enable>
+                            <p1:EnableLed>false</p1:EnableLed>
+                            <p1:AutoConnect>false</p1:AutoConnect>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>Commutator</Name>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="14" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="14" Label="Source2" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="5" To="8" Label="Source1" />
+                        <Edge From="5" To="10" Label="Source1" />
+                        <Edge From="5" To="12" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
+                        <Edge From="7" To="14" Label="Source3" />
+                        <Edge From="8" To="9" Label="Source1" />
+                        <Edge From="9" To="14" Label="Source4" />
+                        <Edge From="10" To="11" Label="Source1" />
+                        <Edge From="11" To="14" Label="Source5" />
+                        <Edge From="12" To="13" Label="Source1" />
+                        <Edge From="13" To="14" Label="Source6" />
+                        <Edge From="14" To="15" Label="Source1" />
+                        <Edge From="15" To="16" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="rx:PublishSubject">
-                    <Name>Disconnected</Name>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>Disconnected</Name>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="IsConnected" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>Commutator</Name>
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>PortName</Selector>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="PortName" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>Enable</Selector>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="Enable" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>EnableLed</Selector>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="EnableLed" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>AutoConnect</Selector>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="AutoConnect" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p1:CommutatorSettings">
-                      <p1:IsConnected>false</p1:IsConnected>
-                      <p1:PortName>COM1</p1:PortName>
-                      <p1:Enable>false</p1:Enable>
-                      <p1:EnableLed>false</p1:EnableLed>
-                      <p1:AutoConnect>true</p1:AutoConnect>
-                    </Combinator>
-                  </Expression>
-                  <Expression xsi:type="MulticastSubject">
-                    <Name>Commutator</Name>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>StopAcquisitionIfAutoConnect</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>AutoConnect</Selector>
+                        </Expression>
+                        <Expression xsi:type="rx:Condition">
+                          <Name>True</Name>
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="WorkflowInput">
+                                <Name>Source1</Name>
+                              </Expression>
+                              <Expression xsi:type="WorkflowOutput" />
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                            <Value>Acquisition stopped because a commutator is required.</Value>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>MiniscopeStatus</Name>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
                 </Nodes>
                 <Edges>
@@ -6092,22 +6175,6 @@
                   <Edge From="16" To="17" Label="Source2" />
                   <Edge From="17" To="18" Label="Source1" />
                   <Edge From="19" To="20" Label="Source1" />
-                  <Edge From="20" To="32" Label="Source1" />
-                  <Edge From="21" To="22" Label="Source1" />
-                  <Edge From="22" To="32" Label="Source2" />
-                  <Edge From="23" To="24" Label="Source1" />
-                  <Edge From="23" To="26" Label="Source1" />
-                  <Edge From="23" To="28" Label="Source1" />
-                  <Edge From="23" To="30" Label="Source1" />
-                  <Edge From="24" To="25" Label="Source1" />
-                  <Edge From="25" To="32" Label="Source3" />
-                  <Edge From="26" To="27" Label="Source1" />
-                  <Edge From="27" To="32" Label="Source4" />
-                  <Edge From="28" To="29" Label="Source1" />
-                  <Edge From="29" To="32" Label="Source5" />
-                  <Edge From="30" To="31" Label="Source1" />
-                  <Edge From="31" To="32" Label="Source6" />
-                  <Edge From="32" To="33" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
