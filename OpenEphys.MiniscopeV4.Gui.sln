@@ -5,6 +5,8 @@ VisualStudioVersion = 18.7.11903.348
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenEphys.MiniscopeV4.Gui", "OpenEphys.MiniscopeV4.Gui\OpenEphys.MiniscopeV4.Gui.csproj", "{91B40306-4CA7-421D-956F-DA82F41BA542}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenEphys.MiniscopeV4.Gui.Tests", "OpenEphys.MiniscopeV4.Gui.Tests\OpenEphys.MiniscopeV4.Gui.Tests.csproj", "{5FD16BC0-6D2B-428A-94EC-3682648A17C6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,6 +17,10 @@ Global
 		{91B40306-4CA7-421D-956F-DA82F41BA542}.Debug|x64.Build.0 = Debug|Any CPU
 		{91B40306-4CA7-421D-956F-DA82F41BA542}.Release|x64.ActiveCfg = Release|Any CPU
 		{91B40306-4CA7-421D-956F-DA82F41BA542}.Release|x64.Build.0 = Release|Any CPU
+		{5FD16BC0-6D2B-428A-94EC-3682648A17C6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5FD16BC0-6D2B-428A-94EC-3682648A17C6}.Debug|x64.Build.0 = Debug|Any CPU
+		{5FD16BC0-6D2B-428A-94EC-3682648A17C6}.Release|x64.ActiveCfg = Release|Any CPU
+		{5FD16BC0-6D2B-428A-94EC-3682648A17C6}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

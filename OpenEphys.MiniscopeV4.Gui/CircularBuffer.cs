@@ -13,12 +13,16 @@ namespace OpenEphys.MiniscopeV4.Gui;
 /// This creates an oscilloscope-style sweep when visualizing the data.
 /// </remarks>
 /// <typeparam name="T"></typeparam>
+/// <exception cref="ArgumentOutOfRangeException">Thrown when the capacity is not positive.</exception>
 class CircularBuffer<T> : IReadOnlyCollection<T>
 {
     private readonly T[] buffer;
 
     public CircularBuffer(int capacity)
     {
+        if (capacity <= 0)
+            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
+
         buffer = new T[capacity];
     }
 

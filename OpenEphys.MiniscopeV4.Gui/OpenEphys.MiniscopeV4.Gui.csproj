@@ -25,6 +25,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="OpenEphys.MiniscopeV4.Gui.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<EmbeddedResource Include="**\*.bonsai" />
 		<EmbeddedResource Include="Fonts\*" />
 		<EmbeddedResource Include="Resources\icon.ico" />
