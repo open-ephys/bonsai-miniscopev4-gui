@@ -3,10 +3,10 @@
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:p1="clr-namespace:OpenEphys.MiniscopeV4.Gui;assembly=OpenEphys.MiniscopeV4.Gui"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
-                 xmlns:p2="clr-namespace:OpenEphys.Miniscope;assembly=OpenEphys.Miniscope"
+                 xmlns:p2="clr-namespace:OpenCV.Net;assembly=OpenCV.Net"
+                 xmlns:p3="clr-namespace:OpenEphys.Miniscope;assembly=OpenEphys.Miniscope"
                  xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
                  xmlns:ui="clr-namespace:Bonsai.Design;assembly=Bonsai.Design"
-                 xmlns:p3="clr-namespace:OpenCV.Net;assembly=OpenCV.Net"
                  xmlns:imviz="clr-namespace:Bonsai.ImGui.Visualizers;assembly=Bonsai.ImGui.Visualizers"
                  xmlns:cv="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
@@ -61,13 +61,27 @@
               <Combinator xsi:type="p1:CommutatorSettings">
                 <p1:IsConnected>false</p1:IsConnected>
                 <p1:PortName />
-                <p1:Enable>false</p1:Enable>
-                <p1:EnableLed>false</p1:EnableLed>
-                <p1:AutoConnect>true</p1:AutoConnect>
+                <p1:Enable>true</p1:Enable>
+                <p1:EnableLed>true</p1:EnableLed>
+                <p1:AutoConnect>false</p1:AutoConnect>
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>Commutator</Name>
+            </Expression>
+            <Expression xsi:type="PropertySource" TypeArguments="p1:SaturationSettings,p2:Scalar">
+              <MemberName>Color</MemberName>
+              <Value>
+                <Val0>0</Val0>
+                <Val1>0</Val1>
+                <Val2>100</Val2>
+                <Val3>0</Val3>
+              </Value>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="Color" />
+              </PropertyMappings>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:SaturationSettings">
@@ -82,13 +96,41 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:DffSettings">
                 <p1:BackgroundFrames>100</p1:BackgroundFrames>
-                <p1:BackgroundThreshold>14.3</p1:BackgroundThreshold>
+                <p1:BackgroundThreshold>92</p1:BackgroundThreshold>
                 <p1:Sigma>3</p1:Sigma>
               </Combinator>
             </Expression>
             <Expression xsi:type="PropertyMapping">
               <PropertyMappings>
                 <Property Name="Dff" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="PropertySource" TypeArguments="p1:SaturationSettings,p2:Scalar">
+              <MemberName>Color</MemberName>
+              <Value>
+                <Val0>0</Val0>
+                <Val1>255</Val1>
+                <Val2>0</Val2>
+                <Val3>0</Val3>
+              </Value>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="ReferenceColor" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="PropertySource" TypeArguments="p1:SaturationSettings,p2:Scalar">
+              <MemberName>Color</MemberName>
+              <Value>
+                <Val0>255</Val0>
+                <Val1>0</Val1>
+                <Val2>0</Val2>
+                <Val3>0</Val3>
+              </Value>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="LiveColor" />
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -213,25 +255,31 @@
             <Edge From="6" To="7" Label="Source1" />
             <Edge From="8" To="9" Label="Source1" />
             <Edge From="10" To="11" Label="Source1" />
-            <Edge From="11" To="16" Label="Source1" />
+            <Edge From="11" To="12" Label="Source1" />
             <Edge From="12" To="13" Label="Source1" />
-            <Edge From="13" To="16" Label="Source2" />
+            <Edge From="13" To="22" Label="Source1" />
             <Edge From="14" To="15" Label="Source1" />
-            <Edge From="15" To="16" Label="Source3" />
+            <Edge From="15" To="22" Label="Source2" />
             <Edge From="16" To="17" Label="Source1" />
+            <Edge From="17" To="20" Label="Source1" />
             <Edge From="18" To="19" Label="Source1" />
+            <Edge From="19" To="20" Label="Source2" />
             <Edge From="20" To="21" Label="Source1" />
+            <Edge From="21" To="22" Label="Source3" />
             <Edge From="22" To="23" Label="Source1" />
             <Edge From="24" To="25" Label="Source1" />
             <Edge From="26" To="27" Label="Source1" />
             <Edge From="28" To="29" Label="Source1" />
             <Edge From="30" To="31" Label="Source1" />
-            <Edge From="31" To="32" Label="Source1" />
-            <Edge From="33" To="34" Label="Source1" />
-            <Edge From="35" To="36" Label="Source1" />
+            <Edge From="32" To="33" Label="Source1" />
+            <Edge From="34" To="35" Label="Source1" />
             <Edge From="36" To="37" Label="Source1" />
-            <Edge From="38" To="39" Label="Source1" />
-            <Edge From="40" To="41" Label="Source1" />
+            <Edge From="37" To="38" Label="Source1" />
+            <Edge From="39" To="40" Label="Source1" />
+            <Edge From="41" To="42" Label="Source1" />
+            <Edge From="42" To="43" Label="Source1" />
+            <Edge From="44" To="45" Label="Source1" />
+            <Edge From="46" To="47" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -350,13 +398,13 @@
                     </PropertyMappings>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p2:UclaMiniscopeV4">
-                      <p2:Index>0</p2:Index>
-                      <p2:LedBrightness>0</p2:LedBrightness>
-                      <p2:Focus>0</p2:Focus>
-                      <p2:SensorGain>Low</p2:SensorGain>
-                      <p2:FramesPerSecond>Fps30</p2:FramesPerSecond>
-                      <p2:LedRespectsDigitalIn>None</p2:LedRespectsDigitalIn>
+                    <Combinator xsi:type="p3:UclaMiniscopeV4">
+                      <p3:Index>0</p3:Index>
+                      <p3:LedBrightness>0</p3:LedBrightness>
+                      <p3:Focus>0</p3:Focus>
+                      <p3:SensorGain>Low</p3:SensorGain>
+                      <p3:FramesPerSecond>Fps30</p3:FramesPerSecond>
+                      <p3:LedRespectsDigitalIn>None</p3:LedRespectsDigitalIn>
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
@@ -1059,7 +1107,7 @@
                             <p1:PortName />
                             <p1:Enable>true</p1:Enable>
                             <p1:EnableLed>true</p1:EnableLed>
-                            <p1:AutoConnect>true</p1:AutoConnect>
+                            <p1:AutoConnect>false</p1:AutoConnect>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="MulticastSubject">
@@ -1461,6 +1509,14 @@
                       <Property Name="AutomaticRestartTriggered" />
                     </PropertyMappings>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Commutator</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="CommutatorSettings" />
+                    </PropertyMappings>
+                  </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:StatusBar" />
                   </Expression>
@@ -1487,17 +1543,19 @@
                   <Edge From="2" To="3" Label="Source1" />
                   <Edge From="3" To="5" Label="Source1" />
                   <Edge From="4" To="5" Label="Source2" />
-                  <Edge From="5" To="10" Label="Source1" />
+                  <Edge From="5" To="12" Label="Source1" />
                   <Edge From="6" To="7" Label="Source1" />
-                  <Edge From="7" To="10" Label="Source2" />
+                  <Edge From="7" To="12" Label="Source2" />
                   <Edge From="8" To="9" Label="Source1" />
-                  <Edge From="9" To="10" Label="Source3" />
+                  <Edge From="9" To="12" Label="Source3" />
                   <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="10" To="13" Label="Source1" />
-                  <Edge From="11" To="12" Label="Source1" />
+                  <Edge From="11" To="12" Label="Source4" />
+                  <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="12" To="15" Label="Source1" />
                   <Edge From="13" To="14" Label="Source1" />
-                  <Edge From="14" To="15" Label="Source1" />
                   <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source1" />
+                  <Edge From="17" To="18" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -1877,7 +1935,7 @@
                           <Name>RawImage</Name>
                           <Workflow>
                             <Nodes>
-                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p3:IplImage">
+                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:IplImage">
                                 <rx:Name>CachedRawImage</rx:Name>
                               </Expression>
                               <Expression xsi:type="WorkflowInput">
@@ -2035,7 +2093,7 @@
                           <Name>DffImage</Name>
                           <Workflow>
                             <Nodes>
-                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p3:IplImage">
+                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:IplImage">
                                 <rx:Name>CachedDffImage</rx:Name>
                               </Expression>
                               <Expression xsi:type="WorkflowInput">
@@ -2079,10 +2137,10 @@
                                       </PropertyMappings>
                                     </Expression>
                                     <Expression xsi:type="Combinator">
-                                      <Combinator xsi:type="p2:DeltaFOverF">
-                                        <p2:BackgroundFrames>100</p2:BackgroundFrames>
-                                        <p2:BackgroundThreshold>92</p2:BackgroundThreshold>
-                                        <p2:Sigma>3</p2:Sigma>
+                                      <Combinator xsi:type="p3:DeltaFOverF">
+                                        <p3:BackgroundFrames>100</p3:BackgroundFrames>
+                                        <p3:BackgroundThreshold>92</p3:BackgroundThreshold>
+                                        <p3:Sigma>3</p3:Sigma>
                                       </Combinator>
                                     </Expression>
                                     <Expression xsi:type="WorkflowOutput" />
@@ -2256,7 +2314,7 @@
                           <Name>SaturationImage</Name>
                           <Workflow>
                             <Nodes>
-                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p3:IplImage">
+                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:IplImage">
                                 <rx:Name>CachedSaturationImage</rx:Name>
                               </Expression>
                               <Expression xsi:type="WorkflowInput">
@@ -2526,7 +2584,7 @@
                           <Name>MaxProjectionImage</Name>
                           <Workflow>
                             <Nodes>
-                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p3:IplImage">
+                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:IplImage">
                                 <rx:Name>CachedMaxProjectionImage</rx:Name>
                               </Expression>
                               <Expression xsi:type="WorkflowInput">
@@ -2757,7 +2815,7 @@
                           <Name>OverlayImage</Name>
                           <Workflow>
                             <Nodes>
-                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p3:IplImage">
+                              <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:IplImage">
                                 <rx:Name>CachedOverlayImage</rx:Name>
                               </Expression>
                               <Expression xsi:type="WorkflowInput">
@@ -3123,12 +3181,12 @@
                                 <Selector>DigitalIn</Selector>
                               </Expression>
                               <Expression xsi:type="HasFlag">
-                                <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
+                                <Operand xsi:type="WorkflowProperty" TypeArguments="p3:MiniscopeDaqDigitalIn">
                                   <Value>DigitalIn0</Value>
                                 </Operand>
                               </Expression>
                               <Expression xsi:type="HasFlag">
-                                <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
+                                <Operand xsi:type="WorkflowProperty" TypeArguments="p3:MiniscopeDaqDigitalIn">
                                   <Value>DigitalIn1</Value>
                                 </Operand>
                               </Expression>
@@ -3206,7 +3264,7 @@
                                 <Selector>Quaternion</Selector>
                               </Expression>
                               <Expression xsi:type="Combinator">
-                                <Combinator xsi:type="p2:QuaternionToEuler" />
+                                <Combinator xsi:type="p3:QuaternionToEuler" />
                               </Expression>
                               <Expression xsi:type="ExternalizedMapping">
                                 <Property Name="Capacity" />
@@ -4022,7 +4080,7 @@
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="HasFlag">
-              <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
+              <Operand xsi:type="WorkflowProperty" TypeArguments="p3:MiniscopeDaqDigitalIn">
                 <Value>DigitalIn0</Value>
               </Operand>
             </Expression>
@@ -4200,7 +4258,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:GenerateRecordingFileNames">
-                <p1:FileName />
+                <p1:FileName>.</p1:FileName>
                 <p1:Suffix>FileCount</p1:Suffix>
               </Combinator>
             </Expression>
@@ -4359,7 +4417,7 @@
                           </PropertyMappings>
                         </Expression>
                         <Expression xsi:type="HasFlag">
-                          <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
+                          <Operand xsi:type="WorkflowProperty" TypeArguments="p3:MiniscopeDaqDigitalIn">
                             <Value>DigitalIn0</Value>
                           </Operand>
                         </Expression>
@@ -4494,7 +4552,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:Delay">
-                            <rx:DueTime>PT3S</rx:DueTime>
+                            <rx:DueTime>PT10M</rx:DueTime>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="rx:PublishSubject">
@@ -4709,7 +4767,7 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:Delay">
-                            <rx:DueTime>PT1S</rx:DueTime>
+                            <rx:DueTime>PT0S</rx:DueTime>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="Combinator">
@@ -4767,7 +4825,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:WriteLogsToFile">
-                      <p1:FileName>..\data\run_19.log</p1:FileName>
+                      <p1:FileName>0.log</p1:FileName>
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="WorkflowOutput" />
@@ -4778,12 +4836,12 @@
                     <Selector>DigitalIn</Selector>
                   </Expression>
                   <Expression xsi:type="HasFlag">
-                    <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
+                    <Operand xsi:type="WorkflowProperty" TypeArguments="p3:MiniscopeDaqDigitalIn">
                       <Value>DigitalIn0</Value>
                     </Operand>
                   </Expression>
                   <Expression xsi:type="HasFlag">
-                    <Operand xsi:type="WorkflowProperty" TypeArguments="p2:MiniscopeDaqDigitalIn">
+                    <Operand xsi:type="WorkflowProperty" TypeArguments="p3:MiniscopeDaqDigitalIn">
                       <Value>DigitalIn1</Value>
                     </Operand>
                   </Expression>
@@ -4803,7 +4861,7 @@
                     <Property Name="FileName" DisplayName="CsvFileName" />
                   </Expression>
                   <Expression xsi:type="io:CsvWriter">
-                    <io:FileName>..\data\run_19.csv</io:FileName>
+                    <io:FileName>0.csv</io:FileName>
                     <io:Append>false</io:Append>
                     <io:Overwrite>false</io:Overwrite>
                     <io:Suffix>None</io:Suffix>
@@ -4837,7 +4895,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="cv:VideoWriter">
-                      <cv:FileName>..\data\run_19.avi</cv:FileName>
+                      <cv:FileName>0.avi</cv:FileName>
                       <cv:Suffix>None</cv:Suffix>
                       <cv:Buffered>true</cv:Buffered>
                       <cv:Overwrite>false</cv:Overwrite>
@@ -5007,7 +5065,7 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="io:WriteAllText">
-                      <io:Path>..\data\run_19.yml</io:Path>
+                      <io:Path>0.yml</io:Path>
                       <io:Overwrite>false</io:Overwrite>
                       <io:Append>false</io:Append>
                     </Combinator>
@@ -5192,7 +5250,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName />
+                      <p1:FileName>.</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -5501,7 +5559,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName />
+                      <p1:FileName>.</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -5699,7 +5757,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName />
+                      <p1:FileName>.</p1:FileName>
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -6007,68 +6065,141 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:LogError" />
                   </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="BooleanProperty">
-                      <Value>false</Value>
-                    </Combinator>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>DisconnectCommutator</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="BooleanProperty">
+                            <Value>false</Value>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="rx:PublishSubject">
+                          <Name>Disconnected</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Disconnected</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="IsConnected" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>Commutator</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>PortName</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="PortName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Enable</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Enable" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>EnableLed</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="EnableLed" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>AutoConnect</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="AutoConnect" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:CommutatorSettings">
+                            <p1:IsConnected>false</p1:IsConnected>
+                            <p1:PortName>COM1</p1:PortName>
+                            <p1:Enable>false</p1:Enable>
+                            <p1:EnableLed>false</p1:EnableLed>
+                            <p1:AutoConnect>false</p1:AutoConnect>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>Commutator</Name>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="14" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="14" Label="Source2" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="5" To="8" Label="Source1" />
+                        <Edge From="5" To="10" Label="Source1" />
+                        <Edge From="5" To="12" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
+                        <Edge From="7" To="14" Label="Source3" />
+                        <Edge From="8" To="9" Label="Source1" />
+                        <Edge From="9" To="14" Label="Source4" />
+                        <Edge From="10" To="11" Label="Source1" />
+                        <Edge From="11" To="14" Label="Source5" />
+                        <Edge From="12" To="13" Label="Source1" />
+                        <Edge From="13" To="14" Label="Source6" />
+                        <Edge From="14" To="15" Label="Source1" />
+                        <Edge From="15" To="16" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
-                  <Expression xsi:type="rx:PublishSubject">
-                    <Name>Disconnected</Name>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>Disconnected</Name>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="IsConnected" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>Commutator</Name>
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>PortName</Selector>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="PortName" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>Enable</Selector>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="Enable" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>EnableLed</Selector>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="EnableLed" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>AutoConnect</Selector>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="AutoConnect" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="p1:CommutatorSettings">
-                      <p1:IsConnected>false</p1:IsConnected>
-                      <p1:PortName>COM1</p1:PortName>
-                      <p1:Enable>false</p1:Enable>
-                      <p1:EnableLed>false</p1:EnableLed>
-                      <p1:AutoConnect>true</p1:AutoConnect>
-                    </Combinator>
-                  </Expression>
-                  <Expression xsi:type="MulticastSubject">
-                    <Name>Commutator</Name>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>StopAcquisitionIfAutoConnect</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>AutoConnect</Selector>
+                        </Expression>
+                        <Expression xsi:type="rx:Condition">
+                          <Name>True</Name>
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="WorkflowInput">
+                                <Name>Source1</Name>
+                              </Expression>
+                              <Expression xsi:type="WorkflowOutput" />
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                            <Value>Acquisition stopped because a commutator is required.</Value>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>MiniscopeStatus</Name>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                      </Edges>
+                    </Workflow>
                   </Expression>
                 </Nodes>
                 <Edges>
@@ -6092,22 +6223,6 @@
                   <Edge From="16" To="17" Label="Source2" />
                   <Edge From="17" To="18" Label="Source1" />
                   <Edge From="19" To="20" Label="Source1" />
-                  <Edge From="20" To="32" Label="Source1" />
-                  <Edge From="21" To="22" Label="Source1" />
-                  <Edge From="22" To="32" Label="Source2" />
-                  <Edge From="23" To="24" Label="Source1" />
-                  <Edge From="23" To="26" Label="Source1" />
-                  <Edge From="23" To="28" Label="Source1" />
-                  <Edge From="23" To="30" Label="Source1" />
-                  <Edge From="24" To="25" Label="Source1" />
-                  <Edge From="25" To="32" Label="Source3" />
-                  <Edge From="26" To="27" Label="Source1" />
-                  <Edge From="27" To="32" Label="Source4" />
-                  <Edge From="28" To="29" Label="Source1" />
-                  <Edge From="29" To="32" Label="Source5" />
-                  <Edge From="30" To="31" Label="Source1" />
-                  <Edge From="31" To="32" Label="Source6" />
-                  <Edge From="32" To="33" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>

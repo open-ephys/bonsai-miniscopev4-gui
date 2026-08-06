@@ -11,7 +11,7 @@ Hardware:
     PortName: ''
     Enable: true
     EnableLed: true
-    AutoConnect: true
+    AutoConnect: false
 Display:
   Saturation:
     Threshold: 160

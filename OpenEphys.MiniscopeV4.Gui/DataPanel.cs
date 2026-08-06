@@ -434,6 +434,14 @@ public class DataPanel
                     var activeTab = ImageTab.None;
                     bool resetMaxProjection = false;
 
+                    if (overlayDialogTask != null && overlayDialogTask.IsCompleted)
+                    {
+                        var chosen = overlayDialogTask.Result;
+                        if (!string.IsNullOrEmpty(chosen))
+                            overlayReferencePath = chosen;
+                        overlayDialogTask = null;
+                    }
+
                     if (!AcquisitionStatus && !ActiveImage.TexID.IsNull)
                     {
                         ActiveImage = default;
@@ -721,14 +729,6 @@ public class DataPanel
                                             }
                                         }
                                         Tooltip.Describe("Choose a reference image (e.g., a previous captured image) to overlay on the live view.");
-
-                                        if (overlayDialogTask != null && overlayDialogTask.IsCompleted)
-                                        {
-                                            var chosen = overlayDialogTask.Result;
-                                            if (!string.IsNullOrEmpty(chosen))
-                                                overlayReferencePath = chosen;
-                                            overlayDialogTask = null;
-                                        }
 
                                         ImGui.SameLine();
                                         if (ImGui.Button($"{browseLabel}##browse_screenshots", new Vector2(browseWidth, 0)))
@@ -1304,7 +1304,13 @@ public class DataPanel
         if (buffer == null)
             return;
 
-        int extendedCount = window.ExtendedCount;
+        // NB: Unlike the other plots, this one shares the x-axis of the plot above it and so is drawn with a
+        // window built from *that* buffer, not from this one. The plot buffers are separate subscriptions torn
+        // down and rebuilt independently on each acquisition transition, so this one can briefly hold fewer
+        // samples than the window wants to draw. Never ask the getters for more points than this buffer has.
+        int available = buffer.Count;
+
+        int extendedCount = Math.Min(window.ExtendedCount, available);
         int extendedStepCount = extendedCount > 0 ? 2 * extendedCount : 0;
 
         for (int i = 0; i < buffer.Series.Length; i++)
@@ -1345,11 +1351,12 @@ public class DataPanel
 
             void PlotRun(string suffix, (int Start, int Rank, int Count) segment)
             {
-                if (segment.Count <= 0)
+                int count = Math.Min(segment.Count, available);
+                if (count <= 0)
                     return;
 
                 run = segment;
-                int stepCount = segment.Count > 1 ? 2 * segment.Count - 1 : 1;
+                int stepCount = count > 1 ? 2 * count - 1 : 1;
 
                 ImPlot.SetNextFillStyle(color);
                 ImPlot.PlotShadedG(labels[i] + "##fill" + suffix, valueGetterDelegate, null, baselineGetterDelegate, null, stepCount);
