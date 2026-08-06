@@ -101,11 +101,13 @@ public class CircularBufferBuilder : SingleArgumentExpressionBuilder
         string name,
         ValueGetter<TSource> getY)
     {
+        var nullable = !typeof(TSource).IsValueType;
         return new(name, (_, idx, pointPtr) =>
         {
             var point = (ImPlotPoint*)pointPtr;
+            ref var value = ref buffer[idx];
             point->X = idx;
-            point->Y = getY(ref buffer[idx]);
+            point->Y = nullable && (object)value is null ? 0.0 : getY(ref value);
             return pointPtr;
         });
     }
@@ -116,11 +118,21 @@ public class CircularBufferBuilder : SingleArgumentExpressionBuilder
         ValueGetter<TSource> getX,
         ValueGetter<TSource> getY)
     {
+        var nullable = !typeof(TSource).IsValueType;
         return new(name, (_, idx, pointPtr) =>
         {
             var point = (ImPlotPoint*)pointPtr;
-            point->X = getX(ref buffer[idx]);
-            point->Y = getY(ref buffer[idx]);
+            ref var value = ref buffer[idx];
+            if (nullable && (object)value is null)
+            {
+                point->X = idx;
+                point->Y = 0.0;
+            }
+            else
+            {
+                point->X = getX(ref value);
+                point->Y = getY(ref value);
+            }
             return pointPtr;
         });
     }
