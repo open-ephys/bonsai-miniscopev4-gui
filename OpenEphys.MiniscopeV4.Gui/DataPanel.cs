@@ -205,6 +205,12 @@ public class DataPanel
     static readonly double[] eulerGridStepCandidates = { 5, 10, 15, 20, 30, 45, 60, 90, 180 };
     const float MinGridPixelSpacing = 32f;
 
+    static readonly double[] timeGridStepCandidates = { 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60 };
+    const float MinTimeGridPixelSpacing = 48f;
+    const float MinTimeLabelGap = 8f;
+
+    const double TimeLabelFraction = 0.15;
+
     static readonly ImPlotSubplotFlags signalSubplotFlags = ImPlotSubplotFlags.NoTitle | ImPlotSubplotFlags.NoMenus | ImPlotSubplotFlags.NoResize | ImPlotSubplotFlags.NoLegend | ImPlotSubplotFlags.LinkAllX;
 
     const double DigitalAmplitude = 0.8;
@@ -377,6 +383,64 @@ public class DataPanel
                 var textPos = new Vector2(plotPos.X + 4f, y - textHeight - 1f);
                 drawList.AddText(textPos, labelColor, labelFormatter(level));
             }
+        }
+
+        ImPlot.PopPlotClipRect();
+    }
+
+    static string FormatTimeLabel(double seconds, double step) => step < 1 ? $"{seconds:0.0} s" : $"{seconds:0} s";
+
+    static double TimeLabelLimit(double axisMin, double axisMax) => axisMin - (axisMax - axisMin) * TimeLabelFraction;
+
+    static void DrawTimeGrid(double fps, double yAxisDataMin)
+    {
+        if (fps <= 0)
+            return;
+
+        var limits = ImPlot.GetPlotLimits();
+        double minSeconds = limits.X.Min / fps;
+        double maxSeconds = limits.X.Max / fps;
+        if (maxSeconds <= minSeconds)
+            return;
+
+        var plotPos = ImPlot.GetPlotPos();
+        var plotSize = ImPlot.GetPlotSize();
+        double step = ChooseGridStep(maxSeconds - minSeconds, plotSize.X, timeGridStepCandidates, MinTimeGridPixelSpacing * UiScale.Current);
+        if (step <= 0)
+            return;
+
+        var drawList = ImPlot.GetPlotDrawList();
+        uint lineColor = ImGui.ColorConvertFloat4ToU32(GridLineColor);
+        uint labelColor = ImGui.ColorConvertFloat4ToU32(GridLabelColor());
+        float axisLabelY = ImPlot.PlotToPixels(limits.X.Min, yAxisDataMin).Y;
+
+        float labelY = Math.Min(axisLabelY + 2f * UiScale.Current, plotPos.Y + plotSize.Y - ImGui.GetTextLineHeight());
+        float edgePadding = 3f * UiScale.Current;
+        float minLabelGap = MinTimeLabelGap * UiScale.Current;
+        float labelLeftLimit = plotPos.X + edgePadding;
+        float labelRightLimit = plotPos.X + plotSize.X - edgePadding;
+        float lastLabelRight = float.NegativeInfinity;
+
+        ImPlot.PushPlotClipRect();
+
+        for (long index = (long)Math.Ceiling(minSeconds / step); ; index++)
+        {
+            double seconds = index * step;
+            if (seconds > maxSeconds)
+                break;
+
+            float x = ImPlot.PlotToPixels(seconds * fps, yAxisDataMin).X;
+            drawList.AddLine(new Vector2(x, plotPos.Y), new Vector2(x, axisLabelY), lineColor);
+
+            var label = FormatTimeLabel(seconds, step);
+            float textWidth = ImGui.CalcTextSize(label).X;
+            float textX = Math.Max(labelLeftLimit, Math.Min(x - textWidth * 0.5f, labelRightLimit - textWidth));
+
+            if (textX < lastLabelRight + minLabelGap)
+                continue;
+
+            drawList.AddText(new Vector2(textX, labelY), labelColor, label);
+            lastLabelRight = textX + textWidth;
         }
 
         ImPlot.PopPlotClipRect();
@@ -831,6 +895,7 @@ public class DataPanel
 
                                     bool scrollable = Paused || !AcquisitionStatus;
                                     var frameRate = SelectedFrameRate;
+                                    var fps = ConvertFrameRateV4ToFps(frameRate) ?? 0;
                                     ImPlotAxisFlags xAxisFlags = scrollable ? (axisFlags & ~ImPlotAxisFlags.AutoFit) : (axisFlags | ImPlotAxisFlags.Lock);
                                     ImPlotAxisFlags yAxisFlags = axisFlags | ImPlotAxisFlags.Lock | ImPlotAxisFlags.NoHighlight;
                                     ImPlotFlags signalPlotFlags = scrollable
@@ -879,10 +944,12 @@ public class DataPanel
                                                         ImPlot.SetupAxisLimitsConstraints(ImAxis.X1, -eulerWindow.ExtendedCount, eulerWindow.XAxisMax);
                                                     if (eulerXAxisLimits is (double eulerXAxisMin, double eulerXAxisMax))
                                                         ImPlot.SetupAxisLimits(ImAxis.X1, eulerXAxisMin, eulerXAxisMax, ImPlotCond.Always);
-                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, eulerYAxisMin, eulerYAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, TimeLabelLimit(eulerYAxisMin, eulerYAxisMax), eulerYAxisMax, ImPlotCond.Always);
 
-                                                    double eulerGridStep = ChooseGridStep(eulerYAxisMax - eulerYAxisMin, ImPlot.GetPlotSize().Y, eulerGridStepCandidates, MinGridPixelSpacing * UiScale.Current);
+                                                    float eulerDataPixelSpan = ImPlot.GetPlotSize().Y * (float)(1.0 - TimeLabelFraction);
+                                                    double eulerGridStep = ChooseGridStep(eulerYAxisMax - eulerYAxisMin, eulerDataPixelSpan, eulerGridStepCandidates, MinGridPixelSpacing * UiScale.Current);
                                                     DrawPlotGrid(eulerYAxisMin, eulerYAxisMax, eulerGridStep, FormatDegreeLabel);
+                                                    DrawTimeGrid(fps, eulerYAxisMin);
 
                                                     if (eulerAnglesSeries != null)
                                                     {
@@ -958,9 +1025,10 @@ public class DataPanel
                                                         ImPlot.SetupAxisLimitsConstraints(ImAxis.X1, -quaternionWindow.ExtendedCount, quaternionWindow.XAxisMax);
                                                     if (quaternionXAxisLimits is (double quaternionXAxisMin, double quaternionXAxisMax))
                                                         ImPlot.SetupAxisLimits(ImAxis.X1, quaternionXAxisMin, quaternionXAxisMax, ImPlotCond.Always);
-                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, quaternionAxisMin, quaternionAxisMax, ImPlotCond.Always);
+                                                    ImPlot.SetupAxisLimits(ImAxis.Y1, TimeLabelLimit(quaternionAxisMin, quaternionAxisMax), quaternionAxisMax, ImPlotCond.Always);
 
                                                     DrawPlotGrid(quaternionAxisMin, quaternionAxisMax, quaternionGridStep, null);
+                                                    DrawTimeGrid(fps, quaternionAxisMin);
 
                                                     if (quaternionSeries != null)
                                                     {
