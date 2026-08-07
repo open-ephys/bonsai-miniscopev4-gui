@@ -1104,7 +1104,7 @@
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p1:CommutatorSettings">
                             <p1:IsConnected>false</p1:IsConnected>
-                            <p1:PortName />
+                            <p1:PortName>COM3</p1:PortName>
                             <p1:Enable>true</p1:Enable>
                             <p1:EnableLed>true</p1:EnableLed>
                             <p1:AutoConnect>false</p1:AutoConnect>
@@ -4258,7 +4258,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:GenerateRecordingFileNames">
-                <p1:FileName>.</p1:FileName>
+                <p1:FileName />
                 <p1:Suffix>FileCount</p1:Suffix>
               </Combinator>
             </Expression>
@@ -5250,7 +5250,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName>.</p1:FileName>
+                      <p1:FileName />
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -5559,7 +5559,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName>.</p1:FileName>
+                      <p1:FileName />
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -5757,7 +5757,7 @@
                       <p1:RecordButton>false</p1:RecordButton>
                       <p1:RecordingMode>Manual</p1:RecordingMode>
                       <p1:CompressVideo>false</p1:CompressVideo>
-                      <p1:FileName>.</p1:FileName>
+                      <p1:FileName />
                       <p1:Suffix>FileCount</p1:Suffix>
                       <p1:RecordingDuration>600</p1:RecordingDuration>
                       <p1:TotalDuration>3600</p1:TotalDuration>
@@ -5969,6 +5969,9 @@
             <Expression xsi:type="MemberSelector">
               <Selector>PortName</Selector>
             </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:DistinctUntilChanged" />
+            </Expression>
             <Expression xsi:type="PropertyMapping">
               <PropertyMappings>
                 <Property Name="PortName" />
@@ -5977,6 +5980,9 @@
             <Expression xsi:type="MemberSelector">
               <Selector>Enable</Selector>
             </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:DistinctUntilChanged" />
+            </Expression>
             <Expression xsi:type="PropertyMapping">
               <PropertyMappings>
                 <Property Name="Enable" />
@@ -5984,6 +5990,9 @@
             </Expression>
             <Expression xsi:type="MemberSelector">
               <Selector>EnableLed</Selector>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:DistinctUntilChanged" />
             </Expression>
             <Expression xsi:type="PropertyMapping">
               <PropertyMappings>
@@ -6014,6 +6023,9 @@
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
                     <Name>Commutator</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p1:ObserveOnControl" />
                   </Expression>
                   <Expression xsi:type="MemberSelector">
                     <Selector>IsConnected</Selector>
@@ -6072,6 +6084,24 @@
                         <Expression xsi:type="WorkflowInput">
                           <Name>Source1</Name>
                         </Expression>
+                        <Expression xsi:type="rx:Condition">
+                          <Name>IsConnected</Name>
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Commutator</Name>
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>IsConnected</Selector>
+                              </Expression>
+                              <Expression xsi:type="WorkflowOutput" />
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                              <Edge From="1" To="2" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="BooleanProperty">
                             <Value>false</Value>
@@ -6126,9 +6156,9 @@
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="p1:CommutatorSettings">
                             <p1:IsConnected>false</p1:IsConnected>
-                            <p1:PortName>COM1</p1:PortName>
-                            <p1:Enable>false</p1:Enable>
-                            <p1:EnableLed>false</p1:EnableLed>
+                            <p1:PortName>COM3</p1:PortName>
+                            <p1:Enable>true</p1:Enable>
+                            <p1:EnableLed>true</p1:EnableLed>
                             <p1:AutoConnect>false</p1:AutoConnect>
                           </Combinator>
                         </Expression>
@@ -6140,23 +6170,24 @@
                       <Edges>
                         <Edge From="0" To="1" Label="Source1" />
                         <Edge From="1" To="2" Label="Source1" />
-                        <Edge From="2" To="14" Label="Source1" />
-                        <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="4" To="14" Label="Source2" />
-                        <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="5" To="8" Label="Source1" />
-                        <Edge From="5" To="10" Label="Source1" />
-                        <Edge From="5" To="12" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="15" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="5" To="15" Label="Source2" />
                         <Edge From="6" To="7" Label="Source1" />
-                        <Edge From="7" To="14" Label="Source3" />
-                        <Edge From="8" To="9" Label="Source1" />
-                        <Edge From="9" To="14" Label="Source4" />
-                        <Edge From="10" To="11" Label="Source1" />
-                        <Edge From="11" To="14" Label="Source5" />
-                        <Edge From="12" To="13" Label="Source1" />
-                        <Edge From="13" To="14" Label="Source6" />
-                        <Edge From="14" To="15" Label="Source1" />
+                        <Edge From="6" To="9" Label="Source1" />
+                        <Edge From="6" To="11" Label="Source1" />
+                        <Edge From="6" To="13" Label="Source1" />
+                        <Edge From="7" To="8" Label="Source1" />
+                        <Edge From="8" To="15" Label="Source3" />
+                        <Edge From="9" To="10" Label="Source1" />
+                        <Edge From="10" To="15" Label="Source4" />
+                        <Edge From="11" To="12" Label="Source1" />
+                        <Edge From="12" To="15" Label="Source5" />
+                        <Edge From="13" To="14" Label="Source1" />
+                        <Edge From="14" To="15" Label="Source6" />
                         <Edge From="15" To="16" Label="Source1" />
+                        <Edge From="16" To="17" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -6184,6 +6215,24 @@
                             </Edges>
                           </Workflow>
                         </Expression>
+                        <Expression xsi:type="rx:Condition">
+                          <Name>MiniscopeConnected</Name>
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Status</Name>
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>IsConnected</Selector>
+                              </Expression>
+                              <Expression xsi:type="WorkflowOutput" />
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                              <Edge From="1" To="2" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="StringProperty">
                             <Value>Acquisition stopped because a commutator is required.</Value>
@@ -6198,6 +6247,7 @@
                         <Edge From="1" To="2" Label="Source1" />
                         <Edge From="2" To="3" Label="Source1" />
                         <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
@@ -6207,22 +6257,23 @@
                   <Edge From="1" To="2" Label="Source1" />
                   <Edge From="2" To="4" Label="Source1" />
                   <Edge From="3" To="4" Label="Source2" />
-                  <Edge From="4" To="8" Label="Source1" />
+                  <Edge From="4" To="9" Label="Source1" />
                   <Edge From="5" To="6" Label="Source1" />
                   <Edge From="6" To="7" Label="Source1" />
-                  <Edge From="7" To="8" Label="Source2" />
-                  <Edge From="8" To="9" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="8" To="9" Label="Source2" />
                   <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="9" To="14" Label="Source1" />
                   <Edge From="10" To="11" Label="Source1" />
+                  <Edge From="10" To="15" Label="Source1" />
                   <Edge From="11" To="12" Label="Source1" />
                   <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="14" To="15" Label="Source1" />
-                  <Edge From="14" To="19" Label="Source1" />
-                  <Edge From="15" To="17" Label="Source1" />
-                  <Edge From="16" To="17" Label="Source2" />
-                  <Edge From="17" To="18" Label="Source1" />
-                  <Edge From="19" To="20" Label="Source1" />
+                  <Edge From="13" To="14" Label="Source1" />
+                  <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="15" To="20" Label="Source1" />
+                  <Edge From="16" To="18" Label="Source1" />
+                  <Edge From="17" To="18" Label="Source2" />
+                  <Edge From="18" To="19" Label="Source1" />
+                  <Edge From="20" To="21" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -6235,17 +6286,20 @@
             <Edge From="1" To="2" Label="Source1" />
             <Edge From="2" To="3" Label="Source1" />
             <Edge From="3" To="4" Label="Source1" />
-            <Edge From="4" To="12" Label="Source1" />
+            <Edge From="4" To="15" Label="Source1" />
             <Edge From="5" To="6" Label="Source1" />
-            <Edge From="5" To="8" Label="Source1" />
-            <Edge From="5" To="10" Label="Source1" />
+            <Edge From="5" To="9" Label="Source1" />
+            <Edge From="5" To="12" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="7" To="12" Label="Source2" />
-            <Edge From="8" To="9" Label="Source1" />
-            <Edge From="9" To="12" Label="Source3" />
+            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="8" To="15" Label="Source2" />
+            <Edge From="9" To="10" Label="Source1" />
             <Edge From="10" To="11" Label="Source1" />
-            <Edge From="11" To="12" Label="Source4" />
+            <Edge From="11" To="15" Label="Source3" />
             <Edge From="12" To="13" Label="Source1" />
+            <Edge From="13" To="14" Label="Source1" />
+            <Edge From="14" To="15" Label="Source4" />
+            <Edge From="15" To="16" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
