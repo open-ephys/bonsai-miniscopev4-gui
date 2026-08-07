@@ -1214,18 +1214,20 @@ public class DataPanel
 
     struct SweepMarker
     {
-        double fraction;
+        double position;
         int previousEnd;
+        int previousSamplesToPlot;
         readonly int bufferCapacity;
 
         public SweepMarker(int bufferCapacity)
         {
-            fraction = 0;
+            position = 0;
             previousEnd = 0;
+            previousSamplesToPlot = 0;
             this.bufferCapacity = bufferCapacity;
         }
 
-        public int Advance(int end, int samplesToPlot)
+        public double Advance(int end, int samplesToPlot)
         {
             if (samplesToPlot <= 0)
                 return 0;
@@ -1233,9 +1235,13 @@ public class DataPanel
             var newSamples = Mod(end - previousEnd, bufferCapacity);
             previousEnd = end;
 
-            var previous = Math.Min((int)Math.Round(fraction * samplesToPlot), samplesToPlot - 1);
-            var position = Mod(previous + newSamples, samplesToPlot);
-            fraction = (double)position / samplesToPlot;
+            if (samplesToPlot != previousSamplesToPlot && previousSamplesToPlot > 1)
+                position *= (samplesToPlot - 1) / (double)(previousSamplesToPlot - 1);
+            previousSamplesToPlot = samplesToPlot;
+
+            if (newSamples > 0)
+                position = Mod((int)Math.Round(position) + newSamples, samplesToPlot);
+
             return position;
         }
     }
@@ -1247,8 +1253,15 @@ public class DataPanel
         readonly int windowStart;
         readonly int zeroRank;
 
-        /// <summary>Gets the position of the newest sample.</summary>
-        public int Marker { get; }
+        /// <summary>
+        /// Gets the position at which to draw the sweep marker.
+        /// </summary>
+        public double MarkerPosition { get; }
+
+        /// <summary>
+        /// Gets the sample offset in the x-axis to line the data up with the <see cref="MarkerPosition"/>.
+        /// </summary>
+        public double SampleOffset { get; }
 
         /// <summary>
         /// Gets the run holding the oldest data on screen, drawn up to the right edge of the window.
@@ -1267,11 +1280,13 @@ public class DataPanel
         /// <summary>Gets the upper limit of the x-axis.</summary>
         public int XAxisMax => Math.Max(0, samplesToPlot - 1);
 
-        PlotWindow(int count, int end, int marker, int samplesToPlot, int bufferCapacity, bool scrollable)
+        PlotWindow(int count, int end, double markerPosition, int samplesToPlot, int bufferCapacity, bool scrollable)
         {
             this.samplesToPlot = samplesToPlot;
             this.bufferCapacity = bufferCapacity;
-            Marker = marker;
+            MarkerPosition = markerPosition;
+            var marker = (int)Math.Round(markerPosition);
+            SampleOffset = MarkerPosition - marker;
 
             var drawCount = Math.Min(count, samplesToPlot);
             var drawStart = samplesToPlot == 0 ? 0 : Mod(marker - drawCount + 1, samplesToPlot);
@@ -1320,7 +1335,7 @@ public class DataPanel
                 int physicalSlot = window.PhysicalSlot(run.Rank + index);
                 nint result = line.Getter(data, physicalSlot, pointPtr);
                 var point = (ImPlotPoint*)pointPtr;
-                point->X = run.Start + index;
+                point->X = run.Start + index + window.SampleOffset;
                 return result;
             }
 
@@ -1345,7 +1360,7 @@ public class DataPanel
                     int physicalSlot = window.ExtendedPhysicalSlot(k);
                     nint result = line.Getter(data, physicalSlot, pointPtr);
                     var point = (ImPlotPoint*)pointPtr;
-                    point->X = -k;
+                    point->X = -k + window.SampleOffset;
                     return result;
                 }
 
@@ -1356,7 +1371,7 @@ public class DataPanel
             }
         }
 
-        PlotVerticalLine((float)window.Marker, Palette.Yellow);
+        PlotVerticalLine((float)window.MarkerPosition, Palette.Yellow);
     }
 
     static unsafe void PlotVerticalLine(float x, Vector4 color)
@@ -1371,10 +1386,6 @@ public class DataPanel
         if (buffer == null)
             return;
 
-        // NB: Unlike the other plots, this one shares the x-axis of the plot above it and so is drawn with a
-        // window built from *that* buffer, not from this one. The plot buffers are separate subscriptions torn
-        // down and rebuilt independently on each acquisition transition, so this one can briefly hold fewer
-        // samples than the window wants to draw. Never ask the getters for more points than this buffer has.
         int available = buffer.Count;
 
         int extendedCount = Math.Min(window.ExtendedCount, available);
@@ -1397,7 +1408,7 @@ public class DataPanel
                 int physicalSlot = window.PhysicalSlot(run.Rank + offset);
                 nint result = line.Getter(data, physicalSlot, pointPtr);
                 var point = (ImPlotPoint*)pointPtr;
-                point->X = run.Start + offset + (idx & 1);
+                point->X = run.Start + offset + (idx & 1) + window.SampleOffset;
                 point->Y = baseline + point->Y * DigitalAmplitude;
                 return result;
             }
@@ -1408,7 +1419,7 @@ public class DataPanel
                 int physicalSlot = window.PhysicalSlot(run.Rank + offset);
                 nint result = line.Getter(data, physicalSlot, pointPtr);
                 var point = (ImPlotPoint*)pointPtr;
-                point->X = run.Start + offset + (idx & 1);
+                point->X = run.Start + offset + (idx & 1) + window.SampleOffset;
                 point->Y = baseline;
                 return result;
             }
@@ -1448,7 +1459,7 @@ public class DataPanel
                     nint result = line.Getter(data, physicalSlot, pointPtr);
                     var point = (ImPlotPoint*)pointPtr;
                     double heldY = baseline + point->Y * DigitalAmplitude;
-                    point->X = (idx & 1) == 0 ? -k : -(k - 1);
+                    point->X = ((idx & 1) == 0 ? -k : -(k - 1)) + window.SampleOffset;
                     point->Y = heldY;
                     return result;
                 }
@@ -1460,7 +1471,7 @@ public class DataPanel
                     int physicalSlot = window.ExtendedPhysicalSlot(k);
                     nint result = line.Getter(data, physicalSlot, pointPtr);
                     var point = (ImPlotPoint*)pointPtr;
-                    point->X = (idx & 1) == 0 ? -k : -(k - 1);
+                    point->X = ((idx & 1) == 0 ? -k : -(k - 1)) + window.SampleOffset;
                     point->Y = baseline;
                     return result;
                 }
@@ -1479,6 +1490,6 @@ public class DataPanel
             }
         }
 
-        PlotVerticalLine((float)window.Marker, Palette.Yellow);
+        PlotVerticalLine((float)window.MarkerPosition, Palette.Yellow);
     }
 }
