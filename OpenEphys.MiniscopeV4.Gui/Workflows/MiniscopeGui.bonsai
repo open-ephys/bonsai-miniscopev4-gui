@@ -1107,7 +1107,7 @@
                             <p1:PortName>COM3</p1:PortName>
                             <p1:Enable>true</p1:Enable>
                             <p1:EnableLed>true</p1:EnableLed>
-                            <p1:AutoConnect>true</p1:AutoConnect>
+                            <p1:AutoConnect>false</p1:AutoConnect>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="MulticastSubject">
@@ -6017,7 +6017,7 @@
                     <Property Name="EnableLed" />
                   </Expression>
                   <Expression xsi:type="IncludeWorkflow" Path="OpenEphys.Commutator:AutoCommutator.bonsai">
-                    <PortName>COM3</PortName>
+                    <PortName />
                     <Enable>true</Enable>
                     <EnableLed>true</EnableLed>
                   </Expression>
@@ -6215,6 +6215,24 @@
                             </Edges>
                           </Workflow>
                         </Expression>
+                        <Expression xsi:type="rx:Condition">
+                          <Name>MiniscopeConnected</Name>
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Status</Name>
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>IsConnected</Selector>
+                              </Expression>
+                              <Expression xsi:type="WorkflowOutput" />
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                              <Edge From="1" To="2" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="StringProperty">
                             <Value>Acquisition stopped because a commutator is required.</Value>
@@ -6229,6 +6247,7 @@
                         <Edge From="1" To="2" Label="Source1" />
                         <Edge From="2" To="3" Label="Source1" />
                         <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
