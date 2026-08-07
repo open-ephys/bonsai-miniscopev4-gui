@@ -146,8 +146,8 @@ public class DataPanel
 
     static float ControlColumnWidth => 220f * UiScale.Current;
 
-    const float BaseMinImagePaneHeight = 100f;
-    const float BaseMinSignalPaneHeight = 80f;
+    const float BaseMinImagePaneHeight = 150f;
+    const float BaseMinSignalPaneHeight = 120f;
 
     float MinImagePaneHeight => BaseMinImagePaneHeight * UiScale.Current;
     float MinSignalPaneHeight => BaseMinSignalPaneHeight * UiScale.Current;
@@ -889,9 +889,8 @@ public class DataPanel
                                 if (ImGui.BeginTabBar("##SignalTabBar"))
                                 {
                                     ImPlotAxisFlags axisFlags = ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.NoMenus | ImPlotAxisFlags.NoTickMarks | ImPlotAxisFlags.NoGridLines | ImPlotAxisFlags.NoTickLabels;
-                                    const float minimumPlotHeight = 160f;
 
-                                    static Vector2 CalculateChildHeight() => new(-1f, Math.Max(minimumPlotHeight, ImGui.GetContentRegionAvail().Y));
+                                    Vector2 CalculateChildHeight() => new(-1f, Math.Max(MinSignalPaneHeight * 0.65f, ImGui.GetContentRegionAvail().Y));
 
                                     bool scrollable = Paused || !AcquisitionStatus;
                                     var frameRate = SelectedFrameRate;
