@@ -6,7 +6,9 @@
 
 #define AppName      "UCLA Miniscope V4 GUI"
 #define AppDirName   "MiniscopeV4Gui"
-#define AppVersion   "0.1.0"
+#ifndef AppVersion
+  #define AppVersion "0.1.0"
+#endif
 #define AppPublisher "Open Ephys"
 #define AppURL       "https://open-ephys.org/miniscope-docs"
 

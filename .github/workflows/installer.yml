@@ -1,0 +1,89 @@
+name: Installer
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "release") {
+            $version = "${{ github.event.release.tag_name }}" -replace '^v', ''
+            $suffix = ""
+          } else {
+            $prefix = (Select-String -Path Directory.Build.props -Pattern '(?<=VersionPrefix>).*(?=</VersionPrefix>)').Matches.Value
+            $suffix = "pre.${{ github.run_number }}"
+            $version = "$prefix-$suffix"
+          }
+          Write-Host "Version: $version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "suffix=$suffix" >> $env:GITHUB_OUTPUT
+
+      - name: Pack pre-release package
+        if: github.event_name != 'release'
+        shell: pwsh
+        run: |
+          dotnet pack OpenEphys.MiniscopeV4.Gui\OpenEphys.MiniscopeV4.Gui.csproj `
+            --configuration Release `
+            -p:ContinuousIntegrationBuild=true `
+            -p:CiBuildVersionSuffix="${{ steps.version.outputs.suffix }}" `
+            -p:CiRunNumber="${{ github.run_number }}" `
+            -p:IncludeSymbols=false `
+            --output launcher\lib
+          if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed" }
+
+          $expected = "launcher\lib\OpenEphys.MiniscopeV4.Gui.${{ steps.version.outputs.version }}.nupkg"
+          if (-not (Test-Path $expected)) {
+            Get-ChildItem launcher\lib
+            throw "Expected packed package at $expected"
+          }
+
+      # NB: keep the launcher's bootstrap manifest pointed at the
+      # package version actually being released, even if launcher/.bonsai/Bonsai.config
+      # wasn't bumped by hand before tagging.
+      - name: Pin launcher package version
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $configPath = "launcher\.bonsai\Bonsai.config"
+          (Get-Content $configPath) `
+            -replace '(<Package id="OpenEphys\.MiniscopeV4\.Gui" version=")[^"]*(")', "`${1}$version`${2}" `
+            -replace '(location="Packages/OpenEphys\.MiniscopeV4\.Gui\.)[^/]*(/lib/net472/OpenEphys\.MiniscopeV4\.Gui\.dll")', "`${1}$version`${2}" |
+            Set-Content $configPath
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          & iscc "/DAppVersion=$version" installer\MiniscopeGui.iss
+
+      - name: Upload installer artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: MiniscopeGui-Setup-${{ steps.version.outputs.version }}
+          path: artifacts/MiniscopeGui-Setup-*.exe
+
+      - name: Attach installer to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" artifacts/MiniscopeGui-Setup-*.exe

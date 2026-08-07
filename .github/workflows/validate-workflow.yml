@@ -1,0 +1,47 @@
+name: Validate workflow
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  export-image:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            6.0.x
+            8.0.x
+
+      - name: Build
+        run: dotnet build OpenEphys.MiniscopeV4.Gui.sln --configuration Release
+
+      - name: Bootstrap Bonsai
+        shell: pwsh
+        run: launcher\Run.ps1 -BootstrapOnly -BonsaiDir .bonsai
+
+      - name: Export workflow image
+        shell: pwsh
+        run: |
+          $lib = Resolve-Path "artifacts\bin\OpenEphys.MiniscopeV4.Gui\release"
+          $workflow = Resolve-Path "OpenEphys.MiniscopeV4.Gui\Workflows\MiniscopeGui.bonsai"
+          $outFile = Join-Path (Get-Location) "MiniscopeGui.png"
+
+          & ".bonsai\Bonsai.exe" $workflow "--lib:$lib" --export-image $outFile
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Workflow failed to load/export (exit $LASTEXITCODE). It likely contains unresolved or unknown types."
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: MiniscopeGui-workflow-image
+          path: MiniscopeGui.png
+          if-no-files-found: ignore
